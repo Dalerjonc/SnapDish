@@ -12,14 +12,17 @@ const RecipeDetail = () => {
   const [route] = useRoute("/recipe/:id");
   const [, navigate] = useLocation();
   
+  // Get ID parameter from the route
+  const idParam = route?.params?.id;
+  
   // Safely extract and parse the ID parameter
-  const recipeId = route?.params?.id ? parseInt(route.params.id) : undefined;
+  const recipeId = idParam ? parseInt(idParam) : undefined;
   
   // Log the route parameters for debugging
   console.log("Recipe Detail Route:", { 
     hasRoute: !!route, 
     params: route?.params, 
-    id: route?.params?.id,
+    id: idParam,
     parsedId: recipeId 
   });
   
