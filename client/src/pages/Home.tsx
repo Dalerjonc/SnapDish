@@ -14,12 +14,12 @@ const Home = () => {
 
   return (
     <div className="px-4 py-4">
-      {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-primary/90 to-primary rounded-2xl p-5 mb-6 text-white">
-        <h2 className="text-2xl font-bold font-heading mb-2">Hungry but not sure what to cook?</h2>
-        <p className="text-sm mb-4">Snap a photo of your ingredients or a dish you like, and let our AI suggest recipes!</p>
+      {/* Hero Banner - Smaller Version */}
+      <div className="bg-gradient-to-r from-primary/90 to-primary rounded-xl p-4 mb-5 text-white">
+        <h2 className="text-lg font-bold font-heading mb-1">Hungry but not sure what to cook?</h2>
+        <p className="text-xs mb-3">Snap a photo of your ingredients or a dish you like, and let our AI suggest recipes!</p>
         <div className="flex space-x-2">
-          <button className="bg-white text-primary font-medium py-2 px-4 rounded-full text-sm flex items-center">
+          <button className="bg-white text-primary font-medium py-1.5 px-3 rounded-full text-xs flex items-center">
             <i className="ri-information-line mr-1"></i> Learn how
           </button>
         </div>
