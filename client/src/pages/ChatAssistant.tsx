@@ -76,8 +76,8 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
       const welcomeMessage: ChatMessageType = {
         role: "assistant",
         content: recipe 
-          ? `Hello! I'm your AI Chef. I can help with questions about the ${recipe.name} recipe, ingredient substitutions, cooking techniques, and more. What would you like to know?`
-          : "Hello! I'm your AI Chef. I can help with recipe questions, ingredient substitutions, cooking techniques, and more. What would you like to know?",
+          ? `Hello! I'm your AI Chef, your personal cooking assistant. I can help with questions about the ${recipe.name} recipe, ingredient substitutions, cooking techniques, and more. What would you like to know?`
+          : "Hello! I'm your AI Chef, your personal cooking assistant. I can help with recipe questions, ingredient substitutions, cooking techniques, and more. What would you like to know?",
         timestamp: Date.now(),
       };
       setMessages([welcomeMessage]);
@@ -139,7 +139,7 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
         <div>
           <h2 className="font-bold font-heading">AI Chef</h2>
           <p className="text-xs text-neutral-500">
-            {recipe ? `Discussing: ${recipe.name}` : "Ask any cooking questions"}
+            {recipe ? `Discussing: ${recipe.name}` : "Your AI Cooking Assistant"}
           </p>
         </div>
       </div>
