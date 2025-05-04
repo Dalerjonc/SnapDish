@@ -53,7 +53,7 @@ const Home = () => {
       </div>
 
       {/* Category Navigation Buttons - Horizontal */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3">
         <a 
           href="/popular-recipes" 
           className="bg-gradient-to-r from-primary/30 to-primary/10 p-3 rounded-xl text-center flex flex-col items-center"
@@ -68,79 +68,6 @@ const Home = () => {
           <i className="ri-time-line text-secondary text-xl mb-1"></i>
           <span className="text-sm font-medium">Quick & Easy</span>
         </a>
-      </div>
-
-      {/* Popular Recipes Preview */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold font-heading">Popular Recipes</h2>
-          <a href="/popular-recipes" className="text-sm text-primary font-medium">See all</a>
-        </div>
-        
-        <div className="overflow-x-auto hide-scrollbar snap-x flex gap-4 -mx-4 px-4">
-          {loadingPopular ? (
-            // Loading skeleton
-            Array(4).fill(0).map((_, index) => (
-              <div key={index} className="snap-start min-w-[160px] max-w-[160px] rounded-xl overflow-hidden shadow-sm bg-white">
-                <div className="aspect-square bg-neutral-200 animate-pulse"></div>
-                <div className="p-2">
-                  <div className="h-4 bg-neutral-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-neutral-200 rounded animate-pulse w-2/3"></div>
-                </div>
-              </div>
-            ))
-          ) : popularRecipes && popularRecipes.length > 0 ? (
-            popularRecipes.map((recipe: any) => (
-              <RecipeCard
-                key={recipe.id}
-                id={recipe.id}
-                title={recipe.name}
-                image={recipe.image}
-                readyInMinutes={recipe.readyInMinutes}
-                difficulty={recipe.difficulty || "Easy"}
-              />
-            ))
-          ) : (
-            <div className="text-center w-full py-4 text-neutral-500">No recipes found</div>
-          )}
-        </div>
-      </div>
-      
-      {/* Quick & Easy Recipes */}
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold font-heading">Quick & Easy</h2>
-          <a href="/quick-recipes" className="text-sm text-primary font-medium">See all</a>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          {loadingQuick ? (
-            // Loading skeleton
-            Array(2).fill(0).map((_, index) => (
-              <div key={index} className="flex bg-white rounded-xl overflow-hidden shadow-sm">
-                <div className="w-1/3 bg-neutral-200 animate-pulse"></div>
-                <div className="w-2/3 p-2">
-                  <div className="h-4 bg-neutral-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-3 bg-neutral-200 rounded animate-pulse w-2/3 mb-1"></div>
-                  <div className="h-3 bg-neutral-200 rounded animate-pulse w-1/2"></div>
-                </div>
-              </div>
-            ))
-          ) : quickRecipes && quickRecipes.length > 0 ? (
-            quickRecipes.slice(0, 2).map((recipe: any) => (
-              <RecipeCardHorizontal
-                key={recipe.id}
-                id={recipe.id}
-                title={recipe.name}
-                image={recipe.image}
-                readyInMinutes={recipe.readyInMinutes}
-                calories={recipe.calories}
-              />
-            ))
-          ) : (
-            <div className="text-center w-full col-span-2 py-4 text-neutral-500">No recipes found</div>
-          )}
-        </div>
       </div>
     </div>
   );
