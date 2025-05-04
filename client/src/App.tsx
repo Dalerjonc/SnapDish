@@ -9,6 +9,8 @@ import IdentifyDish from "@/pages/IdentifyDish";
 import KitchenIngredients from "@/pages/KitchenIngredients";
 import RecipeDetail from "@/pages/RecipeDetail";
 import ChatAssistant from "@/pages/ChatAssistant";
+import PopularRecipes from "@/pages/PopularRecipes";
+import QuickRecipes from "@/pages/QuickRecipes";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 
@@ -24,6 +26,8 @@ function Router() {
           <Route path="/recipe/:id" component={RecipeDetail} />
           <Route path="/chat" component={ChatAssistant} />
           <Route path="/chat/:recipeId" component={ChatAssistant} />
+          <Route path="/popular-recipes" component={PopularRecipes} />
+          <Route path="/quick-recipes" component={QuickRecipes} />
           <Route component={NotFound} />
         </Switch>
       </main>
