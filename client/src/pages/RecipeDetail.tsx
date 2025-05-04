@@ -6,6 +6,7 @@ import IngredientItem from "@/components/IngredientItem";
 import InstructionStep from "@/components/InstructionStep";
 import RecipeCard from "@/components/RecipeCard";
 import { recipeService } from "@/lib/services";
+import { getStoredPhotoDataUrl } from "@/lib/utils";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
 
 const RecipeDetail = ({ params }: { params?: { id: string } }) => {
@@ -143,8 +144,9 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
     <div>
       {/* Recipe Hero Image */}
       <div className="relative h-64">
+        {/* Use the user's photo if available, otherwise use the recipe image */}
         <img 
-          src={recipe.image || "https://images.unsplash.com/photo-1548940740-204726a19be3"}
+          src={getStoredPhotoDataUrl() || recipe.image || "https://images.unsplash.com/photo-1548940740-204726a19be3"}
           alt={recipe.name} 
           className="w-full h-full object-cover" 
         />

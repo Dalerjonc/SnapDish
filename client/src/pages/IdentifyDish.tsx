@@ -5,6 +5,7 @@ import { recipeService } from "@/lib/services";
 import ImageUploader from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { storePhotoDataUrl } from "@/lib/utils";
 
 const IdentifyDish = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -48,9 +49,17 @@ const IdentifyDish = () => {
     setSelectedImage(file);
   };
 
-  const handleIdentify = () => {
+  const handleIdentify = async () => {
     if (selectedImage) {
-      identifyMutation.mutate(selectedImage);
+      try {
+        // Store photo before identifying
+        await storePhotoDataUrl(selectedImage);
+        identifyMutation.mutate(selectedImage);
+      } catch (error) {
+        console.error("Failed to store image:", error);
+        // Continue with identification even if image storage fails
+        identifyMutation.mutate(selectedImage);
+      }
     } else {
       toast({
         title: "No image selected",
