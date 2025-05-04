@@ -22,20 +22,23 @@ const RecipeDetail = () => {
     id: route?.params?.id,
     parsedId: recipeId 
   });
+  
+  // Make sure we have a valid numeric ID
+  const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : undefined;
 
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
 
   // Get recipe details
   const { data: recipe, isLoading } = useQuery<Recipe>({
-    queryKey: [`/api/recipes/${recipeId}`],
-    enabled: !!recipeId,
+    queryKey: [`/api/recipes/${validRecipeId}`],
+    enabled: !!validRecipeId,
   });
 
   // Get similar recipes
   const { data: similarRecipes, isLoading: loadingSimilar } = useQuery<Recipe[]>({
-    queryKey: [`/api/recipes/${recipeId}/similar`],
-    enabled: !!recipeId,
+    queryKey: [`/api/recipes/${validRecipeId}/similar`],
+    enabled: !!validRecipeId,
   });
 
   const handleBack = () => {
@@ -62,8 +65,8 @@ const RecipeDetail = () => {
   };
 
   const handleChatWithAI = () => {
-    if (recipeId) {
-      navigate(`/chat/${recipeId}`);
+    if (validRecipeId) {
+      navigate(`/chat/${validRecipeId}`);
     }
   };
 

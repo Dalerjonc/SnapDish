@@ -22,12 +22,16 @@ const ChatAssistant = () => {
     ? parseInt(routeRecipe.params.recipeId) 
     : undefined;
     
+  // Make sure we have a valid numeric ID
+  const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : undefined;
+  
   // Log the route information for debugging
   console.log("Chat Assistant Route:", {
     hasRecipeRoute: !!routeRecipe,
     hasGeneralRoute: !!routeGeneral,
     params: routeRecipe?.params,
-    recipeId
+    recipeId,
+    validRecipeId
   });
 
   // Get chat history
@@ -44,8 +48,8 @@ const ChatAssistant = () => {
 
   // If we have a recipe ID, get the recipe details
   const { data: recipe } = useQuery<Recipe>({
-    queryKey: [`/api/recipes/${recipeId}`],
-    enabled: !!recipeId,
+    queryKey: [`/api/recipes/${validRecipeId}`],
+    enabled: !!validRecipeId,
   });
 
   // Send message mutation
@@ -103,7 +107,7 @@ const ChatAssistant = () => {
       // Send to API
       sendMessageMutation.mutate({ 
         message,
-        recipeId,
+        recipeId: validRecipeId,
       });
       
       // Clear input
