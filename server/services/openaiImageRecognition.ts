@@ -95,6 +95,55 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
       return null;
     }
   }
+  
+  async getRecipeAndNutrition(dishName: string): Promise<any> {
+    try {
+      if (!openai) {
+        throw new Error("OpenAI API key not configured");
+      }
+
+      console.log("Getting recipe and nutrition for:", dishName);
+      
+      // Call OpenAI API for recipe and nutrition information
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: `You are a culinary and nutrition expert. Provide detailed recipe and nutrition information for the specified dish in JSON format. Include the following fields:
+            - name: The dish name
+            - summary: A short description of the dish and its origin
+            - readyInMinutes: Estimated preparation time in minutes
+            - servings: Number of servings the recipe makes
+            - calories: Calories per serving
+            - protein: Protein content per serving in grams
+            - carbs: Carbohydrate content per serving in grams
+            - fat: Fat content per serving in grams
+            - instructions: Step-by-step cooking instructions
+            - extendedIngredients: Array of ingredients with name, amount, and unit
+            - analyzedInstructions: Structured cooking steps with equipment and ingredients used in each step
+            
+            Format the response as a valid JSON object with these fields.`
+          },
+          {
+            role: "user",
+            content: `Provide detailed recipe and nutrition information for: ${dishName}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1500
+      });
+      
+      // Parse the JSON response
+      const recipeData = JSON.parse(response.choices[0].message.content || "{}");
+      
+      console.log("Generated recipe and nutrition data for:", dishName);
+      return recipeData;
+    } catch (error) {
+      console.error("Error getting recipe and nutrition with OpenAI:", error);
+      throw error;
+    }
+  }
 
   async identifyIngredients(imageBuffer: Buffer): Promise<string[]> {
     try {

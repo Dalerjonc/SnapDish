@@ -97,22 +97,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // Get recipe details based on the identified dish
-        console.log("Searching for recipe matching:", detectedDish);
-        const recipe = await recipeApiService.searchRecipeByName(detectedDish);
+        // First try to find recipe in our database
+        let recipe;
+        
+        try {
+          console.log("Trying to find recipe in database:", detectedDish);
+          recipe = await recipeApiService.searchRecipeByName(detectedDish);
+          console.log("Found recipe in database:", recipe.name);
+        } catch (dbError) {
+          console.log("Recipe not found in database, generating with OpenAI...");
+          
+          // If not found in database, generate recipe with OpenAI
+          const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
+          console.log("Generated recipe with OpenAI:", openAIRecipeData.name);
+          
+          // Convert OpenAI recipe to our format
+          recipe = {
+            id: Math.floor(Math.random() * 10000) + 1000, // Generate a random ID
+            name: openAIRecipeData.name || detectedDish,
+            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
+            readyInMinutes: openAIRecipeData.readyInMinutes || 30,
+            servings: openAIRecipeData.servings || 4,
+            sourceUrl: "",
+            summary: openAIRecipeData.summary || `Recipe for ${detectedDish}`,
+            instructions: openAIRecipeData.instructions || "No instructions available",
+            calories: openAIRecipeData.calories || 0,
+            protein: openAIRecipeData.protein || "0g",
+            carbs: openAIRecipeData.carbs || "0g",
+            fat: openAIRecipeData.fat || "0g",
+            diets: openAIRecipeData.diets || [],
+            extendedIngredients: openAIRecipeData.extendedIngredients || [],
+            analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
+              name: "",
+              steps: [
+                {
+                  number: 1,
+                  step: "No detailed instructions available",
+                  ingredients: [],
+                  equipment: []
+                }
+              ]
+            }],
+            created_at: new Date()
+          };
+        }
         
         // Check if we got a valid recipe with all required fields
         if (!recipe || !recipe.id || !recipe.name) {
-          console.log("Invalid recipe returned:", recipe);
-          return res.status(404).json({ message: "Recipe not found for the identified dish" });
+          console.log("Invalid recipe generated:", recipe);
+          return res.status(404).json({ message: "Could not generate valid recipe for the identified dish" });
         }
         
         console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
         res.json(recipe);
       } catch (recipeError) {
-        console.error("Error fetching recipe details:", recipeError);
-        return res.status(404).json({ 
-          message: `Could not find a matching recipe: ${recipeError.message}`
+        console.error("Error generating recipe:", recipeError);
+        return res.status(500).json({ 
+          message: `Error processing recipe data: ${recipeError instanceof Error ? recipeError.message : String(recipeError)}`
         });
       }
     } catch (error) {

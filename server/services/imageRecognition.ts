@@ -6,6 +6,7 @@
 export interface ImageRecognitionService {
   identifyDish(imageBuffer: Buffer): Promise<string | null>;
   identifyIngredients(imageBuffer: Buffer): Promise<string[]>;
+  getRecipeAndNutrition(dishName: string): Promise<any>;
 }
 
 class MockImageRecognitionService implements ImageRecognitionService {
@@ -85,6 +86,63 @@ class MockImageRecognitionService implements ImageRecognitionService {
       return [];
     }
   }
+
+  async getRecipeAndNutrition(dishName: string): Promise<any> {
+    // For the mock implementation, just return a basic recipe template
+    // In real implementation, this would call external API or database
+    return {
+      name: dishName,
+      summary: `A delicious recipe for ${dishName}.`,
+      readyInMinutes: 30,
+      servings: 4,
+      calories: 350,
+      protein: "15g",
+      carbs: "40g",
+      fat: "12g",
+      instructions: "Prepare ingredients. Cook according to instructions. Serve hot.",
+      extendedIngredients: [
+        {
+          id: 1001,
+          name: "ingredient 1",
+          amount: 1,
+          unit: "cup",
+          original: "1 cup of ingredient 1"
+        },
+        {
+          id: 1002,
+          name: "ingredient 2",
+          amount: 2,
+          unit: "tbsp",
+          original: "2 tablespoons of ingredient 2"
+        }
+      ],
+      analyzedInstructions: [
+        {
+          name: "",
+          steps: [
+            {
+              number: 1,
+              step: "Prepare all ingredients.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 2,
+              step: "Cook according to recipe instructions.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 3,
+              step: "Serve and enjoy.",
+              ingredients: [],
+              equipment: []
+            }
+          ]
+        }
+      ]
+    };
+  }
 }
 
 class GoogleVisionImageRecognitionService implements ImageRecognitionService {
@@ -124,6 +182,12 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
       console.error("Error identifying ingredients with Google Vision:", error);
       return [];
     }
+  }
+  
+  async getRecipeAndNutrition(dishName: string): Promise<any> {
+    // Forward to mock implementation for now
+    const mockService = new MockImageRecognitionService();
+    return mockService.getRecipeAndNutrition(dishName);
   }
 }
 
