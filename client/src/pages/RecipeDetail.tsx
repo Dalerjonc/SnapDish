@@ -26,8 +26,12 @@ const RecipeDetail = () => {
     parsedId: recipeId 
   });
   
-  // Make sure we have a valid numeric ID
-  const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : undefined;
+  // Make sure we have a valid numeric ID - this will throw a 404 if id is not a valid number
+  const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : null;
+  
+  if (!validRecipeId) {
+    console.error("Invalid recipe ID in URL:", idParam);
+  }
 
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);

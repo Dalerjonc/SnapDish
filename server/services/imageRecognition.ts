@@ -1,9 +1,9 @@
 /**
  * Service for image recognition
- * Using Google Cloud Vision API to identify dishes and ingredients from images
+ * Interface and default implementation for image recognition services
  */
 
-interface ImageRecognitionService {
+export interface ImageRecognitionService {
   identifyDish(imageBuffer: Buffer): Promise<string | null>;
   identifyIngredients(imageBuffer: Buffer): Promise<string[]>;
 }
@@ -127,11 +127,13 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
   }
 }
 
-// For a real implementation, we'd use environment variables to decide which service to use
-// const useRealAPI = process.env.USE_REAL_IMAGE_API === 'true';
-// export const imageRecognitionService: ImageRecognitionService = useRealAPI 
-//   ? new GoogleVisionImageRecognitionService()
-//   : new MockImageRecognitionService();
+// Import the OpenAI-based service
+import { OpenAIVisionImageRecognitionService } from './openaiImageRecognition';
 
-// For now, use the mock service
-export const imageRecognitionService: ImageRecognitionService = new MockImageRecognitionService();
+// Check if OpenAI API key is available
+const apiKey = process.env.OPENAI_API_KEY;
+
+// Export the appropriate service based on API key availability
+export const imageRecognitionService: ImageRecognitionService = apiKey 
+  ? new OpenAIVisionImageRecognitionService()
+  : new MockImageRecognitionService();
