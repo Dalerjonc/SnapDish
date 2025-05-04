@@ -17,10 +17,18 @@ const ChatAssistant = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  // Added more robust parameter parsing
-  const recipeId = routeRecipe && routeRecipe.params && routeRecipe.params.recipeId 
+  // Using optional chaining for parameter parsing
+  const recipeId = routeRecipe?.params?.recipeId
     ? parseInt(routeRecipe.params.recipeId) 
     : undefined;
+    
+  // Log the route information for debugging
+  console.log("Chat Assistant Route:", {
+    hasRecipeRoute: !!routeRecipe,
+    hasGeneralRoute: !!routeGeneral,
+    params: routeRecipe?.params,
+    recipeId
+  });
 
   // Get chat history
   const { data: chatHistory } = useQuery<ChatMessageType[]>({

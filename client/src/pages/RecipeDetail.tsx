@@ -12,8 +12,16 @@ const RecipeDetail = () => {
   const [route] = useRoute("/recipe/:id");
   const [, navigate] = useLocation();
   
-  // Added a safer way to parse the ID parameter
-  const recipeId = route && route.params && route.params.id ? parseInt(route.params.id) : undefined;
+  // Safely extract and parse the ID parameter
+  const recipeId = route?.params?.id ? parseInt(route.params.id) : undefined;
+  
+  // Log the route parameters for debugging
+  console.log("Recipe Detail Route:", { 
+    hasRoute: !!route, 
+    params: route?.params, 
+    id: route?.params?.id,
+    parsedId: recipeId 
+  });
 
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);

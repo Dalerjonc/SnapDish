@@ -23,8 +23,10 @@ const IdentifyDish = () => {
         
         // Check if we have a valid ID and use toString() to convert it safely for the URL
         const recipeId = data.id.toString();
+        console.log("Navigating to recipe with ID:", recipeId);
         navigate(`/recipe/${recipeId}`);
       } else {
+        console.error("Invalid recipe data received:", data);
         toast({
           title: "Identification incomplete",
           description: "Couldn't get complete recipe information",
@@ -33,6 +35,7 @@ const IdentifyDish = () => {
       }
     },
     onError: (error) => {
+      console.error("Error in dish identification:", error);
       toast({
         title: "Error identifying dish",
         description: error instanceof Error ? error.message : "Please try again with a clearer photo",

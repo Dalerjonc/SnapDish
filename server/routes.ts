@@ -94,6 +94,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get recipe details based on the identified dish
       const recipe = await recipeApiService.searchRecipeByName(detectedDish);
       
+      // Check if we got a valid recipe with all required fields
+      if (!recipe || !recipe.id || !recipe.name) {
+        return res.status(404).json({ message: "Recipe not found for the identified dish" });
+      }
+      
+      console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
       res.json(recipe);
     } catch (error) {
       console.error("Error identifying dish:", error);

@@ -14,11 +14,24 @@ export const recipeService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Failed to identify dish");
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to identify dish");
+      } catch (e) {
+        // If cannot parse as JSON, just use text
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to identify dish");
+      }
     }
 
-    return response.json();
+    const data = await response.json();
+    
+    // Validate that we have a proper recipe object
+    if (!data || !data.id || !data.name) {
+      throw new Error("Received invalid recipe data from server");
+    }
+    
+    return data;
   },
 
   async getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
