@@ -82,6 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Processing image for dish identification...");
+      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
       
       // Get image buffer
       const imageBuffer = req.file.buffer;
@@ -150,6 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No image uploaded" });
       }
 
+      console.log("Processing image for ingredients identification...");
+      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
+      
       // Get image buffer
       const imageBuffer = req.file.buffer;
       

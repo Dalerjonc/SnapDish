@@ -16,15 +16,53 @@ const ImageUploader = ({ onImageSelect, title, description, className = "" }: Im
     const files = event.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      onImageSelect(file);
       
       // Create preview URL
       const reader = new FileReader();
       reader.onload = () => {
-        setPreviewUrl(reader.result as string);
+        const dataUrl = reader.result as string;
+        setPreviewUrl(dataUrl);
+        
+        // Convert to a supported format (JPEG) if needed
+        convertToSupportedFormat(file, dataUrl);
       };
       reader.readAsDataURL(file);
     }
+  };
+  
+  // Convert file to a supported format (JPEG) regardless of input format
+  const convertToSupportedFormat = (file: File, dataUrl: string) => {
+    // Create an image element to load the data
+    const img = new Image();
+    img.onload = () => {
+      // Create a canvas to draw the image
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Draw the image on the canvas
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to JPEG format
+        canvas.toBlob((blob) => {
+          if (blob) {
+            // Create a new file with JPEG format
+            const convertedFile = new File(
+              [blob], 
+              file.name.replace(/\.[^/.]+$/, "") + ".jpeg", 
+              { type: "image/jpeg" }
+            );
+            console.log("Converted image to JPEG format:", convertedFile);
+            onImageSelect(convertedFile);
+          }
+        }, 'image/jpeg', 0.9);
+      }
+    };
+    
+    // Set source to load the image
+    img.src = dataUrl;
   };
 
   const triggerFileInput = () => {

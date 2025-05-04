@@ -21,6 +21,41 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
       // Convert buffer to base64
       const base64Image = imageBuffer.toString('base64');
       
+      // Determine MIME type based on signature
+      // Simple check for common image formats
+      let contentType = "image/jpeg"; // Default
+      
+      // Check for file signatures to determine type
+      if (imageBuffer.length > 2) {
+        const firstBytes = imageBuffer.slice(0, 4);
+        
+        // Check PNG signature (89 50 4E 47)
+        if (firstBytes[0] === 0x89 && firstBytes[1] === 0x50 && 
+            firstBytes[2] === 0x4E && firstBytes[3] === 0x47) {
+          contentType = "image/png";
+        }
+        // Check JPEG signature (FF D8)
+        else if (firstBytes[0] === 0xFF && firstBytes[1] === 0xD8) {
+          contentType = "image/jpeg";
+        }
+        // Check GIF signature (47 49 46)
+        else if (firstBytes[0] === 0x47 && firstBytes[1] === 0x49 && 
+                firstBytes[2] === 0x46) {
+          contentType = "image/gif";
+        }
+        // Check WebP signature (52 49 46 46 ... 57 45 42 50)
+        // WebP files start with "RIFF" and contain "WEBP" at position 8
+        else if (imageBuffer.length > 12 && 
+                firstBytes[0] === 0x52 && firstBytes[1] === 0x49 && 
+                firstBytes[2] === 0x46 && firstBytes[3] === 0x46 &&
+                imageBuffer[8] === 0x57 && imageBuffer[9] === 0x45 && 
+                imageBuffer[10] === 0x42 && imageBuffer[11] === 0x50) {
+          contentType = "image/webp";
+        }
+      }
+      
+      console.log("Detected content type:", contentType);
+      
       // Call OpenAI Vision API
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -36,7 +71,7 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+                  url: `data:${contentType};base64,${base64Image}`
                 }
               }
             ]
@@ -72,6 +107,41 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
       // Convert buffer to base64
       const base64Image = imageBuffer.toString('base64');
       
+      // Determine MIME type based on signature
+      // Simple check for common image formats
+      let contentType = "image/jpeg"; // Default
+      
+      // Check for file signatures to determine type
+      if (imageBuffer.length > 2) {
+        const firstBytes = imageBuffer.slice(0, 4);
+        
+        // Check PNG signature (89 50 4E 47)
+        if (firstBytes[0] === 0x89 && firstBytes[1] === 0x50 && 
+            firstBytes[2] === 0x4E && firstBytes[3] === 0x47) {
+          contentType = "image/png";
+        }
+        // Check JPEG signature (FF D8)
+        else if (firstBytes[0] === 0xFF && firstBytes[1] === 0xD8) {
+          contentType = "image/jpeg";
+        }
+        // Check GIF signature (47 49 46)
+        else if (firstBytes[0] === 0x47 && firstBytes[1] === 0x49 && 
+                firstBytes[2] === 0x46) {
+          contentType = "image/gif";
+        }
+        // Check WebP signature (52 49 46 46 ... 57 45 42 50)
+        // WebP files start with "RIFF" and contain "WEBP" at position 8
+        else if (imageBuffer.length > 12 && 
+                firstBytes[0] === 0x52 && firstBytes[1] === 0x49 && 
+                firstBytes[2] === 0x46 && firstBytes[3] === 0x46 &&
+                imageBuffer[8] === 0x57 && imageBuffer[9] === 0x45 && 
+                imageBuffer[10] === 0x42 && imageBuffer[11] === 0x50) {
+          contentType = "image/webp";
+        }
+      }
+      
+      console.log("Detected content type for ingredients:", contentType);
+      
       // Call OpenAI Vision API with a prompt specific to ingredient detection
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -87,7 +157,7 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+                  url: `data:${contentType};base64,${base64Image}`
                 }
               }
             ]
