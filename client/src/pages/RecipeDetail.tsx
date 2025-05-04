@@ -35,13 +35,24 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
 
+  // Extract dish name from URL query params for OpenAI generation
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const dishName = searchParams.get('name');
+  
+  console.log("Recipe detail with dish name from URL:", dishName);
+  
   // Get recipe details - custom fetcher to debug issues
   const { data: recipe, isLoading, error } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${validRecipeId}`],
     queryFn: async () => {
-      console.log("Fetching recipe with ID:", validRecipeId);
+      console.log("Fetching recipe with ID:", validRecipeId, "with dish name:", dishName);
       try {
-        const response = await fetch(`/api/recipes/${validRecipeId}`, {
+        // If we have a dish name, include it in the API request
+        const url = dishName 
+          ? `/api/recipes/${validRecipeId}?name=${encodeURIComponent(dishName)}`
+          : `/api/recipes/${validRecipeId}`;
+          
+        const response = await fetch(url, {
           credentials: "include"
         });
         
