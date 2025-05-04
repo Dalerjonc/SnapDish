@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import ChatMessage from "@/components/ChatMessage";
 import { chatService } from "@/lib/services";
 import { useToast } from "@/hooks/use-toast";
-import { ChatMessage as ChatMessageType } from "@shared/schema";
+import { ChatMessage as ChatMessageType, Recipe } from "@shared/schema";
 
 const ChatAssistant = () => {
   const [message, setMessage] = useState("");
@@ -23,17 +23,19 @@ const ChatAssistant = () => {
     : undefined;
 
   // Get chat history
-  const { data: chatHistory } = useQuery({
-    queryKey: ["/api/chat/history"],
-    onSuccess: (data) => {
-      if (data && data.length > 0) {
-        setMessages(data);
-      }
-    },
+  const { data: chatHistory } = useQuery<ChatMessageType[]>({
+    queryKey: ["/api/chat/history"]
   });
 
+  // Update messages when chat history is loaded
+  useEffect(() => {
+    if (chatHistory && chatHistory.length > 0) {
+      setMessages(chatHistory);
+    }
+  }, [chatHistory]);
+
   // If we have a recipe ID, get the recipe details
-  const { data: recipe } = useQuery({
+  const { data: recipe } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${recipeId}`],
     enabled: !!recipeId,
   });

@@ -14,11 +14,23 @@ const IdentifyDish = () => {
   const identifyMutation = useMutation({
     mutationFn: (file: File) => recipeService.identifyDish(file),
     onSuccess: (data) => {
-      toast({
-        title: "Success!",
-        description: `Identified: ${data.name}`,
-      });
-      navigate(`/recipe/${data.id}`);
+      // Make sure data contains valid recipe information
+      if (data && data.id && data.name) {
+        toast({
+          title: "Success!",
+          description: `Identified: ${data.name}`,
+        });
+        
+        // Check if we have a valid ID and use toString() to convert it safely for the URL
+        const recipeId = data.id.toString();
+        navigate(`/recipe/${recipeId}`);
+      } else {
+        toast({
+          title: "Identification incomplete",
+          description: "Couldn't get complete recipe information",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error) => {
       toast({

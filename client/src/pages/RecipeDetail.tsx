@@ -19,19 +19,20 @@ const RecipeDetail = () => {
   const [isSaved, setIsSaved] = useState(false);
 
   // Get recipe details
-  const { data: recipe, isLoading } = useQuery({
+  const { data: recipe, isLoading } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${recipeId}`],
     enabled: !!recipeId,
   });
 
   // Get similar recipes
-  const { data: similarRecipes, isLoading: loadingSimilar } = useQuery({
+  const { data: similarRecipes, isLoading: loadingSimilar } = useQuery<Recipe[]>({
     queryKey: [`/api/recipes/${recipeId}/similar`],
     enabled: !!recipeId,
   });
 
   const handleBack = () => {
-    navigate(-1);
+    // Using a string path instead of number to avoid type errors
+    navigate("/");
   };
 
   const handleShare = async () => {
