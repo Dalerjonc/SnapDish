@@ -424,10 +424,12 @@ class MockRecipeApiService implements RecipeApiService {
     );
     
     if (matchingRecipes.length === 0) {
-      // If no direct match, return a default recipe
-      return this.sampleRecipes[0];
+      // If no direct match, throw an error to trigger proper error handling
+      console.log(`No recipe found matching query: "${query}"`);
+      throw new Error(`No recipe found matching query: "${query}"`);
     }
     
+    console.log(`Found recipe matching "${query}":`, matchingRecipes[0].name);
     // Return the first matching recipe
     return matchingRecipes[0];
   }

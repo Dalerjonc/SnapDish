@@ -81,29 +81,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No image uploaded" });
       }
 
+      console.log("Processing image for dish identification...");
+      
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
       // Identify the dish using image recognition
       const detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
+      console.log("Image recognition result:", detectedDish);
       
       if (!detectedDish) {
+        console.log("No dish detected in the image");
         return res.status(404).json({ message: "Could not identify any dish in the image" });
       }
       
-      // Get recipe details based on the identified dish
-      const recipe = await recipeApiService.searchRecipeByName(detectedDish);
-      
-      // Check if we got a valid recipe with all required fields
-      if (!recipe || !recipe.id || !recipe.name) {
-        return res.status(404).json({ message: "Recipe not found for the identified dish" });
+      try {
+        // Get recipe details based on the identified dish
+        console.log("Searching for recipe matching:", detectedDish);
+        const recipe = await recipeApiService.searchRecipeByName(detectedDish);
+        
+        // Check if we got a valid recipe with all required fields
+        if (!recipe || !recipe.id || !recipe.name) {
+          console.log("Invalid recipe returned:", recipe);
+          return res.status(404).json({ message: "Recipe not found for the identified dish" });
+        }
+        
+        console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
+        res.json(recipe);
+      } catch (recipeError) {
+        console.error("Error fetching recipe details:", recipeError);
+        return res.status(404).json({ 
+          message: `Could not find a matching recipe: ${recipeError.message}`
+        });
       }
-      
-      console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
-      res.json(recipe);
     } catch (error) {
-      console.error("Error identifying dish:", error);
-      res.status(500).json({ message: "Error processing image" });
+      console.error("Error in dish identification process:", error);
+      res.status(500).json({ 
+        message: "Error processing image or finding matching recipe",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

@@ -4,34 +4,48 @@ import { Recipe, ChatMessage } from "@shared/schema";
 // API service for recipe-related operations
 export const recipeService = {
   async identifyDish(imageFile: File): Promise<Recipe> {
+    console.log("Starting dish identification with image file:", imageFile.name, imageFile.type, imageFile.size);
     const formData = new FormData();
     formData.append("image", imageFile);
 
-    const response = await fetch("/api/recipes/identify", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+    try {
+      const response = await fetch("/api/recipes/identify", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to identify dish");
-      } catch (e) {
-        // If cannot parse as JSON, just use text
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to identify dish");
+      console.log("Dish identification response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = "Failed to identify dish";
+        try {
+          const errorData = await response.json();
+          console.error("Error response from server:", errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // If cannot parse as JSON, get the text
+          const errorText = await response.text();
+          console.error("Error response text:", errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
-    }
 
-    const data = await response.json();
-    
-    // Validate that we have a proper recipe object
-    if (!data || !data.id || !data.name) {
-      throw new Error("Received invalid recipe data from server");
+      const data = await response.json();
+      console.log("Identified recipe data:", data);
+      
+      // Validate that we have a proper recipe object
+      if (!data || !data.id || !data.name) {
+        console.error("Invalid recipe data:", data);
+        throw new Error("Received invalid recipe data from server");
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error in identifyDish service:", error);
+      throw error;
     }
-    
-    return data;
   },
 
   async getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
