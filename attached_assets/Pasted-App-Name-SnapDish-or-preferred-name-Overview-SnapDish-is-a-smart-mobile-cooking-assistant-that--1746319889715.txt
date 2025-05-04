@@ -1,0 +1,66 @@
+App Name: SnapDish (or preferred name)
+
+Overview:
+SnapDish is a smart mobile cooking assistant that helps users identify dishes from photos, generate recipes based on available ingredients, and understand nutrition information. Users can either snap/upload a photo of a cooked meal or raw grocery items. The app uses AI to detect the dish or ingredients, then suggests recipes, cooking steps, and calorie/nutrition details. ChatGPT is integrated into the app to provide cooking guidance, answer food-related questions, and generate custom recipe suggestions. The app includes a single unified screen where users can either type or snap a photo of ingredients they have, making meal planning easy and flexible.
+
+Core Features:
+
+Photo Recipe Detection (Cooked Food):
+
+Users take/upload a photo of a prepared dish.
+
+The app identifies the meal using image recognition (e.g., Google Vision API or Clarifai).
+
+Recipes, ingredients, cooking steps, and nutrition info are fetched and displayed using APIs like Spoonacular or Edamam.
+
+Unified “What’s in My Kitchen” Page (Snap or Type Ingredients):
+
+One screen allows users to:
+
+Type or paste a list of available ingredients (e.g., “carrots, eggs, spinach”),
+
+OR take a photo of their groceries (raw ingredients).
+
+Image recognition detects the visible grocery items.
+
+The app matches available ingredients to possible recipes using Spoonacular’s ingredient-based search.
+
+Results include exact-match recipes, optional add-ons, and suggestions for missing ingredients.
+
+Smart Cooking Assistant (ChatGPT):
+
+Users can chat with an AI assistant powered by OpenAI's GPT-4.
+
+Ask for healthy alternatives, substitutions, cooking advice, or custom recipe ideas.
+
+Chat interface can assist at any stage of the cooking flow.
+
+Tech Stack Suggestions:
+
+Frontend: Flutter or React Native (for cross-platform support)
+
+Backend: FastAPI (Python) or Node.js
+
+Image Recognition: Google Vision API or Clarifai for dish and ingredient detection
+
+Recipe & Nutrition APIs: Spoonacular, Edamam, Nutritionix
+
+AI Assistant: OpenAI API (ChatGPT / GPT-4)
+
+Database & Hosting: Firebase or Supabase
+
+User Flow Example:
+
+Home Screen: Choose between “Identify Dish” or “What’s in My Kitchen”
+
+Identify Dish: Upload or snap a cooked meal photo → App shows name, recipe, nutrition
+
+What’s in My Kitchen (Unified):
+
+Type in ingredients OR
+
+Take a photo of raw groceries
+
+App detects items → Suggests recipes using those ingredients
+
+ChatGPT Assistant: Available on results screen for advice, alternatives, or new ideas
