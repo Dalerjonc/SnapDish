@@ -1,0 +1,256 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { recipeService, imageService } from "@/lib/services";
+import { queryClient } from "@/lib/queryClient";
+import ImageUploader from "@/components/ImageUploader";
+import RecipeCardHorizontal from "@/components/RecipeCardHorizontal";
+import { useToast } from "@/hooks/use-toast";
+
+const KitchenIngredients = () => {
+  const [activeTab, setActiveTab] = useState("type");
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const { toast } = useToast();
+
+  // Query for recipes by ingredients
+  const { data: recipes, isLoading: loadingRecipes } = useQuery({
+    queryKey: ["/api/recipes/by-ingredients", ingredients],
+    enabled: ingredients.length > 0,
+  });
+
+  // Mutation for identifying ingredients from image
+  const identifyIngredientsMutation = useMutation({
+    mutationFn: (file: File) => imageService.identifyIngredients(file),
+    onSuccess: (data) => {
+      setIngredients(prev => [...new Set([...prev, ...data])]);
+      toast({
+        title: "Ingredients detected",
+        description: `Found: ${data.join(", ")}`,
+      });
+      // Auto-search for recipes
+      findRecipesMutation.mutate(data);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error detecting ingredients",
+        description: error instanceof Error ? error.message : "Please try again with a clearer photo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for finding recipes
+  const findRecipesMutation = useMutation({
+    mutationFn: (ingredientList: string[]) => recipeService.getRecipesByIngredients(ingredientList),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/recipes/by-ingredients", ingredients], data);
+      toast({
+        title: `Found ${data.length} recipes`,
+        description: "Recipes that match your ingredients",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error finding recipes",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddIngredient = () => {
+    if (inputValue.trim()) {
+      const newIngredient = inputValue.trim();
+      if (!ingredients.includes(newIngredient)) {
+        setIngredients([...ingredients, newIngredient]);
+        setInputValue("");
+      }
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAddIngredient();
+    }
+  };
+
+  const handleRemoveIngredient = (ingredient: string) => {
+    setIngredients(ingredients.filter(i => i !== ingredient));
+  };
+
+  const handleFindRecipes = () => {
+    if (ingredients.length > 0) {
+      findRecipesMutation.mutate(ingredients);
+    } else {
+      toast({
+        title: "No ingredients added",
+        description: "Please add at least one ingredient",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleImageSelect = (file: File) => {
+    identifyIngredientsMutation.mutate(file);
+  };
+
+  return (
+    <div className="px-4 py-4">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold font-heading mb-2">What's In My Kitchen?</h2>
+        <p className="text-sm text-neutral-600">Find recipes based on ingredients you have available</p>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="type" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="w-full border-b border-neutral-200 mb-6 grid grid-cols-2">
+          <TabsTrigger value="type" className="py-2 px-4 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium text-sm">
+            Type Ingredients
+          </TabsTrigger>
+          <TabsTrigger value="photo" className="py-2 px-4 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium text-sm">
+            Snap Photo
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="type" className="mt-0">
+          <div className="mb-6">
+            <div className="relative mb-4">
+              <Input
+                type="text"
+                placeholder="Enter ingredients (e.g., eggs, spinach, cheese)"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full border border-neutral-300 rounded-lg py-3 px-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              />
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary"
+                onClick={handleAddIngredient}
+              >
+                <i className="ri-add-line"></i>
+              </button>
+            </div>
+
+            {/* Selected Ingredients */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {ingredients.map((ingredient, index) => (
+                <div key={index} className="bg-neutral-100 rounded-full py-1 px-3 text-sm flex items-center">
+                  {ingredient}
+                  <button
+                    className="ml-1 text-neutral-500"
+                    onClick={() => handleRemoveIngredient(ingredient)}
+                  >
+                    <i className="ri-close-line"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              className="w-full bg-primary text-white font-medium py-3 rounded-lg mb-4"
+              onClick={handleFindRecipes}
+              disabled={findRecipesMutation.isPending || ingredients.length === 0}
+            >
+              {findRecipesMutation.isPending ? (
+                <>
+                  <i className="ri-loader-4-line animate-spin mr-2"></i>
+                  Searching...
+                </>
+              ) : (
+                "Find Recipes"
+              )}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="photo" className="mt-0">
+          <ImageUploader
+            onImageSelect={handleImageSelect}
+            title="Snap a photo of your ingredients"
+            description="Take a clear photo of multiple ingredients together"
+            className="mb-6"
+          />
+          
+          {identifyIngredientsMutation.isPending && (
+            <div className="text-center py-4">
+              <i className="ri-loader-4-line animate-spin text-2xl text-primary mb-2"></i>
+              <p className="text-sm text-neutral-600">Analyzing ingredients...</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Results */}
+      {(loadingRecipes || findRecipesMutation.isPending) && (
+        <div className="py-4">
+          <h3 className="text-base font-semibold font-heading mb-3">Finding Recipes...</h3>
+          {Array(3).fill(0).map((_, index) => (
+            <div key={index} className="flex bg-white rounded-xl overflow-hidden shadow-sm mb-3 h-24">
+              <div className="w-1/3 bg-neutral-200 animate-pulse"></div>
+              <div className="w-2/3 p-3">
+                <div className="h-4 bg-neutral-200 rounded animate-pulse mb-2 w-3/4"></div>
+                <div className="h-3 bg-neutral-200 rounded animate-pulse w-1/2 mb-1"></div>
+                <div className="h-3 bg-neutral-200 rounded animate-pulse w-1/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {recipes && recipes.length > 0 && !loadingRecipes && !findRecipesMutation.isPending && (
+        <div>
+          <h3 className="text-base font-semibold font-heading mb-3">
+            Recipes with your ingredients ({recipes.length})
+          </h3>
+          <div className="grid grid-cols-1 gap-3">
+            {recipes.map((recipe: any) => (
+              <RecipeCardHorizontal
+                key={recipe.id}
+                id={recipe.id}
+                title={recipe.name}
+                image={recipe.image}
+                readyInMinutes={recipe.readyInMinutes}
+                calories={recipe.calories}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Example ingredient photos */}
+      {!recipes && !loadingRecipes && !findRecipesMutation.isPending && (
+        <div>
+          <h3 className="text-base font-semibold font-heading mb-3">Example Ingredients</h3>
+          <div className="overflow-x-auto hide-scrollbar snap-x flex gap-4 -mx-4 px-4">
+            <div className="snap-start rounded-xl overflow-hidden shadow-sm bg-white aspect-square min-w-[160px] max-w-[160px]">
+              <img 
+                src="https://images.unsplash.com/photo-1584473457409-2a40b9841397" 
+                alt="Vegetable spread" 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+            <div className="snap-start rounded-xl overflow-hidden shadow-sm bg-white aspect-square min-w-[160px] max-w-[160px]">
+              <img 
+                src="https://images.unsplash.com/photo-1567306226408-c02fe98d5b0e" 
+                alt="Fresh herbs and vegetables" 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+            <div className="snap-start rounded-xl overflow-hidden shadow-sm bg-white aspect-square min-w-[160px] max-w-[160px]">
+              <img 
+                src="https://images.unsplash.com/photo-1573246123716-6b1782bfc499" 
+                alt="Various raw meats and vegetables" 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default KitchenIngredients;

@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 220 14.3% 14.1%;
+  
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  
+  --primary: 17 100% 60%; /* FF6B35 */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 206 100% 27%; /* 004E89 */
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 120 50% 55%; /* 5CB85C */
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+  
+  --chart-1: 17 100% 60%;
+  --chart-2: 206 100% 27%;
+  --chart-3: 120 50% 55%;
+  --chart-4: 0 0% 60%;
+  --chart-5: 31 89% 50%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  
+  --primary: 17 100% 60%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 206 100% 27%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 120 50% 55%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --ring: 240 4.9% 83.9%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply font-sans antialiased bg-neutral-100 text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .chat-bubble {
+    @apply relative rounded-[1.15rem];
+  }
+  
+  .chat-bubble:after {
+    content: '';
+    @apply absolute -left-2 bottom-0 w-3 h-3 bg-neutral-100 rounded-br-xl;
+  }
+  
+  .chat-bubble-user {
+    @apply relative rounded-[1.15rem];
+  }
+  
+  .chat-bubble-user:after {
+    content: '';
+    @apply absolute -right-2 bottom-0 w-3 h-3 bg-secondary rounded-bl-xl;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
