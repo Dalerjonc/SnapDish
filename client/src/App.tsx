@@ -11,6 +11,7 @@ import RecipeDetail from "@/pages/RecipeDetail";
 import ChatAssistant from "@/pages/ChatAssistant";
 import PopularRecipes from "@/pages/PopularRecipes";
 import QuickRecipes from "@/pages/QuickRecipes";
+import Profile from "@/pages/Profile";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/chat/:recipeId" component={ChatAssistant} />
           <Route path="/popular-recipes" component={PopularRecipes} />
           <Route path="/quick-recipes" component={QuickRecipes} />
+          <Route path="/profile" component={Profile} />
           <Route component={NotFound} />
         </Switch>
       </main>

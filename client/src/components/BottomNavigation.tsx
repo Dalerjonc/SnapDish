@@ -17,22 +17,16 @@ const BottomNavigation = () => {
           <span className="text-xs mt-1">Home</span>
         </a>
       </Link>
-      <Link href="/popular-recipes">
-        <a className={`flex flex-col items-center p-2 ${isActive("/popular-recipes") ? "text-primary" : "text-neutral-500"}`}>
-          <i className="ri-fire-line text-xl"></i>
-          <span className="text-xs mt-1">Popular</span>
-        </a>
-      </Link>
-      <Link href="/quick-recipes">
-        <a className={`flex flex-col items-center p-2 ${isActive("/quick-recipes") ? "text-primary" : "text-neutral-500"}`}>
-          <i className="ri-time-line text-xl"></i>
-          <span className="text-xs mt-1">Quick</span>
-        </a>
-      </Link>
       <Link href="/chat">
         <a className={`flex flex-col items-center p-2 ${isActive("/chat") ? "text-primary" : "text-neutral-500"}`}>
           <i className="ri-message-3-line text-xl"></i>
           <span className="text-xs mt-1">AI Chat</span>
+        </a>
+      </Link>
+      <Link href="/profile">
+        <a className={`flex flex-col items-center p-2 ${isActive("/profile") ? "text-primary" : "text-neutral-500"}`}>
+          <i className="ri-user-line text-xl"></i>
+          <span className="text-xs mt-1">Profile</span>
         </a>
       </Link>
     </nav>
