@@ -30,7 +30,7 @@ const Home = () => {
             className="bg-primary/10 rounded-xl flex-1 flex flex-col items-center justify-center"
           >
             <div className="w-12 h-12 flex items-center justify-center bg-primary/20 text-primary rounded-full mb-1">
-              <i className="ri-camera-line text-xl"></i>
+              <i className="ri-camera-line text-2xl"></i>
             </div>
             <h3 className="text-base font-semibold">Identify Dish</h3>
             <p className="text-xs text-neutral-600">Snap a photo of any meal</p>
@@ -42,7 +42,7 @@ const Home = () => {
             className="bg-secondary/10 rounded-xl flex-1 flex flex-col items-center justify-center"
           >
             <div className="w-12 h-12 flex items-center justify-center bg-secondary/20 text-secondary rounded-full mb-1">
-              <i className="ri-refrigerator-line text-xl"></i>
+              <i className="ri-shopping-basket-2-line text-2xl"></i>
             </div>
             <h3 className="text-base font-semibold">What's in My Kitchen</h3>
             <p className="text-xs text-neutral-600">Find recipes based on what you have</p>
