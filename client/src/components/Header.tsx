@@ -16,9 +16,6 @@ const Header = () => {
           <button className="p-2 rounded-full hover:bg-neutral-100">
             <i className="ri-search-line text-neutral-600"></i>
           </button>
-          <button className="p-2 rounded-full hover:bg-neutral-100">
-            <i className="ri-user-line text-neutral-600"></i>
-          </button>
         </div>
       </div>
     </header>
