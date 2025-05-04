@@ -8,20 +8,18 @@ import RecipeCard from "@/components/RecipeCard";
 import { recipeService } from "@/lib/services";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
 
-const RecipeDetail = () => {
-  // Need to cast the route value to fix TypeScript issue with params access
-  const [route] = useRoute<{ id: string }>("/recipe/:id");
+const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   const [, navigate] = useLocation();
   
-  // Get ID parameter from the route
-  const idParam = route?.params?.id;
+  // Get ID parameter from the props
+  const idParam = params?.id;
   
   // Safely extract and parse the ID parameter
   const recipeId = idParam ? parseInt(idParam) : undefined;
   
   // Log the route parameters for debugging
   console.log("Recipe Detail Route:", { 
-    hasRoute: !!route, 
+    hasParams: !!params, 
     idParam,
     parsedId: recipeId 
   });

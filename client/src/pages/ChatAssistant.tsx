@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,18 +8,16 @@ import { chatService } from "@/lib/services";
 import { useToast } from "@/hooks/use-toast";
 import { ChatMessage as ChatMessageType, Recipe } from "@shared/schema";
 
-const ChatAssistant = () => {
+const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [routeRecipe] = useRoute<{ recipeId: string }>("/chat/:recipeId");
-  const [routeGeneral] = useRoute("/chat");
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
   // Using proper type checking for parameter parsing
-  const recipeId = routeRecipe?.params?.recipeId 
-    ? parseInt(routeRecipe.params.recipeId) 
+  const recipeId = params?.recipeId 
+    ? parseInt(params.recipeId) 
     : undefined;
     
   // Make sure we have a valid numeric ID
@@ -27,8 +25,7 @@ const ChatAssistant = () => {
   
   // Log the route information for debugging
   console.log("Chat Assistant Route:", {
-    hasRecipeRoute: !!routeRecipe,
-    hasGeneralRoute: !!routeGeneral,
+    hasParams: !!params,
     recipeId,
     validRecipeId
   });
