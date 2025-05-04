@@ -369,6 +369,133 @@ class MockRecipeApiService implements RecipeApiService {
       extendedIngredients: [],
       analyzedInstructions: [],
       created_at: new Date()
+    },
+    {
+      id: 12,
+      name: "Plov (Rice Pilaf)",
+      image: "https://images.unsplash.com/photo-1568716508386-cde42ce1d4b7",
+      readyInMinutes: 60,
+      servings: 6,
+      sourceUrl: "https://example.com/plov",
+      summary: "Central Asian rice pilaf with meat, carrots, and spices.",
+      instructions: "Sauté meat and onions. Add carrots and spices. Add rice and water. Cook until rice is tender.",
+      calories: 480,
+      protein: "24g",
+      carbs: "65g",
+      fat: "16g",
+      diets: ["dairy-free"],
+      extendedIngredients: [
+        {
+          id: 701,
+          name: "lamb",
+          amount: 1,
+          unit: "pound",
+          original: "1 pound lamb or beef, cubed"
+        },
+        {
+          id: 702,
+          name: "rice",
+          amount: 2,
+          unit: "cups",
+          original: "2 cups long-grain rice"
+        },
+        {
+          id: 703,
+          name: "carrots",
+          amount: 3,
+          unit: "",
+          original: "3 large carrots, julienned"
+        },
+        {
+          id: 704,
+          name: "onions",
+          amount: 2,
+          unit: "",
+          original: "2 large onions, sliced"
+        },
+        {
+          id: 705,
+          name: "garlic",
+          amount: 1,
+          unit: "head",
+          original: "1 whole head of garlic"
+        },
+        {
+          id: 706,
+          name: "cumin",
+          amount: 1,
+          unit: "teaspoon",
+          original: "1 teaspoon cumin"
+        }
+      ],
+      analyzedInstructions: [
+        {
+          name: "",
+          steps: [
+            {
+              number: 1,
+              step: "Heat oil in a large pot or Dutch oven over medium-high heat.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 2,
+              step: "Add meat and brown on all sides, about 5 minutes.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 3,
+              step: "Add sliced onions and cook until translucent, about 3 minutes.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 4,
+              step: "Add julienned carrots and cook for another 5 minutes, stirring occasionally.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 5,
+              step: "Add cumin, salt, and pepper. Stir well.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 6,
+              step: "Add rice and stir to coat with oil.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 7,
+              step: "Pour in hot water, enough to cover the rice by about 1 inch.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 8,
+              step: "Push the whole head of garlic into the center of the mixture.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 9,
+              step: "Bring to a boil, then reduce heat to low. Cover and simmer for 30-40 minutes until rice is tender.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 10,
+              step: "Remove from heat and let rest for 10 minutes before serving.",
+              ingredients: [],
+              equipment: []
+            }
+          ]
+        }
+      ],
+      created_at: new Date()
     }
   ];
 
@@ -418,13 +545,38 @@ class MockRecipeApiService implements RecipeApiService {
 
   async searchRecipeByName(query: string): Promise<Recipe> {
     // Search for recipes by name (case-insensitive, partial match)
-    const lowerQuery = query.toLowerCase();
-    const matchingRecipes = this.sampleRecipes.filter(recipe => 
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // First try: exact match or substring match
+    let matchingRecipes = this.sampleRecipes.filter(recipe => 
       recipe.name.toLowerCase().includes(lowerQuery)
     );
     
+    // Second try: Check if query contains recipe name (reverse match)
+    // This helps with cases where AI returns "Dish Name with details"
     if (matchingRecipes.length === 0) {
-      // If no direct match, throw an error to trigger proper error handling
+      matchingRecipes = this.sampleRecipes.filter(recipe => 
+        lowerQuery.includes(recipe.name.toLowerCase())
+      );
+    }
+    
+    // Third try: Split query and see if any word matches beginning of recipe names
+    // This helps with dishes like "Plov" matching "Plov (Rice Pilaf)"
+    if (matchingRecipes.length === 0) {
+      const queryWords = lowerQuery.split(/\s+|\(|\)|\./);
+      matchingRecipes = this.sampleRecipes.filter(recipe => {
+        const recipeName = recipe.name.toLowerCase();
+        return queryWords.some(word => 
+          word.length > 2 && (
+            recipeName.startsWith(word) || 
+            recipeName.includes(` ${word}`)
+          )
+        );
+      });
+    }
+    
+    if (matchingRecipes.length === 0) {
+      // If no match at all, throw an error to trigger proper error handling
       console.log(`No recipe found matching query: "${query}"`);
       throw new Error(`No recipe found matching query: "${query}"`);
     }
