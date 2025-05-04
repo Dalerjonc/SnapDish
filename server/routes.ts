@@ -50,8 +50,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid recipe ID" });
       }
 
-      const recipe = await recipeApiService.getRecipeById(id);
-      res.json(recipe);
+      try {
+        // First try to get from predefined recipes
+        const recipe = await recipeApiService.getRecipeById(id);
+        
+        if (recipe) {
+          console.log("Found recipe in database:", recipe.name);
+          return res.json(recipe);
+        }
+      } catch (dbError) {
+        console.log("Recipe not found in database, ID:", id);
+        
+        // If it's a high ID (above 1000), it's likely a dynamically generated recipe
+        if (id > 1000) {
+          // Get the dish name from query params
+          const dishName = req.query.name as string;
+          
+          if (dishName) {
+            console.log("Regenerating recipe with OpenAI for:", dishName);
+            
+            try {
+              // Generate the recipe data with OpenAI
+              const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(dishName);
+              
+              // Create a recipe object
+              const generatedRecipe = {
+                id: id, // Use the requested ID
+                name: openAIRecipeData.name || dishName,
+                image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
+                readyInMinutes: openAIRecipeData.readyInMinutes || 30,
+                servings: openAIRecipeData.servings || 4,
+                sourceUrl: "",
+                summary: openAIRecipeData.summary || `Recipe for ${dishName}`,
+                instructions: openAIRecipeData.instructions || "No instructions available",
+                calories: openAIRecipeData.calories || 0,
+                protein: openAIRecipeData.protein || "0g",
+                carbs: openAIRecipeData.carbs || "0g",
+                fat: openAIRecipeData.fat || "0g",
+                diets: openAIRecipeData.diets || [],
+                extendedIngredients: openAIRecipeData.extendedIngredients || [],
+                analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
+                  name: "",
+                  steps: [
+                    {
+                      number: 1,
+                      step: "No detailed instructions available",
+                      ingredients: [],
+                      equipment: []
+                    }
+                  ]
+                }],
+                created_at: new Date()
+              };
+              
+              return res.json(generatedRecipe);
+            } catch (openaiError) {
+              console.error("Error generating recipe with OpenAI:", openaiError);
+            }
+          }
+        }
+      }
+      
+      // If we get here, we couldn't find or generate the recipe
+      return res.status(404).json({ message: "Recipe not found" });
     } catch (error) {
       console.error("Error fetching recipe:", error);
       res.status(500).json({ message: "Error fetching recipe details" });
@@ -97,50 +158,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // First try to find recipe in our database
-        let recipe;
+        // Always generate recipe with OpenAI directly - no database lookup
+        console.log("Generating recipe with OpenAI for:", detectedDish);
         
-        try {
-          console.log("Trying to find recipe in database:", detectedDish);
-          recipe = await recipeApiService.searchRecipeByName(detectedDish);
-          console.log("Found recipe in database:", recipe.name);
-        } catch (dbError) {
-          console.log("Recipe not found in database, generating with OpenAI...");
-          
-          // If not found in database, generate recipe with OpenAI
-          const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
-          console.log("Generated recipe with OpenAI:", openAIRecipeData.name);
-          
-          // Convert OpenAI recipe to our format
-          recipe = {
-            id: Math.floor(Math.random() * 10000) + 1000, // Generate a random ID
-            name: openAIRecipeData.name || detectedDish,
-            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
-            readyInMinutes: openAIRecipeData.readyInMinutes || 30,
-            servings: openAIRecipeData.servings || 4,
-            sourceUrl: "",
-            summary: openAIRecipeData.summary || `Recipe for ${detectedDish}`,
-            instructions: openAIRecipeData.instructions || "No instructions available",
-            calories: openAIRecipeData.calories || 0,
-            protein: openAIRecipeData.protein || "0g",
-            carbs: openAIRecipeData.carbs || "0g",
-            fat: openAIRecipeData.fat || "0g",
-            diets: openAIRecipeData.diets || [],
-            extendedIngredients: openAIRecipeData.extendedIngredients || [],
-            analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
-              name: "",
-              steps: [
-                {
-                  number: 1,
-                  step: "No detailed instructions available",
-                  ingredients: [],
-                  equipment: []
-                }
-              ]
-            }],
-            created_at: new Date()
-          };
-        }
+        // Generate recipe with OpenAI
+        const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
+        console.log("Generated recipe with OpenAI:", openAIRecipeData.name || detectedDish);
+        
+        // Convert OpenAI recipe to our format
+        const recipe = {
+          id: Math.floor(Math.random() * 10000) + 1000, // Generate a random ID
+          name: openAIRecipeData.name || detectedDish,
+          image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
+          readyInMinutes: openAIRecipeData.readyInMinutes || 30,
+          servings: openAIRecipeData.servings || 4,
+          sourceUrl: "",
+          summary: openAIRecipeData.summary || `Recipe for ${detectedDish}`,
+          instructions: openAIRecipeData.instructions || "No instructions available",
+          calories: openAIRecipeData.calories || 0,
+          protein: openAIRecipeData.protein || "0g",
+          carbs: openAIRecipeData.carbs || "0g",
+          fat: openAIRecipeData.fat || "0g",
+          diets: openAIRecipeData.diets || [],
+          extendedIngredients: openAIRecipeData.extendedIngredients || [],
+          analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
+            name: "",
+            steps: [
+              {
+                number: 1,
+                step: "No detailed instructions available",
+                ingredients: [],
+                equipment: []
+              }
+            ]
+          }],
+          created_at: new Date()
+        };
         
         // Check if we got a valid recipe with all required fields
         if (!recipe || !recipe.id || !recipe.name) {

@@ -25,7 +25,8 @@ const IdentifyDish = () => {
         // Check if we have a valid ID and use toString() to convert it safely for the URL
         const recipeId = data.id.toString();
         console.log("Navigating to recipe with ID:", recipeId);
-        navigate(`/recipe/${recipeId}`);
+        // Include dish name in the URL for dynamic recipe generation
+        navigate(`/recipe/${recipeId}?name=${encodeURIComponent(data.name)}`);
       } else {
         console.error("Invalid recipe data received:", data);
         toast({
