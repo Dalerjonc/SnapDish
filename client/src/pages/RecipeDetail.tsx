@@ -9,11 +9,12 @@ import { recipeService } from "@/lib/services";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
 
 const RecipeDetail = () => {
-  const [route] = useRoute("/recipe/:id");
+  // Need to cast the route value to fix TypeScript issue with params access
+  const [route] = useRoute<{ id: string }>("/recipe/:id");
   const [, navigate] = useLocation();
   
   // Get ID parameter from the route
-  const idParam = route?.params?.id;
+  const idParam = route && route.params ? route.params.id : undefined;
   
   // Safely extract and parse the ID parameter
   const recipeId = idParam ? parseInt(idParam) : undefined;
@@ -21,8 +22,7 @@ const RecipeDetail = () => {
   // Log the route parameters for debugging
   console.log("Recipe Detail Route:", { 
     hasRoute: !!route, 
-    params: route?.params, 
-    id: idParam,
+    idParam,
     parsedId: recipeId 
   });
   
@@ -32,16 +32,39 @@ const RecipeDetail = () => {
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
 
-  // Get recipe details
-  const { data: recipe, isLoading } = useQuery<Recipe>({
+  // Get recipe details - custom fetcher to debug issues
+  const { data: recipe, isLoading, error } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${validRecipeId}`],
+    queryFn: async () => {
+      console.log("Fetching recipe with ID:", validRecipeId);
+      try {
+        const response = await fetch(`/api/recipes/${validRecipeId}`, {
+          credentials: "include"
+        });
+        
+        console.log("Recipe API response status:", response.status);
+        
+        if (!response.ok) {
+          console.error("Recipe fetch error:", response.status, response.statusText);
+          throw new Error(`Recipe fetch failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log("Recipe data received:", data);
+        return data;
+      } catch (err) {
+        console.error("Recipe fetch exception:", err);
+        throw err;
+      }
+    },
     enabled: !!validRecipeId,
+    retry: 1,
   });
 
   // Get similar recipes
   const { data: similarRecipes, isLoading: loadingSimilar } = useQuery<Recipe[]>({
     queryKey: [`/api/recipes/${validRecipeId}/similar`],
-    enabled: !!validRecipeId,
+    enabled: !!validRecipeId && !!recipe,
   });
 
   const handleBack = () => {

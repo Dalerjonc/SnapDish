@@ -12,13 +12,13 @@ const ChatAssistant = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [routeRecipe] = useRoute("/chat/:recipeId");
+  const [routeRecipe] = useRoute<{ recipeId: string }>("/chat/:recipeId");
   const [routeGeneral] = useRoute("/chat");
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  // Using optional chaining for parameter parsing
-  const recipeId = routeRecipe?.params?.recipeId
+  // Using proper type checking for parameter parsing
+  const recipeId = routeRecipe && routeRecipe.params 
     ? parseInt(routeRecipe.params.recipeId) 
     : undefined;
     
@@ -29,7 +29,6 @@ const ChatAssistant = () => {
   console.log("Chat Assistant Route:", {
     hasRecipeRoute: !!routeRecipe,
     hasGeneralRoute: !!routeGeneral,
-    params: routeRecipe?.params,
     recipeId,
     validRecipeId
   });
