@@ -19,8 +19,8 @@ const BottomNavigation = () => {
       </Link>
       <Link href="/chat">
         <a className={`flex flex-col items-center p-2 ${isActive("/chat") ? "text-primary" : "text-neutral-500"}`}>
-          <i className="ri-message-3-line text-xl"></i>
-          <span className="text-xs mt-1">AI Chat</span>
+          <i className="ri-restaurant-2-line text-xl"></i>
+          <span className="text-xs mt-1">AI Chef</span>
         </a>
       </Link>
       <Link href="/profile">
