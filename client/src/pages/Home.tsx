@@ -33,7 +33,7 @@ const Home = () => {
               <i className="ri-camera-line text-2xl"></i>
             </div>
             <h3 className="text-base font-semibold">Identify Dish</h3>
-            <p className="text-xs text-neutral-600">Snap a photo of any meal</p>
+            <p className="text-xs text-neutral-600">Snap a photo of any meal to get the recipe</p>
           </a>
           
           {/* What's in My Kitchen - Full Width */}
@@ -45,7 +45,7 @@ const Home = () => {
               <i className="ri-shopping-basket-2-line text-2xl"></i>
             </div>
             <h3 className="text-base font-semibold">What's in My Kitchen</h3>
-            <p className="text-xs text-neutral-600">Find recipes based on what you have</p>
+            <p className="text-xs text-neutral-600">Add ingredients you have — we'll suggest recipes you can cook!</p>
           </a>
         </div>
 
