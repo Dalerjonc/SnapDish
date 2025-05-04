@@ -18,7 +18,7 @@ const ChatAssistant = () => {
   const { toast } = useToast();
 
   // Using proper type checking for parameter parsing
-  const recipeId = routeRecipe && routeRecipe.params 
+  const recipeId = routeRecipe?.params?.recipeId 
     ? parseInt(routeRecipe.params.recipeId) 
     : undefined;
     

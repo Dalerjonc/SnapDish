@@ -14,7 +14,7 @@ const RecipeDetail = () => {
   const [, navigate] = useLocation();
   
   // Get ID parameter from the route
-  const idParam = route && route.params ? route.params.id : undefined;
+  const idParam = route?.params?.id;
   
   // Safely extract and parse the ID parameter
   const recipeId = idParam ? parseInt(idParam) : undefined;
@@ -26,7 +26,7 @@ const RecipeDetail = () => {
     parsedId: recipeId 
   });
   
-  // Make sure we have a valid numeric ID - this will throw a 404 if id is not a valid number
+  // Make sure we have a valid numeric ID
   const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : null;
   
   if (!validRecipeId) {
