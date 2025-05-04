@@ -17,6 +17,130 @@ class MockRecipeApiService implements RecipeApiService {
   // Sample recipes data
   private readonly sampleRecipes: Recipe[] = [
     {
+      id: 15,
+      name: "Shurpa",
+      image: "https://images.unsplash.com/photo-1609501676725-7186f017a4b5",
+      readyInMinutes: 120,
+      servings: 6,
+      sourceUrl: "https://example.com/shurpa",
+      summary: "Shurpa is a traditional Uzbek and Central Asian soup or stew made with meat (usually lamb) and vegetables. It's aromatic, hearty, and perfect for cold days.",
+      instructions: "Brown meat with onions. Add spices, then add water and vegetables. Simmer until meat is tender and soup is flavorful.",
+      calories: 420,
+      protein: "32g",
+      carbs: "18g",
+      fat: "22g",
+      diets: [],
+      extendedIngredients: [
+        {
+          id: 901,
+          name: "lamb",
+          amount: 1,
+          unit: "kg",
+          original: "1 kg lamb meat, cut into chunks"
+        },
+        {
+          id: 902,
+          name: "onions",
+          amount: 2,
+          unit: "large",
+          original: "2 large onions, chopped"
+        },
+        {
+          id: 903,
+          name: "carrots",
+          amount: 3,
+          unit: "medium",
+          original: "3 medium carrots, cut into chunks"
+        },
+        {
+          id: 904,
+          name: "potatoes",
+          amount: 4,
+          unit: "medium",
+          original: "4 medium potatoes, quartered"
+        },
+        {
+          id: 905,
+          name: "bell peppers",
+          amount: 2,
+          unit: "medium",
+          original: "2 medium bell peppers, cut into chunks"
+        },
+        {
+          id: 906,
+          name: "garlic",
+          amount: 4,
+          unit: "cloves",
+          original: "4 cloves garlic, minced"
+        },
+        {
+          id: 907,
+          name: "cumin",
+          amount: 2,
+          unit: "tsp",
+          original: "2 tsp ground cumin"
+        },
+        {
+          id: 908,
+          name: "coriander",
+          amount: 1,
+          unit: "tsp",
+          original: "1 tsp ground coriander"
+        },
+        {
+          id: 909,
+          name: "fresh herbs",
+          amount: 1,
+          unit: "bunch",
+          original: "Fresh cilantro and dill for garnish"
+        }
+      ],
+      analyzedInstructions: [
+        {
+          name: "",
+          steps: [
+            {
+              number: 1,
+              step: "Heat oil in a large pot or dutch oven. Add lamb chunks and brown on all sides, about 5-7 minutes.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 2,
+              step: "Add chopped onions to the pot and sauté until soft and translucent, about 3-4 minutes.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 3,
+              step: "Add minced garlic, cumin, and coriander. Stir and cook for 1 minute until fragrant.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 4,
+              step: "Pour in 8-10 cups of water or broth. Bring to a boil, then reduce heat and simmer for 1 hour or until meat is becoming tender.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 5,
+              step: "Add carrots, potatoes, and bell peppers to the pot. Continue simmering for another 30-40 minutes until vegetables are tender and meat is fully cooked.",
+              ingredients: [],
+              equipment: []
+            },
+            {
+              number: 6,
+              step: "Season with salt and black pepper to taste. Garnish with fresh herbs before serving.",
+              ingredients: [],
+              equipment: []
+            }
+          ]
+        }
+      ],
+      created_at: new Date()
+    },
+    {
       id: 1,
       name: "Pasta with Tomato Sauce",
       image: "https://images.unsplash.com/photo-1548940740-204726a19be3",
