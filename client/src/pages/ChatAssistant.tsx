@@ -17,7 +17,8 @@ const ChatAssistant = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const recipeId = routeRecipe?.params.recipeId 
+  // Added more robust parameter parsing
+  const recipeId = routeRecipe && routeRecipe.params && routeRecipe.params.recipeId 
     ? parseInt(routeRecipe.params.recipeId) 
     : undefined;
 

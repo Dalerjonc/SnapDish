@@ -6,12 +6,14 @@ import IngredientItem from "@/components/IngredientItem";
 import InstructionStep from "@/components/InstructionStep";
 import RecipeCard from "@/components/RecipeCard";
 import { recipeService } from "@/lib/services";
-import { AnalyzedInstruction } from "@shared/schema";
+import { AnalyzedInstruction, Recipe } from "@shared/schema";
 
 const RecipeDetail = () => {
   const [route] = useRoute("/recipe/:id");
   const [, navigate] = useLocation();
-  const recipeId = route?.params.id ? parseInt(route.params.id) : undefined;
+  
+  // Added a safer way to parse the ID parameter
+  const recipeId = route && route.params && route.params.id ? parseInt(route.params.id) : undefined;
 
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
