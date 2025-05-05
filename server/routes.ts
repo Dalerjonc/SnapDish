@@ -21,9 +21,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   app.use("/api", express.json());
   
+  // Create a separate router just for recipe routes to better control their order
+  const recipesRouter = express.Router();
+  
   // Popular and quick recipes (home screen)
-  // Make sure all the specific routes (not using :id params) come first
-  app.get("/api/recipes/popular", async (req, res) => {
+  // Static routes come first
+  recipesRouter.get("/popular", async (req, res) => {
     try {
       const recipes = await recipeApiService.getPopularRecipes();
       res.json(recipes);
@@ -33,7 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recipes/quick", async (req, res) => {
+  recipesRouter.get("/quick", async (req, res) => {
     try {
       const recipes = await recipeApiService.getQuickRecipes();
       res.json(recipes);
@@ -44,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get saved recipes
-  app.get("/api/recipes/saved", async (req, res) => {
+  recipesRouter.get("/saved", async (req, res) => {
     try {
       // For simplicity, using a mock user ID since we don't have authentication
       const userId = 1;
@@ -58,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Search recipes by name - IMPORTANT: This must come before the :id route
-  app.get("/api/recipes/search", async (req, res) => {
+  recipesRouter.get("/search", async (req, res) => {
     try {
       const query = req.query.query as string;
       
@@ -137,8 +140,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Now add the parameter routes
+  
   // Get recipe details
-  app.get("/api/recipes/:id", async (req, res) => {
+  recipesRouter.get("/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -219,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get similar recipes
-  app.get("/api/recipes/:id/similar", async (req, res) => {
+  recipesRouter.get("/:id/similar", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -235,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Identify dish from photo
-  app.post("/api/recipes/identify", upload.single("image"), async (req, res) => {
+  recipesRouter.post("/identify", upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
@@ -330,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get recipes by ingredients
-  app.post("/api/recipes/by-ingredients", async (req, res) => {
+  recipesRouter.post("/by-ingredients", async (req, res) => {
     try {
       const { ingredients } = ingredientsSearchSchema.parse(req.body);
       
@@ -377,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save recipe
-  app.post("/api/recipes/:id/save", async (req, res) => {
+  recipesRouter.post("/:id/save", async (req, res) => {
     try {
       const recipeId = parseInt(req.params.id);
       if (isNaN(recipeId)) {
@@ -396,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Remove saved recipe
-  app.delete("/api/recipes/:id/save", async (req, res) => {
+  recipesRouter.delete("/:id/save", async (req, res) => {
     try {
       const recipeId = parseInt(req.params.id);
       if (isNaN(recipeId)) {
@@ -413,9 +418,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error removing saved recipe" });
     }
   });
+  
+  // Mount the recipes router
+  app.use("/api/recipes", recipesRouter);
+  
+  // Create a chat router for all chat-related endpoints
+  const chatRouter = express.Router();
 
   // Chat with AI
-  app.post("/api/chat", async (req, res) => {
+  chatRouter.post("/", async (req, res) => {
     try {
       const { message, recipeId } = chatMessageSchema.parse(req.body);
       
@@ -461,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get chat history
-  app.get("/api/chat/history", async (req, res) => {
+  chatRouter.get("/history", async (req, res) => {
     try {
       // For simplicity, using a mock user ID since we don't have authentication
       const userId = 1;
@@ -473,6 +484,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching chat history" });
     }
   });
+  
+  // Mount the chat router
+  app.use("/api/chat", chatRouter);
+  
+  // Create an ingredients router
+  const ingredientsRouter = express.Router();
+  
+  // Identify ingredients from photo
+  ingredientsRouter.post("/identify", upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image uploaded" });
+      }
+
+      console.log("Processing image for ingredients identification...");
+      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
+      
+      // Get image buffer
+      const imageBuffer = req.file.buffer;
+      
+      // Identify ingredients using image recognition
+      const ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
+      
+      if (!ingredients || ingredients.length === 0) {
+        return res.status(404).json({ message: "Could not identify any ingredients in the image" });
+      }
+      
+      res.json(ingredients);
+    } catch (error) {
+      console.error("Error identifying ingredients:", error);
+      res.status(500).json({ message: "Error processing image" });
+    }
+  });
+  
+  // Mount the ingredients router
+  app.use("/api/ingredients", ingredientsRouter);
 
   const httpServer = createServer(app);
   
