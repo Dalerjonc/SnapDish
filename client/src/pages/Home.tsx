@@ -12,6 +12,46 @@ const Home = () => {
     queryKey: ["/api/recipes/quick"],
   });
 
+  // Loading skeleton for the home page
+  const renderSkeletonHome = () => (
+    <div className="h-[calc(100vh-140px)] flex flex-col px-4 py-3 animate-pulse">
+      {/* Hero Banner Skeleton */}
+      <div className="bg-neutral-200 rounded-xl p-3 mb-3 h-14"></div>
+
+      {/* Main Container - Skeleton */}
+      <div className="flex flex-col h-full">
+        {/* Main Options - Big Buttons Skeleton */}
+        <div className="flex flex-col gap-3 flex-grow mb-3">
+          {/* Identify Dish - Skeleton */}
+          <div className="bg-neutral-200 rounded-xl flex-1 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 bg-neutral-300 rounded-full mb-2"></div>
+            <div className="h-4 bg-neutral-300 rounded-lg w-1/3 mb-1"></div>
+            <div className="h-3 bg-neutral-300 rounded-lg w-1/2"></div>
+          </div>
+          
+          {/* What's in My Kitchen - Skeleton */}
+          <div className="bg-neutral-200 rounded-xl flex-1 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 bg-neutral-300 rounded-full mb-2"></div>
+            <div className="h-4 bg-neutral-300 rounded-lg w-2/5 mb-1"></div>
+            <div className="h-3 bg-neutral-300 rounded-lg w-3/5"></div>
+          </div>
+        </div>
+
+        {/* Category Buttons - Skeleton */}
+        <div className="grid grid-cols-2 gap-3 h-16">
+          <div className="bg-neutral-200 rounded-xl flex items-center justify-center h-full"></div>
+          <div className="bg-neutral-200 rounded-xl flex items-center justify-center h-full"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Display loading state
+  if (loadingPopular || loadingQuick) {
+    return renderSkeletonHome();
+  }
+
+  // Actual rendered UI
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col px-4 py-3">
       {/* Hero Banner - Compact Version */}

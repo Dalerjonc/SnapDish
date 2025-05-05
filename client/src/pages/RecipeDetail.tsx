@@ -113,25 +113,92 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   if (isLoading) {
     return (
       <div className="animate-pulse">
-        <div className="h-64 bg-neutral-200"></div>
-        <div className="px-4 py-5">
-          <div className="h-8 bg-neutral-200 rounded mb-2"></div>
-          <div className="h-4 bg-neutral-200 rounded w-3/4 mb-4"></div>
-          <div className="flex space-x-4 mb-4">
-            <div className="h-6 bg-neutral-200 rounded w-1/4"></div>
-            <div className="h-6 bg-neutral-200 rounded w-1/4"></div>
-            <div className="h-6 bg-neutral-200 rounded w-1/4"></div>
+        {/* Header and image area */}
+        <div className="relative">
+          <div className="h-64 bg-neutral-200"></div>
+          <div className="absolute top-4 left-4">
+            <div className="bg-white/80 backdrop-blur-sm p-2 rounded-full w-10 h-10"></div>
           </div>
-          <div className="bg-neutral-100 rounded-xl p-4 mb-6 h-32"></div>
+          <div className="absolute top-4 right-4 flex space-x-2">
+            <div className="bg-white/80 backdrop-blur-sm p-2 rounded-full w-10 h-10"></div>
+            <div className="bg-white/80 backdrop-blur-sm p-2 rounded-full w-10 h-10"></div>
+          </div>
+        </div>
+        
+        {/* Content area */}
+        <div className="px-4 py-5">
+          {/* Title */}
+          <div className="h-8 bg-neutral-200 rounded-lg mb-2 w-3/4"></div>
+          <div className="h-4 bg-neutral-200 rounded-lg w-1/2 mb-4"></div>
+          
+          {/* Recipe info metrics */}
+          <div className="flex space-x-4 mb-6">
+            <div className="h-6 bg-neutral-200 rounded-lg w-1/4"></div>
+            <div className="h-6 bg-neutral-200 rounded-lg w-1/4"></div>
+            <div className="h-6 bg-neutral-200 rounded-lg w-1/4"></div>
+          </div>
+          
+          {/* Nutrition box */}
+          <div className="bg-neutral-100 rounded-xl p-4 mb-6">
+            <div className="h-5 bg-neutral-200 rounded-lg w-1/2 mb-3"></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-4 bg-neutral-200 rounded-lg"></div>
+              <div className="h-4 bg-neutral-200 rounded-lg"></div>
+              <div className="h-4 bg-neutral-200 rounded-lg"></div>
+              <div className="h-4 bg-neutral-200 rounded-lg"></div>
+            </div>
+          </div>
+          
+          {/* Ingredients section */}
           <div className="mb-6">
-            <div className="h-6 bg-neutral-200 rounded mb-3"></div>
-            <div className="space-y-2">
+            <div className="h-6 bg-neutral-200 rounded-lg mb-3 w-1/3"></div>
+            <div className="space-y-3">
               {Array(5).fill(0).map((_, i) => (
+                <div key={i} className="h-5 bg-neutral-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Instructions section */}
+          <div className="mb-6">
+            <div className="h-6 bg-neutral-200 rounded-lg mb-3 w-1/2"></div>
+            <div className="space-y-6">
+              {Array(3).fill(0).map((_, i) => (
                 <div key={i} className="flex items-start">
-                  <div className="h-6 w-6 rounded-md bg-neutral-200 mr-3"></div>
-                  <div className="h-6 bg-neutral-200 rounded w-2/3"></div>
+                  <div className="h-8 w-8 rounded-full bg-neutral-200 mr-3 flex-shrink-0"></div>
+                  <div className="space-y-2 w-full">
+                    <div className="h-4 bg-neutral-200 rounded-lg w-full"></div>
+                    <div className="h-4 bg-neutral-200 rounded-lg w-11/12"></div>
+                    <div className="h-4 bg-neutral-200 rounded-lg w-4/5"></div>
+                  </div>
                 </div>
               ))}
+            </div>
+          </div>
+          
+          {/* AI Assistant button */}
+          <div className="mb-6">
+            <div className="h-12 bg-neutral-200 rounded-lg w-full"></div>
+          </div>
+          
+          {/* Similar recipes */}
+          <div>
+            <div className="h-6 bg-neutral-200 rounded-lg mb-3 w-2/5"></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-neutral-100 rounded-xl overflow-hidden">
+                <div className="bg-neutral-200 aspect-square w-full"></div>
+                <div className="p-2">
+                  <div className="h-4 bg-neutral-200 rounded-lg mb-1"></div>
+                  <div className="h-3 bg-neutral-200 rounded-lg w-2/3"></div>
+                </div>
+              </div>
+              <div className="bg-neutral-100 rounded-xl overflow-hidden">
+                <div className="bg-neutral-200 aspect-square w-full"></div>
+                <div className="p-2">
+                  <div className="h-4 bg-neutral-200 rounded-lg mb-1"></div>
+                  <div className="h-3 bg-neutral-200 rounded-lg w-2/3"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -232,18 +299,18 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
         <div className="mb-6">
           <h3 className="text-lg font-semibold font-heading mb-3">Ingredients</h3>
           <ul className="space-y-2">
-            {recipe.extendedIngredients && recipe.extendedIngredients.length > 0 ? (
+            {recipe.extendedIngredients && Array.isArray(recipe.extendedIngredients) && recipe.extendedIngredients.length > 0 ? (
               recipe.extendedIngredients.map((ingredient, index) => (
                 <IngredientItem
                   key={index}
-                  name={ingredient.name}
-                  amount={ingredient.amount}
-                  unit={ingredient.unit}
-                  original={ingredient.original}
+                  name={ingredient.name || ""}
+                  amount={typeof ingredient.amount === 'number' ? ingredient.amount : undefined}
+                  unit={ingredient.unit || ""}
+                  original={ingredient.original || ingredient.name || ""}
                 />
               ))
             ) : (
-              <li>No ingredients information available</li>
+              <li className="text-neutral-600">No ingredients information available</li>
             )}
           </ul>
         </div>
@@ -251,19 +318,28 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
         {/* Instructions */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold font-heading mb-3">Cooking Steps</h3>
-          {recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0 ? (
+          {recipe.analyzedInstructions && Array.isArray(recipe.analyzedInstructions) && recipe.analyzedInstructions.length > 0 ? (
             <ol className="space-y-4">
               {recipe.analyzedInstructions.flatMap((instruction: AnalyzedInstruction) =>
-                instruction.steps.map((step, index) => (
-                  <InstructionStep
-                    key={index}
-                    number={step.number}
-                    step={step.step}
-                    ingredients={step.ingredients}
-                    equipment={step.equipment}
-                  />
-                ))
+                instruction && instruction.steps && Array.isArray(instruction.steps) 
+                  ? instruction.steps.map((step, index) => (
+                      <InstructionStep
+                        key={index}
+                        number={step.number}
+                        step={step.step}
+                        ingredients={step.ingredients}
+                        equipment={step.equipment}
+                      />
+                    ))
+                  : []
               )}
+            </ol>
+          ) : recipe.instructions ? (
+            <ol className="space-y-4">
+              <li className="flex items-start">
+                <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">1</div>
+                <p className="text-neutral-700">{recipe.instructions}</p>
+              </li>
             </ol>
           ) : (
             <p className="text-neutral-600">No detailed instructions available</p>

@@ -206,17 +206,27 @@ const KitchenIngredients = () => {
       {/* Results */}
       {(loadingRecipes || findRecipesMutation.isPending) && (
         <div className="py-4">
-          <h3 className="text-base font-semibold font-heading mb-3">Finding Recipes...</h3>
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="h-6 bg-neutral-200 rounded-lg animate-pulse w-2/3"></div>
+            <div className="h-6 w-6 bg-neutral-200 rounded-full animate-pulse"></div>
+          </div>
           {Array(3).fill(0).map((_, index) => (
             <div key={index} className="flex bg-white rounded-xl overflow-hidden shadow-sm mb-3 h-24">
               <div className="w-1/3 bg-neutral-200 animate-pulse"></div>
               <div className="w-2/3 p-3">
-                <div className="h-4 bg-neutral-200 rounded animate-pulse mb-2 w-3/4"></div>
-                <div className="h-3 bg-neutral-200 rounded animate-pulse w-1/2 mb-1"></div>
-                <div className="h-3 bg-neutral-200 rounded animate-pulse w-1/3"></div>
+                <div className="h-4 bg-neutral-200 rounded-lg animate-pulse mb-2 w-3/4"></div>
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/4"></div>
+                  <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/4"></div>
+                </div>
+                <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/3"></div>
               </div>
             </div>
           ))}
+          {/* Loading progress indicator */}
+          <div className="w-full h-1 bg-neutral-200 rounded-full overflow-hidden mt-4">
+            <div className="h-full w-[40%] bg-primary absolute animate-progress-indeterminate"></div>
+          </div>
         </div>
       )}
 
