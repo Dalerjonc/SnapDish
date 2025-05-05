@@ -145,59 +145,161 @@ class MockImageRecognitionService implements ImageRecognitionService {
   }
 }
 
+// Import Google Vision API
+import * as vision from '@google-cloud/vision';
+
+// Food-related categories for filtering Vision API results
+const FOOD_CATEGORIES = [
+  'food', 'dish', 'cuisine', 'meal', 'recipe', 'ingredient', 'breakfast', 'lunch', 'dinner',
+  'appetizer', 'dessert', 'snack', 'fruit', 'vegetable', 'meat', 'seafood', 'pasta', 'rice', 
+  'sandwich', 'salad', 'soup', 'baked goods', 'bread', 'cake', 'pie', 'cookie', 'pastry'
+];
+
 class GoogleVisionImageRecognitionService implements ImageRecognitionService {
+  private visionClient: vision.ImageAnnotatorClient | null = null;
+  private mockService: MockImageRecognitionService;
+
+  constructor() {
+    try {
+      // Initialize Google Vision client
+      this.visionClient = new vision.ImageAnnotatorClient();
+      console.log("Google Vision client initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize Google Vision client:", error);
+      this.visionClient = null;
+    }
+    
+    // Initialize mock service as fallback
+    this.mockService = new MockImageRecognitionService();
+  }
+
   async identifyDish(imageBuffer: Buffer): Promise<string | null> {
     try {
-      // This would be a real implementation using the Google Cloud Vision API
-      // First, we'd need to import the necessary clients:
-      // const vision = require('@google-cloud/vision');
-      // const client = new vision.ImageAnnotatorClient();
+      if (!this.visionClient) {
+        console.log("No Vision client available, using mock service");
+        return this.mockService.identifyDish(imageBuffer);
+      }
+
+      // Call the Vision API to get annotations for the image
+      const [result] = await this.visionClient.labelDetection(imageBuffer);
+      const labels = result.labelAnnotations || [];
       
-      // Then encode the image and call the API:
-      // const [result] = await client.labelDetection(imageBuffer);
-      // const labels = result.labelAnnotations;
+      console.log("Vision API labels:", labels.map(l => `${l.description} (${l.score})`).join(', '));
       
-      // Process the labels to identify food items
-      // const foodLabels = labels.filter(label => foodCategories.includes(label.description));
+      // Filter for labels that are related to food
+      const foodLabels = labels.filter(label => {
+        const description = label.description?.toLowerCase() || '';
+        return FOOD_CATEGORIES.some(category => description.includes(category)) || 
+               (label.score !== null && label.score !== undefined && label.score > 0.8); // Include high confidence labels too
+      });
       
-      // Return the highest confidence food item
-      // return foodLabels.length > 0 ? foodLabels[0].description : null;
+      // If no food-related labels were found, check for generic objects
+      if (foodLabels.length === 0 && this.visionClient) {
+        console.log("No food labels found, using object detection");
+        const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
+        const objects = objectResult.localizedObjectAnnotations || [];
+        
+        console.log("Vision API objects:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+        
+        const foodObjects = objects.filter(obj => {
+          const name = obj.name?.toLowerCase() || '';
+          return FOOD_CATEGORIES.some(category => name.includes(category)) || 
+                 (obj.score !== null && obj.score !== undefined && obj.score > 0.8);
+        });
+        
+        if (foodObjects.length > 0) {
+          // Sort by score (highest first) and return the top result
+          foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
+          return foodObjects[0].name || null;
+        }
+      } else {
+        // Sort by score (highest first) and return the top result
+        foodLabels.sort((a, b) => (b.score || 0) - (a.score || 0));
+        return foodLabels[0].description || null;
+      }
       
-      // For now, we'll use the mock implementation
-      const mockService = new MockImageRecognitionService();
-      return mockService.identifyDish(imageBuffer);
+      console.log("No food items detected with Google Vision, using mock service");
+      return this.mockService.identifyDish(imageBuffer);
     } catch (error) {
       console.error("Error identifying dish with Google Vision:", error);
-      return null;
+      console.log("Falling back to mock service");
+      return this.mockService.identifyDish(imageBuffer);
     }
   }
 
   async identifyIngredients(imageBuffer: Buffer): Promise<string[]> {
     try {
-      // This would be a real implementation using the Google Cloud Vision API
-      // However, for now we'll use the mock implementation
-      const mockService = new MockImageRecognitionService();
-      return mockService.identifyIngredients(imageBuffer);
+      if (!this.visionClient) {
+        console.log("No Vision client available, using mock service");
+        return this.mockService.identifyIngredients(imageBuffer);
+      }
+      
+      // Use both label detection and object localization for better ingredient identification
+      const [labelResult] = await this.visionClient.labelDetection(imageBuffer);
+      const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
+      
+      const labels = labelResult.labelAnnotations || [];
+      const objects = objectResult.localizedObjectAnnotations || [];
+      
+      console.log("Vision API labels for ingredients:", labels.map(l => `${l.description} (${l.score})`).join(', '));
+      console.log("Vision API objects for ingredients:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+      
+      // Extract potential ingredients from labels
+      const ingredientsFromLabels = labels
+        .filter(label => (label.score !== null && label.score !== undefined && label.score > 0.6)) // Only consider labels with decent confidence
+        .map(label => label.description || "")
+        .filter(desc => desc.length > 0);
+      
+      // Extract potential ingredients from objects
+      const ingredientsFromObjects = objects
+        .filter(obj => (obj.score !== null && obj.score !== undefined && obj.score > 0.6)) // Only consider objects with decent confidence
+        .map(obj => obj.name || "")
+        .filter(name => name.length > 0);
+      
+      // Combine both sets and remove duplicates
+      const ingredientSet = new Set([...ingredientsFromLabels, ...ingredientsFromObjects]);
+      const allIngredients = Array.from(ingredientSet);
+      
+      // If we found ingredients, return them
+      if (allIngredients.length > 0) {
+        return allIngredients.slice(0, 10); // Limit to top 10 to avoid overwhelming results
+      }
+      
+      console.log("No ingredients detected with Google Vision, using mock service");
+      return this.mockService.identifyIngredients(imageBuffer);
     } catch (error) {
       console.error("Error identifying ingredients with Google Vision:", error);
-      return [];
+      console.log("Falling back to mock service");
+      return this.mockService.identifyIngredients(imageBuffer);
     }
   }
   
   async getRecipeAndNutrition(dishName: string): Promise<any> {
-    // Forward to mock implementation for now
-    const mockService = new MockImageRecognitionService();
-    return mockService.getRecipeAndNutrition(dishName);
+    // We'll continue to use the OpenAI service implementation for generating recipes and nutrition info
+    return this.mockService.getRecipeAndNutrition(dishName);
   }
 }
 
 // Import the OpenAI-based service
 import { OpenAIVisionImageRecognitionService } from './openaiImageRecognition';
 
-// Check if OpenAI API key is available
-const apiKey = process.env.OPENAI_API_KEY;
+// Check if API keys are available
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const googleApiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-// Export the appropriate service based on API key availability
-export const imageRecognitionService: ImageRecognitionService = apiKey 
-  ? new OpenAIVisionImageRecognitionService()
-  : new MockImageRecognitionService();
+// Determine which service to use based on available API keys
+let selectedService: ImageRecognitionService;
+
+if (googleApiKey) {
+  console.log("Using Google Cloud Vision for image recognition");
+  selectedService = new GoogleVisionImageRecognitionService();
+} else if (openaiApiKey) {
+  console.log("Using OpenAI Vision for image recognition");
+  selectedService = new OpenAIVisionImageRecognitionService();
+} else {
+  console.log("No API keys available, using mock image recognition service");
+  selectedService = new MockImageRecognitionService();
+}
+
+// Export the selected service
+export const imageRecognitionService: ImageRecognitionService = selectedService;
