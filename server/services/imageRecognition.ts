@@ -145,139 +145,49 @@ class MockImageRecognitionService implements ImageRecognitionService {
   }
 }
 
-// Import Google Vision API
-import * as vision from '@google-cloud/vision';
+// Import the Google Vision API helpers
+import * as googleVision from './googleVision';
 
-// Food-related categories for filtering Vision API results
-const FOOD_CATEGORIES = [
-  'food', 'dish', 'cuisine', 'meal', 'recipe', 'ingredient', 'breakfast', 'lunch', 'dinner',
-  'appetizer', 'dessert', 'snack', 'fruit', 'vegetable', 'meat', 'seafood', 'pasta', 'rice', 
-  'sandwich', 'salad', 'soup', 'baked goods', 'bread', 'cake', 'pie', 'cookie', 'pastry'
-];
-
-// Proper implementation of Google Vision API for image recognition
+// Implementation of Google Vision API for image recognition
 class GoogleVisionImageRecognitionService implements ImageRecognitionService {
-  private visionClient: vision.ImageAnnotatorClient | null = null;
   private mockService: MockImageRecognitionService;
+  private isGoogleVisionAvailable: boolean = false;
 
   constructor() {
     try {
-      // First try to use the service-account.json file in the project root
-      try {
-        // Create the client with the keyFilename option
-        this.visionClient = new vision.ImageAnnotatorClient({
-          keyFilename: './service-account.json'
+      // Test Google Vision API by analyzing a simple buffer
+      const testBuffer = Buffer.from('test');
+      googleVision.analyzeImage(testBuffer)
+        .then(() => {
+          console.log("Google Vision client successfully tested");
+          this.isGoogleVisionAvailable = true;
+        })
+        .catch(error => {
+          console.error("Google Vision client test failed:", error);
+          this.isGoogleVisionAvailable = false;
         });
-        
-        console.log("Google Vision client initialized with service-account.json file");
-      } catch (fileError) {
-        console.error("Failed to initialize with service-account.json:", fileError);
-        console.error("Error details:", fileError instanceof Error ? fileError.message : String(fileError));
-        
-        // Fall back to environment variable if available
-        const googleCredentials = process.env.GOOGLE_CREDENTIALS_JSON;
-        
-        if (googleCredentials) {
-          try {
-            // Check if the credentials start with '{' (indicating JSON)
-            if (googleCredentials.trim().startsWith('{')) {
-              // Parse the JSON credentials
-              const credentials = JSON.parse(googleCredentials);
-              
-              // Create the client with the credentials
-              this.visionClient = new vision.ImageAnnotatorClient({
-                credentials: credentials
-              });
-              
-              console.log("Google Vision client initialized with JSON credentials from env var");
-            } else {
-              // It's probably an API key, use it directly
-              this.visionClient = new vision.ImageAnnotatorClient({
-                apiKey: googleCredentials
-              });
-              
-              console.log("Google Vision client initialized with API key from env var");
-            }
-          } catch (jsonError) {
-            console.error("Failed to parse Google credentials:", jsonError);
-            console.error("Error details:", jsonError instanceof Error ? jsonError.message : String(jsonError));
-            this.visionClient = null;
-          }
-        } else {
-          console.log("No Google credentials available in environment");
-          this.visionClient = null;
-        }
-      }
     } catch (error) {
       console.error("Failed to initialize Google Vision client:", error);
-      console.error("Error details:", error instanceof Error ? error.message : String(error));
-      this.visionClient = null;
+      this.isGoogleVisionAvailable = false;
     }
     
     // Initialize mock service as fallback
     this.mockService = new MockImageRecognitionService();
     
-    // Log whether we're using the real service or fallback
-    if (this.visionClient) {
-      console.log("Google Vision client successfully initialized");
-    } else {
-      console.log("Google Vision client initialization failed, will use fallback service");
-    }
+    console.log("Google Vision Image Recognition Service initialized");
   }
 
   async identifyDish(imageBuffer: Buffer): Promise<string | null> {
     try {
-      if (!this.visionClient) {
-        console.log("No Vision client available, using mock service");
-        return this.mockService.identifyDish(imageBuffer);
-      }
-
-      // Call the Vision API to get annotations for the image
-      const [result] = await this.visionClient.labelDetection(imageBuffer);
-      const labels = result.labelAnnotations || [];
+      // Use Google Vision to identify the dish
+      const dishName = await googleVision.identifyDish(imageBuffer);
       
-      console.log("Vision API labels:", labels.map(l => `${l.description} (${l.score})`).join(', '));
-      
-      // Filter for labels that are related to food
-      const foodLabels = labels.filter(label => {
-        const description = label.description?.toLowerCase() || '';
-        return FOOD_CATEGORIES.some(category => description.includes(category)) || 
-               (label.score !== null && label.score !== undefined && label.score > 0.8); // Include high confidence labels too
-      });
-      
-      // If we found food labels, use them directly
-      if (foodLabels.length > 0) {
-        // Sort by score (highest first) and return the top result
-        foodLabels.sort((a, b) => (b.score || 0) - (a.score || 0));
-        return foodLabels[0].description || null;
+      if (dishName) {
+        console.log(`Google Vision identified dish: ${dishName}`);
+        return dishName;
       }
       
-      // If no food-related labels were found, check for generic objects
-      if (this.visionClient) {
-        try {
-          console.log("No food labels found, using object detection");
-          const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
-          const objects = objectResult.localizedObjectAnnotations || [];
-          
-          console.log("Vision API objects:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
-          
-          const foodObjects = objects.filter(obj => {
-            const name = obj.name?.toLowerCase() || '';
-            return FOOD_CATEGORIES.some(category => name.includes(category)) || 
-                  (obj.score !== null && obj.score !== undefined && obj.score > 0.8);
-          });
-          
-          if (foodObjects.length > 0) {
-            // Sort by score (highest first) and return the top result
-            foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
-            return foodObjects[0].name || null;
-          }
-        } catch (error) {
-          console.error("Error during object localization:", error);
-        }
-      }
-      
-      // If we haven't returned yet, use the mock service as a fallback
+      // Fall back to mock service if no dish was identified
       console.log("No food items detected with Google Vision, using mock service");
       return this.mockService.identifyDish(imageBuffer);
     } catch (error) {
@@ -289,46 +199,15 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
 
   async identifyIngredients(imageBuffer: Buffer): Promise<string[]> {
     try {
-      if (!this.visionClient) {
-        console.log("No Vision client available, using mock service");
-        return this.mockService.identifyIngredients(imageBuffer);
+      // Use Google Vision to identify ingredients
+      const ingredients = await googleVision.identifyIngredients(imageBuffer);
+      
+      if (ingredients && ingredients.length > 0) {
+        console.log(`Google Vision identified ingredients: ${ingredients.join(', ')}`);
+        return ingredients;
       }
       
-      // Use both label detection and object localization for better ingredient identification
-      try {
-        const [labelResult] = await this.visionClient.labelDetection(imageBuffer);
-        const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
-        
-        const labels = labelResult.labelAnnotations || [];
-        const objects = objectResult.localizedObjectAnnotations || [];
-        
-        console.log("Vision API labels for ingredients:", labels.map(l => `${l.description || 'unnamed'} (${l.score || 0})`).join(', '));
-        console.log("Vision API objects for ingredients:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
-        
-        // Extract potential ingredients from labels
-        const ingredientsFromLabels = labels
-          .filter(label => (label.score !== null && label.score !== undefined && label.score > 0.6)) // Only consider labels with decent confidence
-          .map(label => label.description || "")
-          .filter(desc => desc.length > 0);
-        
-        // Extract potential ingredients from objects
-        const ingredientsFromObjects = objects
-          .filter(obj => (obj.score !== null && obj.score !== undefined && obj.score > 0.6)) // Only consider objects with decent confidence
-          .map(obj => obj.name || "")
-          .filter(name => name.length > 0);
-        
-        // Combine both sets and remove duplicates
-        const ingredientSet = new Set([...ingredientsFromLabels, ...ingredientsFromObjects]);
-        const allIngredients = Array.from(ingredientSet);
-        
-        // If we found ingredients, return them
-        if (allIngredients.length > 0) {
-          return allIngredients.slice(0, 10); // Limit to top 10 to avoid overwhelming results
-        }
-      } catch (error) {
-        console.error("Error analyzing ingredients with Google Vision:", error);
-      }
-      
+      // Fall back to mock service if no ingredients were identified
       console.log("No ingredients detected with Google Vision, using mock service");
       return this.mockService.identifyIngredients(imageBuffer);
     } catch (error) {
