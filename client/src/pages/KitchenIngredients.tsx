@@ -162,7 +162,6 @@ const KitchenIngredients = () => {
                 {findRecipesMutation.isPending ? (
                   <>
                     <div className="flex items-center justify-center">
-                      <i className="ri-loader-4-line animate-spin mr-2"></i>
                       <span>Searching</span>
                       <span className="animate-pulse">...</span>
                     </div>
@@ -193,11 +192,12 @@ const KitchenIngredients = () => {
           
           {identifyIngredientsMutation.isPending && (
             <div className="text-center py-4 mb-2 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
-              </div>
-              <p className="text-sm font-medium text-primary">Analyzing ingredients with AI vision...</p>
+              <p className="text-sm font-medium text-primary">Analyzing ingredients with AI vision<span className="animate-pulse">...</span></p>
               <p className="text-xs text-neutral-600 mt-1">This might take a few seconds</p>
+              {/* Progress indicator */}
+              <div className="w-full h-1 bg-primary/10 rounded-full overflow-hidden mt-3 mx-auto max-w-xs">
+                <div className="h-full w-[40%] bg-primary absolute animate-progress-indeterminate"></div>
+              </div>
             </div>
           )}
         </TabsContent>

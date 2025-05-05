@@ -96,7 +96,6 @@ const IdentifyDish = () => {
             {identifyMutation.isPending ? (
               <>
                 <div className="flex items-center justify-center">
-                  <i className="ri-loader-4-line animate-spin mr-2"></i>
                   <span>Identifying</span>
                   <span className="animate-pulse">...</span>
                 </div>
