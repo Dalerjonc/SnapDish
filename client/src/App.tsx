@@ -12,6 +12,7 @@ import ChatAssistant from "@/pages/ChatAssistant";
 import PopularRecipes from "@/pages/PopularRecipes";
 import QuickRecipes from "@/pages/QuickRecipes";
 import Profile from "@/pages/Profile";
+import Search from "@/pages/Search";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 
@@ -30,6 +31,7 @@ function Router() {
           <Route path="/popular-recipes" component={PopularRecipes} />
           <Route path="/quick-recipes" component={QuickRecipes} />
           <Route path="/profile" component={Profile} />
+          <Route path="/search" component={Search} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -1,6 +1,12 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const Header = () => {
+  const [, setLocation] = useLocation();
+
+  const handleSearchClick = () => {
+    setLocation("/search");
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="px-4 py-3 flex items-center justify-between">
@@ -13,7 +19,11 @@ const Header = () => {
           </Link>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="p-2 rounded-full hover:bg-neutral-100">
+          <button 
+            onClick={handleSearchClick}
+            className="p-2 rounded-full hover:bg-neutral-100"
+            aria-label="Search for recipes"
+          >
             <i className="ri-search-line text-neutral-600"></i>
           </button>
         </div>
