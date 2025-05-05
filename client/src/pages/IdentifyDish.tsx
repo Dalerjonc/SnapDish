@@ -112,7 +112,7 @@ const IdentifyDish = () => {
           {/* Animated Progress Bar */}
           {identifyMutation.isPending && (
             <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
-              <div className="h-full bg-white animate-progress-indeterminate"></div>
+              <div className="h-full w-[40%] bg-white absolute animate-progress-indeterminate"></div>
             </div>
           )}
         </div>

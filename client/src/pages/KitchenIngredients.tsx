@@ -16,7 +16,7 @@ const KitchenIngredients = () => {
   const { toast } = useToast();
 
   // Query for recipes by ingredients
-  const { data: recipes, isLoading: loadingRecipes } = useQuery({
+  const { data: recipes = [], isLoading: loadingRecipes } = useQuery<any[]>({
     queryKey: ["/api/recipes/by-ingredients", ingredients],
     enabled: ingredients.length > 0,
   });
@@ -25,7 +25,11 @@ const KitchenIngredients = () => {
   const identifyIngredientsMutation = useMutation({
     mutationFn: (file: File) => imageService.identifyIngredients(file),
     onSuccess: (data) => {
-      setIngredients(prev => [...new Set([...prev, ...data])]);
+      // Deduplicate ingredients without using Set
+      setIngredients(prev => {
+        const combined = [...prev, ...data];
+        return combined.filter((item, index) => combined.indexOf(item) === index);
+      });
       toast({
         title: "Ingredients detected",
         description: `Found: ${data.join(", ")}`,
@@ -149,20 +153,32 @@ const KitchenIngredients = () => {
               ))}
             </div>
 
-            <Button
-              className="w-full bg-primary text-white font-medium py-3 rounded-lg mb-4"
-              onClick={handleFindRecipes}
-              disabled={findRecipesMutation.isPending || ingredients.length === 0}
-            >
-              {findRecipesMutation.isPending ? (
-                <>
-                  <i className="ri-loader-4-line animate-spin mr-2"></i>
-                  Searching...
-                </>
-              ) : (
-                "Find Recipes"
+            <div className="relative w-full mb-4">
+              <Button
+                className="w-full bg-primary text-white font-medium py-3 rounded-lg"
+                onClick={handleFindRecipes}
+                disabled={findRecipesMutation.isPending || ingredients.length === 0}
+              >
+                {findRecipesMutation.isPending ? (
+                  <>
+                    <div className="flex items-center justify-center">
+                      <i className="ri-loader-4-line animate-spin mr-2"></i>
+                      <span>Searching</span>
+                      <span className="animate-pulse">...</span>
+                    </div>
+                  </>
+                ) : (
+                  "Find Recipes"
+                )}
+              </Button>
+              
+              {/* Animated Progress Bar */}
+              {findRecipesMutation.isPending && (
+                <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
+                  <div className="h-full w-[40%] bg-white absolute animate-progress-indeterminate"></div>
+                </div>
               )}
-            </Button>
+            </div>
           </div>
         </TabsContent>
 
@@ -172,12 +188,16 @@ const KitchenIngredients = () => {
             title="Snap a photo of your ingredients"
             description="Take a clear photo of multiple ingredients together"
             className="mb-6"
+            isProcessing={identifyIngredientsMutation.isPending}
           />
           
           {identifyIngredientsMutation.isPending && (
-            <div className="text-center py-4">
-              <i className="ri-loader-4-line animate-spin text-2xl text-primary mb-2"></i>
-              <p className="text-sm text-neutral-600">Analyzing ingredients...</p>
+            <div className="text-center py-4 mb-2 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-8 h-8 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
+              </div>
+              <p className="text-sm font-medium text-primary">Analyzing ingredients with AI vision...</p>
+              <p className="text-xs text-neutral-600 mt-1">This might take a few seconds</p>
             </div>
           )}
         </TabsContent>
@@ -221,7 +241,7 @@ const KitchenIngredients = () => {
       )}
 
       {/* Example ingredient photos */}
-      {!recipes && !loadingRecipes && !findRecipesMutation.isPending && (
+      {!recipes.length && !loadingRecipes && !findRecipesMutation.isPending && (
         <div>
           <h3 className="text-base font-semibold font-heading mb-3">Example Ingredients</h3>
           <div className="overflow-x-auto hide-scrollbar snap-x flex gap-4 -mx-4 px-4">
