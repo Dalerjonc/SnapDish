@@ -110,20 +110,54 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
         messages: [
           {
             role: "system",
-            content: `You are a culinary and nutrition expert. Provide detailed recipe and nutrition information for the specified dish in JSON format. Include the following fields:
-            - name: The dish name
-            - summary: A short description of the dish and its origin
-            - readyInMinutes: Estimated preparation time in minutes
-            - servings: Number of servings the recipe makes
-            - calories: Calories per serving
-            - protein: Protein content per serving in grams
-            - carbs: Carbohydrate content per serving in grams
-            - fat: Fat content per serving in grams
-            - instructions: Array of step-by-step cooking instructions, where each item is a separate step
-            - extendedIngredients: Array of ingredients with format: [{name: string, amount: number, unit: string, original: string}]
-            - analyzedInstructions: Array with format: [{name: "", steps: [{number: 1, step: "instruction text", ingredients: [], equipment: []}]}]
+            content: `You are a culinary and nutrition expert. Provide detailed recipe and nutrition information for the specified dish in JSON format exactly as shown below:
+            {
+              "name": "Dish Name",
+              "summary": "A short description of the dish and its origin",
+              "readyInMinutes": 30,
+              "servings": 4,
+              "calories": 350,
+              "protein": "25g",
+              "carbs": "30g",
+              "fat": "15g",
+              "instructions": [
+                "First instruction step",
+                "Second instruction step",
+                "Third instruction step"
+              ],
+              "extendedIngredients": [
+                {"name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups of ingredient1"},
+                {"name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
+              ],
+              "analyzedInstructions": [
+                {
+                  "name": "",
+                  "steps": [
+                    {
+                      "number": 1,
+                      "step": "First instruction step",
+                      "ingredients": [],
+                      "equipment": []
+                    },
+                    {
+                      "number": 2,
+                      "step": "Second instruction step",
+                      "ingredients": [],
+                      "equipment": []
+                    },
+                    {
+                      "number": 3,
+                      "step": "Third instruction step",
+                      "ingredients": [],
+                      "equipment": []
+                    }
+                  ]
+                }
+              ]
+            }
             
-            Format the response as a valid JSON object with these fields. Make sure instructions is an array of strings, not a single string.`
+            IMPORTANT: The instructions MUST be an array of strings, where each string is a separate step. The analyzedInstructions must match the instructions array.
+            Each object in the steps array should correspond to an instruction in the instructions array.`
           },
           {
             role: "user",
@@ -135,13 +169,89 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
       });
       
       // Parse the JSON response
-      const recipeData = JSON.parse(response.choices[0].message.content || "{}");
-      
-      console.log("Generated recipe and nutrition data for:", dishName);
-      return recipeData;
+      try {
+        const recipeData = JSON.parse(response.choices[0].message.content || "{}");
+        
+        // Ensure instructions is an array
+        if (recipeData.instructions && typeof recipeData.instructions === 'string') {
+          // Split by new lines or numbered steps
+          const instructionSteps = recipeData.instructions
+            .split(/\n|(?=\d+\.\s)/)
+            .filter(Boolean)
+            .map((step: string) => step.replace(/^\d+\.\s*/, '').trim());
+          
+          recipeData.instructions = instructionSteps;
+        } else if (!Array.isArray(recipeData.instructions)) {
+          recipeData.instructions = ["No instructions available"];
+        }
+        
+        // Ensure analyzedInstructions is properly structured
+        if (!recipeData.analyzedInstructions || !Array.isArray(recipeData.analyzedInstructions) || recipeData.analyzedInstructions.length === 0) {
+          // Create structured instructions from the array of instruction steps
+          recipeData.analyzedInstructions = [{
+            name: "",
+            steps: (Array.isArray(recipeData.instructions) ? recipeData.instructions : [])
+              .map((step: string, index: number) => ({
+                number: index + 1,
+                step: step,
+                ingredients: [],
+                equipment: []
+              }))
+          }];
+        }
+        
+        console.log("Generated recipe and nutrition data for:", dishName);
+        return recipeData;
+      } catch (parseError) {
+        console.error("Error parsing OpenAI recipe JSON:", parseError);
+        
+        // Return a basic structure with default values
+        return {
+          name: dishName,
+          summary: `Recipe for ${dishName}`,
+          readyInMinutes: 30,
+          servings: 4,
+          calories: 0,
+          protein: "0g",
+          carbs: "0g",
+          fat: "0g",
+          instructions: ["No instructions available"],
+          extendedIngredients: [],
+          analyzedInstructions: [{
+            name: "",
+            steps: [{
+              number: 1,
+              step: "No detailed instructions available",
+              ingredients: [],
+              equipment: []
+            }]
+          }]
+        };
+      }
     } catch (error) {
       console.error("Error getting recipe and nutrition with OpenAI:", error);
-      throw error;
+      // Return a basic structure rather than throwing an error
+      return {
+        name: dishName,
+        summary: `Recipe for ${dishName}`,
+        readyInMinutes: 30,
+        servings: 4,
+        calories: 0,
+        protein: "0g",
+        carbs: "0g",
+        fat: "0g",
+        instructions: ["No instructions available"],
+        extendedIngredients: [],
+        analyzedInstructions: [{
+          name: "",
+          steps: [{
+            number: 1,
+            step: "No detailed instructions available",
+            ingredients: [],
+            equipment: []
+          }]
+        }]
+      };
     }
   }
 

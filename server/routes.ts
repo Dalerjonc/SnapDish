@@ -181,17 +181,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fat: openAIRecipeData.fat || "0g",
           diets: openAIRecipeData.diets || [],
           extendedIngredients: openAIRecipeData.extendedIngredients || [],
-          analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
-            name: "",
-            steps: [
-              {
-                number: 1,
-                step: "No detailed instructions available",
-                ingredients: [],
-                equipment: []
-              }
-            ]
-          }],
+          analyzedInstructions: 
+            (openAIRecipeData.analyzedInstructions && Array.isArray(openAIRecipeData.analyzedInstructions) && openAIRecipeData.analyzedInstructions.length > 0)
+              ? openAIRecipeData.analyzedInstructions 
+              : [{
+                  name: "",
+                  steps: Array.isArray(openAIRecipeData.instructions) 
+                    ? openAIRecipeData.instructions.map((step, index) => ({
+                        number: index + 1,
+                        step: step,
+                        ingredients: [],
+                        equipment: []
+                      }))
+                    : [{
+                        number: 1,
+                        step: "No detailed instructions available",
+                        ingredients: [],
+                        equipment: []
+                      }]
+                }],
           created_at: new Date()
         };
         
