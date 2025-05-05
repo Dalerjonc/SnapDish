@@ -119,11 +119,11 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
             - protein: Protein content per serving in grams
             - carbs: Carbohydrate content per serving in grams
             - fat: Fat content per serving in grams
-            - instructions: Step-by-step cooking instructions
-            - extendedIngredients: Array of ingredients with name, amount, and unit
-            - analyzedInstructions: Structured cooking steps with equipment and ingredients used in each step
+            - instructions: Array of step-by-step cooking instructions, where each item is a separate step
+            - extendedIngredients: Array of ingredients with format: [{name: string, amount: number, unit: string, original: string}]
+            - analyzedInstructions: Array with format: [{name: "", steps: [{number: 1, step: "instruction text", ingredients: [], equipment: []}]}]
             
-            Format the response as a valid JSON object with these fields.`
+            Format the response as a valid JSON object with these fields. Make sure instructions is an array of strings, not a single string.`
           },
           {
             role: "user",

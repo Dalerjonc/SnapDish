@@ -336,10 +336,29 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
             </ol>
           ) : recipe.instructions ? (
             <ol className="space-y-4">
-              <li className="flex items-start">
-                <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">1</div>
-                <p className="text-neutral-700">{recipe.instructions}</p>
-              </li>
+              {typeof recipe.instructions === 'string' ? (
+                // Handle string instructions - split by newlines or numbers
+                recipe.instructions.split(/\n|(?=\d+\.\s)/).filter(Boolean).map((step, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">{idx + 1}</div>
+                    <p className="text-neutral-700">{step.replace(/^\d+\.\s*/, '')}</p>
+                  </li>
+                ))
+              ) : Array.isArray(recipe.instructions) ? (
+                // Handle array of instructions
+                (recipe.instructions as string[]).map((step: string, idx: number) => (
+                  <li key={idx} className="flex items-start">
+                    <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">{idx + 1}</div>
+                    <p className="text-neutral-700">{step}</p>
+                  </li>
+                ))
+              ) : (
+                // Fallback case
+                <li className="flex items-start">
+                  <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">1</div>
+                  <p className="text-neutral-700">Follow package instructions</p>
+                </li>
+              )}
             </ol>
           ) : (
             <p className="text-neutral-600">No detailed instructions available</p>

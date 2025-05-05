@@ -23,7 +23,7 @@ export const recipes = pgTable("recipes", {
   servings: integer("servings"),
   sourceUrl: text("source_url"),
   summary: text("summary"),
-  instructions: text("instructions"),
+  instructions: jsonb("instructions").$type<string[] | string>(),
   calories: integer("calories"),
   protein: text("protein"),
   carbs: text("carbs"),
