@@ -162,38 +162,51 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
 
   constructor() {
     try {
-      // Try to use GOOGLE_CREDENTIALS_JSON first
-      const googleCredentials = process.env.GOOGLE_CREDENTIALS_JSON;
-      
-      if (googleCredentials) {
-        try {
-          // Check if the credentials start with '{' (indicating JSON)
-          if (googleCredentials.trim().startsWith('{')) {
-            // Parse the JSON credentials
-            const credentials = JSON.parse(googleCredentials);
-            
-            // Create the client with the credentials
-            this.visionClient = new vision.ImageAnnotatorClient({
-              credentials: credentials
-            });
-            
-            console.log("Google Vision client initialized with JSON credentials");
-          } else {
-            // It's probably an API key, use it directly
-            this.visionClient = new vision.ImageAnnotatorClient({
-              apiKey: googleCredentials
-            });
-            
-            console.log("Google Vision client initialized with API key");
+      // First try to use the service-account.json file in the project root
+      try {
+        // Create the client with the keyFilename option
+        this.visionClient = new vision.ImageAnnotatorClient({
+          keyFilename: './service-account.json'
+        });
+        
+        console.log("Google Vision client initialized with service-account.json file");
+      } catch (fileError) {
+        console.error("Failed to initialize with service-account.json:", fileError);
+        console.error("Error details:", fileError instanceof Error ? fileError.message : String(fileError));
+        
+        // Fall back to environment variable if available
+        const googleCredentials = process.env.GOOGLE_CREDENTIALS_JSON;
+        
+        if (googleCredentials) {
+          try {
+            // Check if the credentials start with '{' (indicating JSON)
+            if (googleCredentials.trim().startsWith('{')) {
+              // Parse the JSON credentials
+              const credentials = JSON.parse(googleCredentials);
+              
+              // Create the client with the credentials
+              this.visionClient = new vision.ImageAnnotatorClient({
+                credentials: credentials
+              });
+              
+              console.log("Google Vision client initialized with JSON credentials from env var");
+            } else {
+              // It's probably an API key, use it directly
+              this.visionClient = new vision.ImageAnnotatorClient({
+                apiKey: googleCredentials
+              });
+              
+              console.log("Google Vision client initialized with API key from env var");
+            }
+          } catch (jsonError) {
+            console.error("Failed to parse Google credentials:", jsonError);
+            console.error("Error details:", jsonError instanceof Error ? jsonError.message : String(jsonError));
+            this.visionClient = null;
           }
-        } catch (jsonError) {
-          console.error("Failed to parse Google credentials:", jsonError);
-          console.error("Error details:", jsonError instanceof Error ? jsonError.message : String(jsonError));
+        } else {
+          console.log("No Google credentials available in environment");
           this.visionClient = null;
         }
-      } else {
-        console.log("No Google credentials available");
-        this.visionClient = null;
       }
     } catch (error) {
       console.error("Failed to initialize Google Vision client:", error);
