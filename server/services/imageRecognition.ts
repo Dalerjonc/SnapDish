@@ -161,8 +161,36 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
 
   constructor() {
     try {
-      // Initialize Google Vision client
-      this.visionClient = new vision.ImageAnnotatorClient();
+      const googleApiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      
+      // Check if the credentials appear to be an API key rather than a file path
+      if (googleApiKey && !googleApiKey.includes('/') && !googleApiKey.includes('\\') && 
+          (googleApiKey.startsWith('AIza') || googleApiKey.includes('{'))) {
+        console.log("Using Google Cloud API key directly instead of credentials file");
+        
+        // If it's a JSON string, parse it and use it as credentials
+        if (googleApiKey.startsWith('{')) {
+          try {
+            const credentials = JSON.parse(googleApiKey);
+            this.visionClient = new vision.ImageAnnotatorClient({ credentials });
+          } catch (parseError) {
+            console.error("Failed to parse JSON credentials:", parseError);
+            this.visionClient = null;
+          }
+        } else {
+          // If it's just an API key, use the simpler key-based auth
+          this.visionClient = new vision.ImageAnnotatorClient({ 
+            projectId: 'snapdish-app',
+            keyFilename: undefined,
+            credentials: undefined,
+            apiEndpoint: 'vision.googleapis.com'
+          });
+        }
+      } else {
+        // Use the default credentials file approach
+        this.visionClient = new vision.ImageAnnotatorClient();
+      }
+      
       console.log("Google Vision client initialized successfully");
     } catch (error) {
       console.error("Failed to initialize Google Vision client:", error);
@@ -195,9 +223,10 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
       
       // If no food-related labels were found, check for generic objects
       if (foodLabels.length === 0 && this.visionClient) {
-        console.log("No food labels found, using object detection");
-        const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
-        const objects = objectResult.localizedObjectAnnotations || [];
+        try {
+          console.log("No food labels found, using object detection");
+          const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
+          const objects = objectResult.localizedObjectAnnotations || [];
         
         console.log("Vision API objects:", objects.map(o => `${o.name} (${o.score})`).join(', '));
         
@@ -211,6 +240,9 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
           // Sort by score (highest first) and return the top result
           foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
           return foodObjects[0].name || null;
+        }
+        } catch (error) {
+          console.error("Error during object localization:", error);
         }
       } else {
         // Sort by score (highest first) and return the top result
