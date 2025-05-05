@@ -323,15 +323,12 @@ import { OpenAIVisionImageRecognitionService } from './openaiImageRecognition';
 
 // Check for available API credentials
 const openaiApiKey = process.env.OPENAI_API_KEY;
-const googleCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-// Determine which service to use based on available credentials
+// For now, only use OpenAI Vision to avoid issues with Google Vision
+// until we have proper JSON credentials
 let selectedService: ImageRecognitionService;
 
-if (googleCredentials) {
-  console.log("Using Google Cloud Vision for image recognition");
-  selectedService = new GoogleVisionImageRecognitionService();
-} else if (openaiApiKey) {
+if (openaiApiKey) {
   console.log("Using OpenAI Vision for image recognition");
   selectedService = new OpenAIVisionImageRecognitionService();
 } else {
