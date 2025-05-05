@@ -22,6 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", express.json());
   
   // Popular and quick recipes (home screen)
+  // Make sure all the specific routes (not using :id params) come first
   app.get("/api/recipes/popular", async (req, res) => {
     try {
       const recipes = await recipeApiService.getPopularRecipes();
@@ -42,7 +43,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Search recipes by name
+  // Get saved recipes
+  app.get("/api/recipes/saved", async (req, res) => {
+    try {
+      // For simplicity, using a mock user ID since we don't have authentication
+      const userId = 1;
+      
+      const savedRecipes = await storage.getSavedRecipes(userId);
+      res.json(savedRecipes);
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      res.status(500).json({ message: "Error fetching saved recipes" });
+    }
+  });
+  
+  // Search recipes by name - IMPORTANT: This must come before the :id route
   app.get("/api/recipes/search", async (req, res) => {
     try {
       const query = req.query.query as string;
@@ -396,20 +411,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing saved recipe:", error);
       res.status(500).json({ message: "Error removing saved recipe" });
-    }
-  });
-
-  // Get saved recipes
-  app.get("/api/recipes/saved", async (req, res) => {
-    try {
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
-      const savedRecipes = await storage.getSavedRecipes(userId);
-      res.json(savedRecipes);
-    } catch (error) {
-      console.error("Error fetching saved recipes:", error);
-      res.status(500).json({ message: "Error fetching saved recipes" });
     }
   });
 

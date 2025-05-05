@@ -50,6 +50,9 @@ const Search = () => {
             Search
           </Button>
         </div>
+        <p className="text-sm text-gray-500 mt-2">
+          Try searching for dishes like "pasta", "tacos", "salad", "chicken", or "shurpa"
+        </p>
       </form>
 
       {isLoading && (
