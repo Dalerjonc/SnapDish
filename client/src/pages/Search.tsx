@@ -20,7 +20,8 @@ const Search = () => {
       if (!response.ok) {
         throw new Error("Failed to search recipes");
       }
-      return { recipes: await response.json() };
+      const recipes = await response.json();
+      return { recipes };
     },
     enabled: submitted && searchTerm.length > 0
   });

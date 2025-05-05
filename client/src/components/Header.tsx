@@ -12,10 +12,10 @@ const Header = () => {
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/">
-            <a className="text-xl font-bold font-heading text-neutral-800">
+            <div className="text-xl font-bold font-heading text-neutral-800">
               <span className="text-primary">Snap</span>
               <span className="text-secondary">Dish</span>
-            </a>
+            </div>
           </Link>
         </div>
         <div className="flex items-center space-x-3">
