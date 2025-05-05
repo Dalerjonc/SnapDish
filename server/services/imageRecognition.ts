@@ -162,14 +162,15 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
 
   constructor() {
     try {
-      const googleCredentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      // Try to use GOOGLE_CREDENTIALS_JSON first
+      const googleCredentials = process.env.GOOGLE_CREDENTIALS_JSON;
       
-      if (googleCredentialsJson) {
-        // Check if the credentials are a JSON string
-        if (googleCredentialsJson.trim().startsWith('{')) {
-          try {
+      if (googleCredentials) {
+        try {
+          // Check if the credentials start with '{' (indicating JSON)
+          if (googleCredentials.trim().startsWith('{')) {
             // Parse the JSON credentials
-            const credentials = JSON.parse(googleCredentialsJson);
+            const credentials = JSON.parse(googleCredentials);
             
             // Create the client with the credentials
             this.visionClient = new vision.ImageAnnotatorClient({
@@ -177,14 +178,18 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
             });
             
             console.log("Google Vision client initialized with JSON credentials");
-          } catch (jsonError) {
-            console.error("Failed to parse Google credentials JSON:", jsonError);
-            this.visionClient = null;
+          } else {
+            // It's probably an API key, use it directly
+            this.visionClient = new vision.ImageAnnotatorClient({
+              apiKey: googleCredentials
+            });
+            
+            console.log("Google Vision client initialized with API key");
           }
-        } else {
-          // Assume it's a file path
-          this.visionClient = new vision.ImageAnnotatorClient();
-          console.log("Google Vision client initialized with credentials file");
+        } catch (jsonError) {
+          console.error("Failed to parse Google credentials:", jsonError);
+          console.error("Error details:", jsonError instanceof Error ? jsonError.message : String(jsonError));
+          this.visionClient = null;
         }
       } else {
         console.log("No Google credentials available");
@@ -192,11 +197,19 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
       }
     } catch (error) {
       console.error("Failed to initialize Google Vision client:", error);
+      console.error("Error details:", error instanceof Error ? error.message : String(error));
       this.visionClient = null;
     }
     
     // Initialize mock service as fallback
     this.mockService = new MockImageRecognitionService();
+    
+    // Log whether we're using the real service or fallback
+    if (this.visionClient) {
+      console.log("Google Vision client successfully initialized");
+    } else {
+      console.log("Google Vision client initialization failed, will use fallback service");
+    }
   }
 
   async identifyDish(imageBuffer: Buffer): Promise<string | null> {
@@ -233,7 +246,7 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
           const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
           const objects = objectResult.localizedObjectAnnotations || [];
           
-          console.log("Vision API objects:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+          console.log("Vision API objects:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
           
           const foodObjects = objects.filter(obj => {
             const name = obj.name?.toLowerCase() || '';
@@ -276,8 +289,8 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
         const labels = labelResult.labelAnnotations || [];
         const objects = objectResult.localizedObjectAnnotations || [];
         
-        console.log("Vision API labels for ingredients:", labels.map(l => `${l.description} (${l.score})`).join(', '));
-        console.log("Vision API objects for ingredients:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+        console.log("Vision API labels for ingredients:", labels.map(l => `${l.description || 'unnamed'} (${l.score || 0})`).join(', '));
+        console.log("Vision API objects for ingredients:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
         
         // Extract potential ingredients from labels
         const ingredientsFromLabels = labels
@@ -323,12 +336,27 @@ import { OpenAIVisionImageRecognitionService } from './openaiImageRecognition';
 
 // Check for available API credentials
 const openaiApiKey = process.env.OPENAI_API_KEY;
+const googleCredentialsJson = process.env.GOOGLE_CREDENTIALS_JSON;
 
-// For now, only use OpenAI Vision to avoid issues with Google Vision
-// until we have proper JSON credentials
+// Determine which service to use based on available credentials
 let selectedService: ImageRecognitionService;
 
-if (openaiApiKey) {
+if (googleCredentialsJson) {
+  console.log("Google Cloud Vision credentials found, trying to use Google Vision API");
+  try {
+    const googleVisionService = new GoogleVisionImageRecognitionService();
+    selectedService = googleVisionService;
+  } catch (error) {
+    console.error("Failed to initialize Google Vision service:", error);
+    console.log("Falling back to OpenAI Vision");
+    
+    if (openaiApiKey) {
+      selectedService = new OpenAIVisionImageRecognitionService();
+    } else {
+      selectedService = new MockImageRecognitionService();
+    }
+  }
+} else if (openaiApiKey) {
   console.log("Using OpenAI Vision for image recognition");
   selectedService = new OpenAIVisionImageRecognitionService();
 } else {
