@@ -318,7 +318,9 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
         {/* Instructions */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold font-heading mb-3">Cooking Steps</h3>
-          {recipe.analyzedInstructions && Array.isArray(recipe.analyzedInstructions) && recipe.analyzedInstructions.length > 0 ? (
+          {recipe.analyzedInstructions && Array.isArray(recipe.analyzedInstructions) && recipe.analyzedInstructions.length > 0 && 
+           recipe.analyzedInstructions[0].steps && Array.isArray(recipe.analyzedInstructions[0].steps) && recipe.analyzedInstructions[0].steps.length > 0 ? (
+            // First choice: Use analyzed instructions if available with steps
             <ol className="space-y-4">
               {recipe.analyzedInstructions.flatMap((instruction: AnalyzedInstruction) =>
                 instruction && instruction.steps && Array.isArray(instruction.steps) 
@@ -334,34 +336,43 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
                   : []
               )}
             </ol>
-          ) : recipe.instructions ? (
+          ) : Array.isArray(recipe.instructions) && recipe.instructions.length > 0 ? (
+            // Second choice: Use array instructions if available
             <ol className="space-y-4">
-              {typeof recipe.instructions === 'string' ? (
-                // Handle string instructions - split by newlines or numbers
-                recipe.instructions.split(/\n|(?=\d+\.\s)/).filter(Boolean).map((step, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">{idx + 1}</div>
-                    <p className="text-neutral-700">{step.replace(/^\d+\.\s*/, '')}</p>
-                  </li>
-                ))
-              ) : Array.isArray(recipe.instructions) ? (
-                // Handle array of instructions
-                (recipe.instructions as string[]).map((step: string, idx: number) => (
-                  <li key={idx} className="flex items-start">
-                    <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">{idx + 1}</div>
-                    <p className="text-neutral-700">{step}</p>
-                  </li>
-                ))
-              ) : (
-                // Fallback case
-                <li className="flex items-start">
-                  <div className="bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">1</div>
-                  <p className="text-neutral-700">Follow package instructions</p>
-                </li>
-              )}
+              {recipe.instructions.map((step: string, idx: number) => (
+                <InstructionStep
+                  key={idx}
+                  number={idx + 1}
+                  step={step}
+                  ingredients={[]}
+                  equipment={[]}
+                />
+              ))}
+            </ol>
+          ) : typeof recipe.instructions === 'string' && recipe.instructions.length > 0 ? (
+            // Third choice: Use string instructions if available
+            <ol className="space-y-4">
+              {recipe.instructions.split(/\n|(?=\d+\.\s)/).filter(Boolean).map((step: string, idx: number) => (
+                <InstructionStep
+                  key={idx}
+                  number={idx + 1}
+                  step={step}
+                  ingredients={[]}
+                  equipment={[]}
+                />
+              ))}
             </ol>
           ) : (
-            <p className="text-neutral-600">No detailed instructions available</p>
+            // Fallback case if no instructions available
+            <div>
+              <p className="text-neutral-600 mb-4">No detailed instructions available</p>
+              <InstructionStep
+                number={1}
+                step="Follow standard cooking practices for this dish. Ask the AI assistant for detailed instructions."
+                ingredients={[]}
+                equipment={[]}
+              />
+            </div>
           )}
         </div>
 

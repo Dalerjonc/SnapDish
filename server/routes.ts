@@ -82,7 +82,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 servings: openAIRecipeData.servings || 4,
                 sourceUrl: "",
                 summary: openAIRecipeData.summary || `Recipe for ${dishName}`,
-                instructions: openAIRecipeData.instructions || "No instructions available",
+                instructions: Array.isArray(openAIRecipeData.instructions) 
+                ? openAIRecipeData.instructions 
+                : typeof openAIRecipeData.instructions === 'string'
+                  ? [openAIRecipeData.instructions] 
+                  : ["No instructions available"],
                 calories: openAIRecipeData.calories || 0,
                 protein: openAIRecipeData.protein || "0g",
                 carbs: openAIRecipeData.carbs || "0g",
@@ -174,7 +178,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           servings: openAIRecipeData.servings || 4,
           sourceUrl: "",
           summary: openAIRecipeData.summary || `Recipe for ${detectedDish}`,
-          instructions: openAIRecipeData.instructions || "No instructions available",
+          instructions: Array.isArray(openAIRecipeData.instructions) 
+            ? openAIRecipeData.instructions 
+            : typeof openAIRecipeData.instructions === 'string'
+              ? [openAIRecipeData.instructions] 
+              : ["No instructions available"],
           calories: openAIRecipeData.calories || 0,
           protein: openAIRecipeData.protein || "0g",
           carbs: openAIRecipeData.carbs || "0g",
@@ -187,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               : [{
                   name: "",
                   steps: Array.isArray(openAIRecipeData.instructions) 
-                    ? openAIRecipeData.instructions.map((step, index) => ({
+                    ? openAIRecipeData.instructions.map((step: string, index: number) => ({
                         number: index + 1,
                         step: step,
                         ingredients: [],
