@@ -27,7 +27,12 @@ const Home = () => {
           {/* Identify Dish - Full Width */}
           <a 
             href="/identify-dish" 
-            className="bg-primary/10 rounded-xl flex-1 flex flex-col items-center justify-center"
+            className="relative bg-primary/10 rounded-xl flex-1 flex flex-col items-center justify-center overflow-hidden"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
           >
             <div className="w-12 h-12 flex items-center justify-center bg-primary/20 text-primary rounded-full mb-1">
               <i className="ri-camera-line text-2xl"></i>
@@ -39,7 +44,12 @@ const Home = () => {
           {/* What's in My Kitchen - Full Width */}
           <a 
             href="/kitchen-ingredients" 
-            className="bg-secondary/10 rounded-xl flex-1 flex flex-col items-center justify-center"
+            className="relative bg-secondary/10 rounded-xl flex-1 flex flex-col items-center justify-center overflow-hidden"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?q=80&w=2074")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
           >
             <div className="w-12 h-12 flex items-center justify-center bg-secondary/20 text-secondary rounded-full mb-1">
               <i className="ri-shopping-basket-2-line text-2xl"></i>
