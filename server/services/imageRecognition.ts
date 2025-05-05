@@ -155,50 +155,16 @@ const FOOD_CATEGORIES = [
   'sandwich', 'salad', 'soup', 'baked goods', 'bread', 'cake', 'pie', 'cookie', 'pastry'
 ];
 
+// We're completely disabling Google Vision API for now
+// due to authentication issues and falling back to OpenAI or the mock service
 class GoogleVisionImageRecognitionService implements ImageRecognitionService {
   private visionClient: vision.ImageAnnotatorClient | null = null;
   private mockService: MockImageRecognitionService;
 
   constructor() {
-    try {
-      const googleApiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      
-      // Check if the credentials appear to be an API key rather than a file path
-      if (googleApiKey && !googleApiKey.includes('/') && !googleApiKey.includes('\\') && 
-          (googleApiKey.startsWith('AIza') || googleApiKey.includes('{'))) {
-        console.log("Using Google Cloud API key directly instead of credentials file");
-        
-        // If it's a JSON string, parse it and use it as credentials
-        if (googleApiKey.startsWith('{')) {
-          try {
-            const credentials = JSON.parse(googleApiKey);
-            this.visionClient = new vision.ImageAnnotatorClient({ credentials });
-          } catch (parseError) {
-            console.error("Failed to parse JSON credentials:", parseError);
-            this.visionClient = null;
-          }
-        } else {
-          // If it's just an API key, use the simpler key-based auth
-          this.visionClient = new vision.ImageAnnotatorClient({ 
-            projectId: 'snapdish-app',
-            keyFilename: undefined,
-            credentials: undefined,
-            apiEndpoint: 'vision.googleapis.com'
-          });
-        }
-      } else {
-        // Use the default credentials file approach
-        this.visionClient = new vision.ImageAnnotatorClient();
-      }
-      
-      console.log("Google Vision client initialized successfully");
-    } catch (error) {
-      console.error("Failed to initialize Google Vision client:", error);
-      this.visionClient = null;
-    }
-    
     // Initialize mock service as fallback
     this.mockService = new MockImageRecognitionService();
+    console.log("Google Vision disabled, using mock service instead");
   }
 
   async identifyDish(imageBuffer: Buffer): Promise<string | null> {
@@ -323,17 +289,13 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
 // Import the OpenAI-based service
 import { OpenAIVisionImageRecognitionService } from './openaiImageRecognition';
 
-// Check if API keys are available
+// Check if OpenAI API key is available
 const openaiApiKey = process.env.OPENAI_API_KEY;
-const googleApiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-// Determine which service to use based on available API keys
+// Determine which service to use based on API key availability
 let selectedService: ImageRecognitionService;
 
-if (googleApiKey) {
-  console.log("Using Google Cloud Vision for image recognition");
-  selectedService = new GoogleVisionImageRecognitionService();
-} else if (openaiApiKey) {
+if (openaiApiKey) {
   console.log("Using OpenAI Vision for image recognition");
   selectedService = new OpenAIVisionImageRecognitionService();
 } else {
