@@ -221,35 +221,39 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
                (label.score !== null && label.score !== undefined && label.score > 0.8); // Include high confidence labels too
       });
       
-      // If no food-related labels were found, check for generic objects
-      if (foodLabels.length === 0 && this.visionClient) {
-        try {
-          console.log("No food labels found, using object detection");
-          const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
-          const objects = objectResult.localizedObjectAnnotations || [];
-        
-        console.log("Vision API objects:", objects.map(o => `${o.name} (${o.score})`).join(', '));
-        
-        const foodObjects = objects.filter(obj => {
-          const name = obj.name?.toLowerCase() || '';
-          return FOOD_CATEGORIES.some(category => name.includes(category)) || 
-                 (obj.score !== null && obj.score !== undefined && obj.score > 0.8);
-        });
-        
-        if (foodObjects.length > 0) {
-          // Sort by score (highest first) and return the top result
-          foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
-          return foodObjects[0].name || null;
-        }
-        } catch (error) {
-          console.error("Error during object localization:", error);
-        }
-      } else {
+      // If we found food labels, use them directly
+      if (foodLabels.length > 0) {
         // Sort by score (highest first) and return the top result
         foodLabels.sort((a, b) => (b.score || 0) - (a.score || 0));
         return foodLabels[0].description || null;
       }
       
+      // If no food-related labels were found, check for generic objects
+      if (this.visionClient) {
+        try {
+          console.log("No food labels found, using object detection");
+          const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
+          const objects = objectResult.localizedObjectAnnotations || [];
+          
+          console.log("Vision API objects:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+          
+          const foodObjects = objects.filter(obj => {
+            const name = obj.name?.toLowerCase() || '';
+            return FOOD_CATEGORIES.some(category => name.includes(category)) || 
+                  (obj.score !== null && obj.score !== undefined && obj.score > 0.8);
+          });
+          
+          if (foodObjects.length > 0) {
+            // Sort by score (highest first) and return the top result
+            foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
+            return foodObjects[0].name || null;
+          }
+        } catch (error) {
+          console.error("Error during object localization:", error);
+        }
+      }
+      
+      // If we haven't returned yet, use the mock service as a fallback
       console.log("No food items detected with Google Vision, using mock service");
       return this.mockService.identifyDish(imageBuffer);
     } catch (error) {
@@ -267,34 +271,38 @@ class GoogleVisionImageRecognitionService implements ImageRecognitionService {
       }
       
       // Use both label detection and object localization for better ingredient identification
-      const [labelResult] = await this.visionClient.labelDetection(imageBuffer);
-      const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
-      
-      const labels = labelResult.labelAnnotations || [];
-      const objects = objectResult.localizedObjectAnnotations || [];
-      
-      console.log("Vision API labels for ingredients:", labels.map(l => `${l.description} (${l.score})`).join(', '));
-      console.log("Vision API objects for ingredients:", objects.map(o => `${o.name} (${o.score})`).join(', '));
-      
-      // Extract potential ingredients from labels
-      const ingredientsFromLabels = labels
-        .filter(label => (label.score !== null && label.score !== undefined && label.score > 0.6)) // Only consider labels with decent confidence
-        .map(label => label.description || "")
-        .filter(desc => desc.length > 0);
-      
-      // Extract potential ingredients from objects
-      const ingredientsFromObjects = objects
-        .filter(obj => (obj.score !== null && obj.score !== undefined && obj.score > 0.6)) // Only consider objects with decent confidence
-        .map(obj => obj.name || "")
-        .filter(name => name.length > 0);
-      
-      // Combine both sets and remove duplicates
-      const ingredientSet = new Set([...ingredientsFromLabels, ...ingredientsFromObjects]);
-      const allIngredients = Array.from(ingredientSet);
-      
-      // If we found ingredients, return them
-      if (allIngredients.length > 0) {
-        return allIngredients.slice(0, 10); // Limit to top 10 to avoid overwhelming results
+      try {
+        const [labelResult] = await this.visionClient.labelDetection(imageBuffer);
+        const [objectResult] = await this.visionClient.objectLocalization(imageBuffer);
+        
+        const labels = labelResult.labelAnnotations || [];
+        const objects = objectResult.localizedObjectAnnotations || [];
+        
+        console.log("Vision API labels for ingredients:", labels.map(l => `${l.description} (${l.score})`).join(', '));
+        console.log("Vision API objects for ingredients:", objects.map(o => `${o.name} (${o.score})`).join(', '));
+        
+        // Extract potential ingredients from labels
+        const ingredientsFromLabels = labels
+          .filter(label => (label.score !== null && label.score !== undefined && label.score > 0.6)) // Only consider labels with decent confidence
+          .map(label => label.description || "")
+          .filter(desc => desc.length > 0);
+        
+        // Extract potential ingredients from objects
+        const ingredientsFromObjects = objects
+          .filter(obj => (obj.score !== null && obj.score !== undefined && obj.score > 0.6)) // Only consider objects with decent confidence
+          .map(obj => obj.name || "")
+          .filter(name => name.length > 0);
+        
+        // Combine both sets and remove duplicates
+        const ingredientSet = new Set([...ingredientsFromLabels, ...ingredientsFromObjects]);
+        const allIngredients = Array.from(ingredientSet);
+        
+        // If we found ingredients, return them
+        if (allIngredients.length > 0) {
+          return allIngredients.slice(0, 10); // Limit to top 10 to avoid overwhelming results
+        }
+      } catch (error) {
+        console.error("Error analyzing ingredients with Google Vision:", error);
       }
       
       console.log("No ingredients detected with Google Vision, using mock service");
