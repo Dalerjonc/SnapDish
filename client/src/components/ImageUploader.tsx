@@ -6,9 +6,10 @@ interface ImageUploaderProps {
   title: string;
   description: string;
   className?: string;
+  isProcessing?: boolean;
 }
 
-const ImageUploader = ({ onImageSelect, title, description, className = "" }: ImageUploaderProps) => {
+const ImageUploader = ({ onImageSelect, title, description, className = "", isProcessing = false }: ImageUploaderProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,8 +113,22 @@ const ImageUploader = ({ onImageSelect, title, description, className = "" }: Im
     <div className={`bg-neutral-100 rounded-xl p-6 text-center ${className}`}>
       <div className="border-2 border-dashed border-neutral-300 rounded-xl p-8 mb-4 flex flex-col items-center justify-center">
         {previewUrl ? (
-          <div className="w-full mb-4">
-            <img src={previewUrl} alt="Preview" className="mx-auto max-h-48 rounded-lg" />
+          <div className="w-full mb-4 relative">
+            <img 
+              src={previewUrl} 
+              alt="Preview" 
+              className={`mx-auto max-h-48 rounded-lg ${isProcessing ? 'opacity-60 filter blur-[1px]' : ''}`} 
+            />
+            {isProcessing && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
+                  <div className="w-10 h-10 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
+                </div>
+                <div className="mt-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                  <p className="text-sm font-medium text-neutral-800">Scanning image and analyzing ingredients...</p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <i className="ri-camera-3-line text-5xl text-neutral-400 mb-4"></i>

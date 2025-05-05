@@ -83,10 +83,15 @@ export default {
             height: "0",
           },
         },
+        "progress-indeterminate": {
+          "0%": { left: "-40%" },
+          "100%": { left: "100%" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "progress-indeterminate": "progress-indeterminate 1.5s ease-in-out infinite",
       },
     },
   },

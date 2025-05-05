@@ -83,26 +83,39 @@ const IdentifyDish = () => {
         title="Take a photo or upload an image"
         description="Works best with clear, well-lit photos of the dish"
         className="mb-6"
+        isProcessing={identifyMutation.isPending}
       />
 
       {selectedImage && (
-        <Button 
-          onClick={handleIdentify} 
-          className="w-full bg-primary text-white font-medium py-3 rounded-lg mb-6"
-          disabled={identifyMutation.isPending}
-        >
-          {identifyMutation.isPending ? (
-            <>
-              <i className="ri-loader-4-line animate-spin mr-2"></i>
-              Identifying...
-            </>
-          ) : (
-            <>
-              <i className="ri-search-line mr-2"></i>
-              Identify Dish
-            </>
+        <div className="relative w-full mb-6">
+          <Button 
+            onClick={handleIdentify} 
+            className="w-full bg-primary text-white font-medium py-3 rounded-lg"
+            disabled={identifyMutation.isPending}
+          >
+            {identifyMutation.isPending ? (
+              <>
+                <div className="flex items-center justify-center">
+                  <i className="ri-loader-4-line animate-spin mr-2"></i>
+                  <span>Identifying</span>
+                  <span className="animate-pulse">...</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <i className="ri-search-line mr-2"></i>
+                Identify Dish
+              </>
+            )}
+          </Button>
+          
+          {/* Animated Progress Bar */}
+          {identifyMutation.isPending && (
+            <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
+              <div className="h-full bg-white animate-progress-indeterminate"></div>
+            </div>
           )}
-        </Button>
+        </div>
       )}
 
       {/* Examples Section */}
