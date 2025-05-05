@@ -138,6 +138,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching similar recipes" });
     }
   });
+  
+  // Search recipes by name
+  app.get("/api/recipes/search", async (req, res) => {
+    try {
+      const query = req.query.query as string;
+      
+      if (!query || query.trim().length === 0) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+      
+      console.log("Searching for recipes with query:", query);
+      
+      try {
+        const recipe = await recipeApiService.searchRecipeByName(query);
+        // Return the result as an array for consistency with other recipe endpoints
+        res.json([recipe]);
+      } catch (searchError) {
+        console.log("No exact match found, generating a recipe with OpenAI");
+        
+        try {
+          // Generate a recipe using OpenAI
+          const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(query);
+          
+          if (!openAIRecipeData) {
+            return res.status(404).json({ message: "Could not generate recipe for search query" });
+          }
+          
+          // Create a recipe object with a random ID
+          const recipe = {
+            id: Math.floor(Math.random() * 10000) + 1000,
+            name: openAIRecipeData.name || query,
+            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
+            readyInMinutes: openAIRecipeData.readyInMinutes || 30,
+            servings: openAIRecipeData.servings || 4,
+            sourceUrl: "",
+            summary: openAIRecipeData.summary || `Recipe for ${query}`,
+            instructions: Array.isArray(openAIRecipeData.instructions) 
+              ? openAIRecipeData.instructions 
+              : typeof openAIRecipeData.instructions === 'string'
+                ? [openAIRecipeData.instructions] 
+                : ["No instructions available"],
+            calories: openAIRecipeData.calories || 0,
+            protein: openAIRecipeData.protein || "0g",
+            carbs: openAIRecipeData.carbs || "0g",
+            fat: openAIRecipeData.fat || "0g",
+            diets: openAIRecipeData.diets || [],
+            extendedIngredients: openAIRecipeData.extendedIngredients || [],
+            analyzedInstructions: 
+              (openAIRecipeData.analyzedInstructions && Array.isArray(openAIRecipeData.analyzedInstructions) && openAIRecipeData.analyzedInstructions.length > 0)
+                ? openAIRecipeData.analyzedInstructions 
+                : [{
+                    name: "",
+                    steps: Array.isArray(openAIRecipeData.instructions) 
+                      ? openAIRecipeData.instructions.map((step: string, index: number) => ({
+                          number: index + 1,
+                          step: step,
+                          ingredients: [],
+                          equipment: []
+                        }))
+                      : [{
+                          number: 1,
+                          step: "No detailed instructions available",
+                          ingredients: [],
+                          equipment: []
+                        }]
+                  }],
+            created_at: new Date()
+          };
+          
+          res.json([recipe]);
+        } catch (openaiError) {
+          console.error("Error generating recipe with OpenAI:", openaiError);
+          res.status(500).json({ message: "Error generating recipe for search query" });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching recipes:", error);
+      res.status(500).json({ message: "Error searching recipes" });
+    }
+  });
 
   // Identify dish from photo
   app.post("/api/recipes/identify", upload.single("image"), async (req, res) => {
