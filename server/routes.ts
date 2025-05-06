@@ -290,13 +290,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const recipe = recipes[0];
           console.log("Successfully found recipe with Edamam:", recipe.name);
           
-          // Cache the recipe for future use
-          // First check if it's an EdamamRecipeApiService to use its caching method
-          if (recipeApiService instanceof EdamamRecipeApiService) {
-            recipeApiService.cacheRecipe(recipe);
+          // Ensure recipe has a numeric ID
+          let recipeId = recipe.id;
+          if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
+            recipeId = parseInt(recipeId);
+          } else if (!recipeId) {
+            recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
+            console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
           }
           
-          return res.json(recipe);
+          // Complete recipe with any missing fields and consistent ID format
+          const completeRecipe = {
+            ...recipe,
+            id: recipeId,
+            instructions: recipe.instructions || [],
+            created_at: new Date()
+          };
+          
+          // Cache the recipe with both string and numeric versions of the ID
+          if (recipeApiService instanceof EdamamRecipeApiService) {
+            console.log(`Caching Edamam recipe with ID: ${completeRecipe.id}`);
+            recipeApiService.cacheRecipe(completeRecipe);
+          }
+          
+          return res.json(completeRecipe);
         }
         
         // If we get here, Edamam didn't return recipes, so fall back to OpenAI
@@ -306,9 +323,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
         console.log("Generated recipe with OpenAI:", openAIRecipeData.name || detectedDish);
         
+        // Generate a consistent numeric ID for the recipe
+        const recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
+        console.log(`Generated recipe ID: ${recipeId}`);
+        
         // Convert OpenAI recipe to our format
         const recipe = {
-          id: Math.floor(Math.random() * 10000) + 1000, // Generate a random ID
+          id: recipeId, // Use consistent numeric ID format
           name: openAIRecipeData.name || detectedDish,
           image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
           readyInMinutes: openAIRecipeData.readyInMinutes || 30,
@@ -359,7 +380,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Cache the OpenAI-generated recipe for future getRecipeById requests
         if (recipeApiService instanceof EdamamRecipeApiService) {
           recipeApiService.cacheRecipe(recipe);
-          console.log("OpenAI generated recipe cached with ID:", recipe.id);
+          
+          // Verify the recipe is cached properly
+          console.log(`Verifying recipe cache for ID: ${recipe.id}`);
+          try {
+            const cachedRecipe = await recipeApiService.getRecipeById(recipe.id);
+            console.log(`Recipe successfully cached and retrieved: ${cachedRecipe.name}`);
+          } catch (cacheError) {
+            console.error("Failed to verify recipe in cache:", cacheError);
+          }
         }
         
         res.json(recipe);
