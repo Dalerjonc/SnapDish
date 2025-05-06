@@ -26,8 +26,22 @@ export class EdamamRecipeApiService implements RecipeApiService {
   // Method to store a recipe in the cache
   public cacheRecipe(recipe: Recipe): void {
     if (recipe && recipe.id) {
-      console.log(`Caching recipe: ${recipe.name} with ID: ${recipe.id}`);
+      console.log(`Caching recipe: ${recipe.name} with ID: ${recipe.id} (${typeof recipe.id})`);
+      
+      // Cache by ID (handles both number and string types)
       this.recipeCache.set(recipe.id, recipe);
+      
+      // Also cache by string version of ID for consistent lookup
+      if (typeof recipe.id === 'number') {
+        this.recipeCache.set(recipe.id.toString(), recipe);
+      } else if (typeof recipe.id === 'string' && !isNaN(parseInt(recipe.id))) {
+        // Also cache by number version if ID is a numeric string
+        this.recipeCache.set(parseInt(recipe.id), recipe);
+      }
+      
+      console.log(`Recipe cache now has ${this.recipeCache.size} entries`);
+    } else {
+      console.warn("Attempted to cache recipe with undefined ID:", recipe);
     }
   }
 
@@ -75,13 +89,27 @@ export class EdamamRecipeApiService implements RecipeApiService {
 
   async getRecipeById(id: number | string): Promise<Recipe> {
     try {
-      // First check if the recipe is in our cache
+      console.log(`Looking for recipe with ID ${id}, type: ${typeof id}`);
+      
+      // First check if the recipe is in our cache (try both number and string versions)
       if (this.recipeCache.has(id)) {
         console.log(`Found recipe with ID ${id} in cache`);
         return this.recipeCache.get(id) as Recipe;
       }
       
-      console.log(`Recipe with ID ${id} not found in cache, trying Edamam`);
+      // Also try the string version if a number was provided
+      if (typeof id === 'number' && this.recipeCache.has(id.toString())) {
+        console.log(`Found recipe with string ID "${id}" in cache`);
+        return this.recipeCache.get(id.toString()) as Recipe;
+      }
+      
+      // Also try the number version if a string was provided and it's numeric
+      if (typeof id === 'string' && !isNaN(parseInt(id)) && this.recipeCache.has(parseInt(id))) {
+        console.log(`Found recipe with numeric ID ${parseInt(id)} in cache`);
+        return this.recipeCache.get(parseInt(id)) as Recipe;
+      }
+      
+      console.log(`Recipe with ID ${id} not found in cache, trying Edamam API`);
       
       // If it's a string ID and starts with "recipe_", it's an Edamam API ID
       if (typeof id === 'string' && id.includes('recipe_')) {
@@ -96,9 +124,9 @@ export class EdamamRecipeApiService implements RecipeApiService {
         return processedRecipe;
       }
       
-      // If it's a numeric ID, try to search by name
-      // This is a fallback for recipes we've identified but don't have in cache
-      console.log(`Could not find recipe with ID ${id}, rebuilding recipe from OpenAI`);
+      // For numeric IDs (from Vision + Edamam API), we need better fallback
+      // Log available cache keys for debugging
+      console.log("Available cache keys:", Array.from(this.recipeCache.keys()));
       
       // If we can't find the recipe, throw an error
       throw new Error(`Recipe with ID ${id} not found in cache or Edamam`);
@@ -151,10 +179,30 @@ export class EdamamRecipeApiService implements RecipeApiService {
       
       if (recipes && recipes.length > 0) {
         const recipe = recipes[0];
-        return {
+        
+        // Make sure we have an ID (if not, generate one)
+        let recipeId = recipe.id;
+        if (!recipeId) {
+          recipeId = this.generateUniqueId();
+          console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
+        } else if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
+          // Convert string ID to number if it's numeric
+          recipeId = parseInt(recipeId, 10);
+          console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
+        }
+        
+        // Create the processed recipe with consistent ID
+        const processedRecipe = {
           ...recipe,
-          id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
+          id: recipeId,
+          instructions: recipe.instructions || [],
+          created_at: new Date()
         };
+        
+        // Cache the recipe for future use
+        this.cacheRecipe(processedRecipe);
+        
+        return processedRecipe;
       } else {
         throw new Error(`No results found for query ${query}`);
       }
@@ -170,10 +218,32 @@ export class EdamamRecipeApiService implements RecipeApiService {
       const query = ingredients.join(' ');
       
       const recipes = await edamamService.searchRecipes(query, 5);
-      return recipes.map(recipe => ({
-        ...recipe,
-        id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
-      }));
+      
+      // Process each recipe to ensure consistent IDs and cache them
+      return recipes.map(recipe => {
+        // Make sure we have an ID (if not, generate one)
+        let recipeId = recipe.id;
+        if (!recipeId) {
+          recipeId = this.generateUniqueId();
+          console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
+        } else if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
+          // Convert string ID to number if it's numeric
+          recipeId = parseInt(recipeId, 10);
+        }
+        
+        // Create the processed recipe with consistent ID
+        const processedRecipe = {
+          ...recipe,
+          id: recipeId,
+          instructions: recipe.instructions || [],
+          created_at: new Date()
+        };
+        
+        // Cache the recipe for future use
+        this.cacheRecipe(processedRecipe);
+        
+        return processedRecipe;
+      });
     } catch (error) {
       console.error(`Error getting recipes by ingredients from Edamam:`, error);
       throw error;
