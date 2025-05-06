@@ -72,10 +72,26 @@ export class EdamamRecipeApiService implements RecipeApiService {
       const query = popularQueries[randomIndex];
       
       const recipes = await edamamService.searchRecipes(query, 3);
-      return recipes.map(recipe => ({
-        ...recipe,
-        id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
-      }));
+      return recipes.map((recipe: any) => {
+        // Use our hash function for non-numeric string IDs
+        let recipeId = recipe.id;
+        if (typeof recipeId === 'string') {
+          if (!isNaN(parseInt(recipeId))) {
+            recipeId = parseInt(recipeId, 10);
+          } else {
+            recipeId = this.hashStringToNumericId(recipeId);
+          }
+        } else if (!recipeId) {
+          recipeId = this.generateUniqueId();
+        }
+        
+        return {
+          ...recipe,
+          id: recipeId,
+          instructions: recipe.instructions || [],
+          created_at: recipe.created_at || new Date()
+        };
+      });
     } catch (error) {
       console.error("Error getting popular recipes from Edamam:", error);
       throw error;
@@ -91,11 +107,28 @@ export class EdamamRecipeApiService implements RecipeApiService {
       
       const recipes = await edamamService.searchRecipes(query, 5);
       return recipes
-        .filter(recipe => recipe.readyInMinutes <= 30)
-        .map(recipe => ({
-          ...recipe,
-          id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
-        }));
+        .filter((recipe: any) => recipe.readyInMinutes <= 30 || recipe.readyInMinutes === undefined)
+        .map((recipe: any) => {
+          // Use our hash function for non-numeric string IDs
+          let recipeId = recipe.id;
+          if (typeof recipeId === 'string') {
+            if (!isNaN(parseInt(recipeId))) {
+              recipeId = parseInt(recipeId, 10);
+            } else {
+              recipeId = this.hashStringToNumericId(recipeId);
+            }
+          } else if (!recipeId) {
+            recipeId = this.generateUniqueId();
+          }
+          
+          return {
+            ...recipe,
+            id: recipeId,
+            readyInMinutes: recipe.readyInMinutes || 30, // Default to 30 minutes if not specified
+            instructions: recipe.instructions || [],
+            created_at: recipe.created_at || new Date()
+          };
+        });
     } catch (error) {
       console.error("Error getting quick recipes from Edamam:", error);
       throw error;
@@ -129,14 +162,47 @@ export class EdamamRecipeApiService implements RecipeApiService {
       // If it's a string ID and starts with "recipe_", it's an Edamam API ID
       if (typeof id === 'string' && id.includes('recipe_')) {
         const recipe = await edamamService.getRecipeById(id);
+        
+        // Make sure we have a consistent numeric ID
+        let recipeId = recipe.id;
+        if (!recipeId) {
+          recipeId = this.generateUniqueId();
+          console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
+        } else if (typeof recipeId === 'string') {
+          if (!isNaN(parseInt(recipeId))) {
+            recipeId = parseInt(recipeId, 10);
+            console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
+          } else {
+            recipeId = this.hashStringToNumericId(recipeId);
+            console.log(`Hashed string ID "${recipe.id}" to numeric ID: ${recipeId}`);
+          }
+        }
+        
         const processedRecipe = {
           ...recipe,
-          id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
+          id: recipeId,
+          instructions: recipe.instructions || [],
+          created_at: recipe.created_at || new Date()
         };
         
         // Cache the recipe for future use
         this.cacheRecipe(processedRecipe);
         return processedRecipe;
+      }
+      
+      // For hash-based IDs, also try the original string ID that might have been hashed
+      if (typeof id === 'number' && id >= 10000) {
+        console.log(`Checking if ${id} is a hashed ID`);
+        // Since we can't reverse the hash function, we'll need to search through cache
+        // to find any potential matches
+        const entries = Array.from(this.recipeCache.entries());
+        for (const [cacheKey, cacheValue] of entries) {
+          if (typeof cacheKey === 'string' && !isNaN(this.hashStringToNumericId(cacheKey)) && 
+              this.hashStringToNumericId(cacheKey) === id) {
+            console.log(`Found a match for hashed ID ${id}: ${cacheKey}`);
+            return cacheValue as Recipe;
+          }
+        }
       }
       
       // For numeric IDs (from Vision + Edamam API), we need better fallback
@@ -170,17 +236,33 @@ export class EdamamRecipeApiService implements RecipeApiService {
       // Use the name to search for similar recipes
       const recipes = await edamamService.getSimilarRecipes(recipeName);
       return recipes
-        .filter(r => {
+        .filter((r: any) => {
           // Filter out the original recipe if we can identify it
           if (typeof r.id === 'string' && typeof id === 'string') {
             return r.id !== id;
           }
           return true;
         })
-        .map(recipe => ({
-          ...recipe,
-          id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
-        }));
+        .map((recipe: any) => {
+          // Use our hash function for non-numeric string IDs
+          let recipeId = recipe.id;
+          if (typeof recipeId === 'string') {
+            if (!isNaN(parseInt(recipeId))) {
+              recipeId = parseInt(recipeId, 10);
+            } else {
+              recipeId = this.hashStringToNumericId(recipeId);
+            }
+          } else if (!recipeId) {
+            recipeId = this.generateUniqueId();
+          }
+          
+          return {
+            ...recipe,
+            id: recipeId,
+            instructions: recipe.instructions || [],
+            created_at: recipe.created_at || new Date()
+          };
+        });
     } catch (error) {
       console.error(`Error getting similar recipes for ${id} from Edamam:`, error);
       throw error;

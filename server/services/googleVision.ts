@@ -6,9 +6,15 @@
 import * as vision from '@google-cloud/vision';
 
 // Create Vision client using JSON credentials directly from the root folder
-const client = new vision.ImageAnnotatorClient({
-  keyFilename: './service-account.json'
-});
+let client: vision.ImageAnnotatorClient | null = null;
+try {
+  client = new vision.ImageAnnotatorClient({
+    keyFilename: './service-account.json'
+  });
+  console.log("Google Vision client created");
+} catch (error) {
+  console.error("Failed to create Google Vision client:", error);
+}
 
 // Food-related categories for filtering Vision API results
 const FOOD_CATEGORIES = [
@@ -20,6 +26,10 @@ const FOOD_CATEGORIES = [
 // Function to analyze uploaded image for general labels
 export async function analyzeImage(imageBuffer: Buffer) {
   try {
+    if (!client) {
+      throw new Error("Google Vision client not initialized");
+    }
+    
     const [result] = await client.labelDetection(imageBuffer);
     const labels = result.labelAnnotations || [];
     return labels.map(label => ({
@@ -35,6 +45,10 @@ export async function analyzeImage(imageBuffer: Buffer) {
 // Function to identify a dish from an image
 export async function identifyDish(imageBuffer: Buffer): Promise<string | null> {
   try {
+    if (!client) {
+      throw new Error("Google Vision client not initialized");
+    }
+    
     // Get labels from the image with more results
     const [result] = await client.labelDetection(imageBuffer);
     const labels = result.labelAnnotations || [];
@@ -127,6 +141,7 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
     // If no specific food-related labels were found, check for objects
     try {
       console.log("No specific food labels found, using object detection");
+      
       const [objectResult] = await client.objectLocalization(imageBuffer);
       const objects = objectResult.localizedObjectAnnotations || [];
       
@@ -149,6 +164,7 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
       }
     } catch (error) {
       console.error("Error during object localization:", error);
+      // Continue to next method if object detection fails
     }
     
     // Try combining relevant high-confidence labels to create a meaningful dish description
@@ -200,6 +216,10 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
 // Function to identify ingredients in an image
 export async function identifyIngredients(imageBuffer: Buffer): Promise<string[]> {
   try {
+    if (!client) {
+      throw new Error("Google Vision client not initialized");
+    }
+    
     // Use both label detection and object localization for better ingredient identification
     const [labelResult] = await client.labelDetection(imageBuffer);
     const [objectResult] = await client.objectLocalization(imageBuffer);
