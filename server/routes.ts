@@ -146,24 +146,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get recipe details
   recipesRouter.get("/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid recipe ID" });
-      }
+      // Get the original ID string from the request
+      const rawId = req.params.id;
+      console.log(`Recipe lookup requested for ID: ${rawId}`);
+      
+      // Try to parse as number but don't reject string IDs (for Edamam recipe_xxx IDs)
+      const numericId = parseInt(rawId);
+      let lookupId: number | string = !isNaN(numericId) ? numericId : rawId;
+      
+      console.log(`Will try looking up recipe with ID: ${lookupId} (${typeof lookupId})`);
 
       try {
-        // First try to get from predefined recipes
-        const recipe = await recipeApiService.getRecipeById(id);
+        // First try to get the recipe with the parsed ID
+        const recipe = await recipeApiService.getRecipeById(lookupId);
         
         if (recipe) {
-          console.log("Found recipe in database:", recipe.name);
+          console.log(`Found recipe in database: ${recipe.name}`);
+          
+          // Cache the recipe with both formats to ensure it's findable later
+          if (recipeApiService instanceof EdamamRecipeApiService) {
+            console.log(`Re-caching recipe with ID: ${recipe.id}`);
+            recipeApiService.cacheRecipe(recipe);
+          }
+          
           return res.json(recipe);
         }
-      } catch (dbError) {
-        console.log("Recipe not found in database, ID:", id);
+      } catch (firstLookupError) {
+        console.log(`Recipe not found with ID ${lookupId}: ${firstLookupError.message}`);
         
-        // If it's a high ID (above 1000), it's likely a dynamically generated recipe
-        if (id > 1000) {
+        // Try the alternative format if we get here (string->number or number->string)
+        if (typeof lookupId === 'number') {
+          // We tried with number, now try with string
+          lookupId = rawId;
+        } else if (!isNaN(numericId)) {
+          // We tried with string, now try with number
+          lookupId = numericId;
+        }
+        
+        console.log(`Trying alternative ID format: ${lookupId} (${typeof lookupId})`);
+        
+        try {
+          const recipe = await recipeApiService.getRecipeById(lookupId);
+          if (recipe) {
+            console.log(`Found recipe with alternative ID format: ${recipe.name}`);
+            // Cache with both formats
+            if (recipeApiService instanceof EdamamRecipeApiService) {
+              recipeApiService.cacheRecipe(recipe);
+            }
+            return res.json(recipe);
+          }
+        } catch (secondLookupError) {
+          console.log(`Recipe not found with alternative ID format: ${secondLookupError.message}`);
+        }
+        
+        // If all lookups failed and it's a high ID, it could be a dynamically generated recipe
+        if (numericId && numericId > 1000) {
           // Get the dish name from query params
           const dishName = req.query.name as string;
           
