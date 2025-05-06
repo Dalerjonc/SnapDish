@@ -152,7 +152,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Try to parse as number but don't reject string IDs (for Edamam recipe_xxx IDs)
       const numericId = parseInt(rawId);
-      let lookupId: number | string = !isNaN(numericId) ? numericId : rawId;
+      let lookupId: number | string;
+      
+      // If it's a valid recipe ID from Edamam (starting with "recipe_"), use it directly
+      if (rawId && rawId.startsWith && rawId.startsWith('recipe_')) {
+        console.log(`Detected Edamam recipe ID: ${rawId}`);
+        lookupId = rawId;
+      } else {
+        // Otherwise, try to convert to number if possible
+        lookupId = !isNaN(numericId) ? numericId : rawId;
+      }
       
       // If it's a string ID, also compute a hash to try later as fallback
       let hashedId: number | null = null;

@@ -15,21 +15,26 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   // Get ID parameter from the props
   const idParam = params?.id;
   
-  // Safely extract and parse the ID parameter
-  const recipeId = idParam ? parseInt(idParam) : undefined;
+  // Extract the ID parameter - could be a number or Edamam ID string
+  let validRecipeId: number | string | null = idParam || null;
+  
+  // Try to parse as number if it looks numeric
+  if (idParam && !idParam.startsWith('recipe_')) {
+    const parsedId = parseInt(idParam);
+    if (!isNaN(parsedId)) {
+      validRecipeId = parsedId;
+    }
+  }
   
   // Log the route parameters for debugging
   console.log("Recipe Detail Route:", { 
     hasParams: !!params, 
     idParam,
-    parsedId: recipeId 
+    parsedId: validRecipeId 
   });
   
-  // Make sure we have a valid numeric ID
-  const validRecipeId = recipeId && !isNaN(recipeId) ? recipeId : null;
-  
   if (!validRecipeId) {
-    console.error("Invalid recipe ID in URL:", idParam);
+    console.error("Missing recipe ID in URL");
   }
 
   // Track if user has saved this recipe

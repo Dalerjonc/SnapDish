@@ -11,7 +11,7 @@ interface RecipeCardHorizontalProps {
 const RecipeCardHorizontal = ({ id, title, image, readyInMinutes, calories }: RecipeCardHorizontalProps) => {
   return (
     <Link href={`/recipe/${id}`}>
-      <a className="flex bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition duration-200">
+      <div className="flex bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition duration-200 cursor-pointer">
         <div className="w-1/3 relative">
           <img src={image} alt={title} className="w-full h-full object-cover" />
         </div>
@@ -30,7 +30,7 @@ const RecipeCardHorizontal = ({ id, title, image, readyInMinutes, calories }: Re
             )}
           </div>
         </div>
-      </a>
+      </div>
     </Link>
   );
 };
