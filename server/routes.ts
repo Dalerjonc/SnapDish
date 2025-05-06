@@ -252,9 +252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
-      // Identify the dish using image recognition
+      // Identify the dish using Google Vision API
       const detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-      console.log("Image recognition result:", detectedDish);
+      console.log("Google Vision API result:", detectedDish);
       
       if (!detectedDish) {
         console.log("No dish detected in the image");
@@ -262,8 +262,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // Always generate recipe with OpenAI directly - no database lookup
-        console.log("Generating recipe with OpenAI for:", detectedDish);
+        // Use the detected dish name to search for recipes through Edamam API
+        console.log("Searching for recipes for:", detectedDish);
+        
+        let recipes: any[] = [];
+        
+        try {
+          // First try to get recipes from Edamam
+          recipes = await recipeApiService.searchRecipeByName(detectedDish)
+            .then(recipe => [recipe]) // Convert single recipe to array
+            .catch(async (err) => {
+              console.log("Error getting recipe from Edamam, trying by ingredients:", err);
+              // If recipe search fails, try searching by the dish name as ingredient
+              return await recipeApiService.getRecipesByIngredients([detectedDish]);
+            });
+          
+          console.log(`Found ${recipes.length} recipes through Edamam API`);
+        } catch (edamamError) {
+          console.error("Edamam search failed:", edamamError);
+          // If Edamam search fails, fall back to OpenAI recipe generation
+          console.log("Falling back to OpenAI recipe generation");
+        }
+        
+        // If we got recipes from Edamam, use the first one
+        if (recipes && recipes.length > 0) {
+          const recipe = recipes[0];
+          console.log("Successfully found recipe with Edamam:", recipe.name);
+          return res.json(recipe);
+        }
+        
+        // If we get here, Edamam didn't return recipes, so fall back to OpenAI
+        console.log("No Edamam recipes found, generating with OpenAI for:", detectedDish);
         
         // Generate recipe with OpenAI
         const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);

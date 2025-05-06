@@ -838,10 +838,26 @@ class SpoonacularRecipeApiService implements RecipeApiService {
   }
 }
 
-// Determine which service to use based on whether API key is available
-const apiKey = process.env.SPOONACULAR_API_KEY;
+// Import the Edamam Recipe Service
+import { EdamamRecipeApiService } from './EdamamRecipeApiService';
 
-// Export the appropriate service
-export const recipeApiService: RecipeApiService = apiKey 
-  ? new SpoonacularRecipeApiService(apiKey) 
-  : new MockRecipeApiService();
+// Determine which service to use based on which API credentials are available
+const spoonacularApiKey = process.env.SPOONACULAR_API_KEY;
+const hasEdamamCredentials = process.env.EDAMAM_RECIPE_APP_ID && process.env.EDAMAM_RECIPE_APP_KEY;
+
+// Create and export the appropriate service based on available credentials
+let recipeService: RecipeApiService;
+
+if (hasEdamamCredentials) {
+  console.log("Using Edamam Recipe API service");
+  recipeService = new EdamamRecipeApiService();
+} else if (spoonacularApiKey) {
+  console.log("Using Spoonacular Recipe API service");
+  recipeService = new SpoonacularRecipeApiService(spoonacularApiKey);
+} else {
+  console.log("No API credentials available, using mock recipe service");
+  recipeService = new MockRecipeApiService();
+}
+
+// Export the selected service
+export const recipeApiService: RecipeApiService = recipeService;

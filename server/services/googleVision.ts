@@ -52,7 +52,9 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
     if (foodLabels.length > 0) {
       // Sort by score (highest first) and return the top result
       foodLabels.sort((a, b) => (b.score || 0) - (a.score || 0));
-      return foodLabels[0].description || null;
+      const dishName = foodLabels[0].description || null;
+      console.log(`Google Vision identified dish: ${dishName}`);
+      return dishName;
     }
     
     // If no food-related labels were found, check for generic objects
@@ -72,10 +74,25 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
       if (foodObjects.length > 0) {
         // Sort by score (highest first) and return the top result
         foodObjects.sort((a, b) => (b.score || 0) - (a.score || 0));
-        return foodObjects[0].name || null;
+        const dishName = foodObjects[0].name || null;
+        console.log(`Google Vision identified dish from objects: ${dishName}`);
+        return dishName;
       }
     } catch (error) {
       console.error("Error during object localization:", error);
+    }
+    
+    // Try one more approach - use all high-confidence labels combined as a search phrase
+    const highConfidenceLabels = labels
+      .filter(label => (label.score || 0) > 0.7)
+      .map(label => label.description)
+      .filter(Boolean)
+      .slice(0, 3);
+      
+    if (highConfidenceLabels.length > 0) {
+      const combinedDishName = highConfidenceLabels.join(' ');
+      console.log(`Google Vision combining high-confidence labels: ${combinedDishName}`);
+      return combinedDishName;
     }
     
     // If we haven't identified a food item, return null
