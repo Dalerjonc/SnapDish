@@ -245,6 +245,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 created_at: new Date()
               };
               
+              // Cache the regenerated recipe for future lookups
+              if (recipeApiService instanceof EdamamRecipeApiService) {
+                console.log(`Caching regenerated recipe with ID: ${numericId}`);
+                recipeApiService.cacheRecipe(generatedRecipe);
+                
+                // Verify recipe is cached properly
+                try {
+                  const cachedRecipe = await recipeApiService.getRecipeById(numericId);
+                  console.log(`Successfully verified cached recipe: ${cachedRecipe.name}`);
+                } catch (cacheError) {
+                  console.error(`Failed to verify recipe in cache: ${cacheError.message}`);
+                }
+              }
+              
               return res.json(generatedRecipe);
             } catch (openaiError) {
               console.error("Error generating recipe with OpenAI:", openaiError);

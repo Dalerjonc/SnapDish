@@ -35,40 +35,109 @@ export async function analyzeImage(imageBuffer: Buffer) {
 // Function to identify a dish from an image
 export async function identifyDish(imageBuffer: Buffer): Promise<string | null> {
   try {
-    // Get labels from the image
+    // Get labels from the image with more results
     const [result] = await client.labelDetection(imageBuffer);
     const labels = result.labelAnnotations || [];
     
     console.log("Vision API labels:", labels.map(l => `${l.description} (${l.score})`).join(', '));
     
-    // Filter for labels that are related to food
-    const foodLabels = labels.filter(label => {
+    // Check if rice dish is detected - many rice dishes need special handling
+    const isRiceDish = labels.some(label => {
       const description = label.description?.toLowerCase() || '';
-      return FOOD_CATEGORIES.some(category => description.includes(category)) || 
-             (label.score !== null && label.score !== undefined && label.score > 0.8); // Include high confidence labels too
+      return description.includes('rice') || 
+             description.includes('pilaf') || 
+             description.includes('biryani') || 
+             description.includes('paella');
     });
     
-    // If we found food labels, use them directly
+    if (isRiceDish) {
+      console.log("Rice dish detected, creating specialized description");
+      
+      // Look for meat types and other key ingredients in the rice dish
+      const meatTypes = labels.filter(label => {
+        const description = label.description?.toLowerCase() || '';
+        return description.includes('beef') || 
+               description.includes('chicken') || 
+               description.includes('pork') || 
+               description.includes('lamb') || 
+               description.includes('meat');
+      });
+      
+      // Look for vegetables or other important ingredients
+      const vegetables = labels.filter(label => {
+        const description = label.description?.toLowerCase() || '';
+        return description.includes('carrot') || 
+               description.includes('peas') || 
+               description.includes('tomato') ||
+               description.includes('vegetable');
+      });
+      
+      // Build a more specific dish name for rice dishes
+      let dishName = '';
+      
+      // Add meat type if found
+      if (meatTypes.length > 0) {
+        dishName += meatTypes[0].description + ' ';
+      }
+      
+      // Add vegetable if found
+      if (vegetables.length > 0) {
+        dishName += vegetables[0].description + ' ';
+      }
+      
+      // Check for specific rice dish types
+      const riceDishType = labels.find(label => {
+        const description = label.description?.toLowerCase() || '';
+        return description.includes('pilaf') || 
+               description.includes('biryani') || 
+               description.includes('paella') ||
+               description.includes('fried rice');
+      });
+      
+      if (riceDishType) {
+        dishName += riceDishType.description;
+      } else {
+        dishName += 'Rice';
+      }
+      
+      console.log(`Generated specific rice dish name: ${dishName}`);
+      return dishName.trim();
+    }
+    
+    // Filter for labels that are related to food but exclude generic "food" label
+    const foodLabels = labels.filter(label => {
+      const description = label.description?.toLowerCase() || '';
+      // Exclude generic food descriptions
+      if (description === 'food' || description === 'dish' || description === 'cuisine') {
+        return false;
+      }
+      return FOOD_CATEGORIES.some(category => description.includes(category)) && 
+             (label.score || 0) > 0.7; // Require good confidence
+    });
+    
+    // If we found specific food labels, use the highest confidence one
     if (foodLabels.length > 0) {
       // Sort by score (highest first) and return the top result
       foodLabels.sort((a, b) => (b.score || 0) - (a.score || 0));
       const dishName = foodLabels[0].description || null;
-      console.log(`Google Vision identified dish: ${dishName}`);
+      console.log(`Google Vision identified specific dish: ${dishName}`);
       return dishName;
     }
     
-    // If no food-related labels were found, check for generic objects
+    // If no specific food-related labels were found, check for objects
     try {
-      console.log("No food labels found, using object detection");
+      console.log("No specific food labels found, using object detection");
       const [objectResult] = await client.objectLocalization(imageBuffer);
       const objects = objectResult.localizedObjectAnnotations || [];
       
       console.log("Vision API objects:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
       
+      // Only use food objects and exclude generic "Food" object
       const foodObjects = objects.filter(obj => {
         const name = obj.name?.toLowerCase() || '';
-        return FOOD_CATEGORIES.some(category => name.includes(category)) || 
-              (obj.score !== null && obj.score !== undefined && obj.score > 0.8);
+        if (name === 'food') return false;
+        return FOOD_CATEGORIES.some(category => name.includes(category)) && 
+              (obj.score || 0) > 0.7; // Require high confidence
       });
       
       if (foodObjects.length > 0) {
@@ -82,17 +151,42 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
       console.error("Error during object localization:", error);
     }
     
-    // Try one more approach - use all high-confidence labels combined as a search phrase
-    const highConfidenceLabels = labels
-      .filter(label => (label.score || 0) > 0.7)
+    // Try combining relevant high-confidence labels to create a meaningful dish description
+    const relevantLabels = labels
+      .filter(label => {
+        const desc = label.description?.toLowerCase() || '';
+        const score = label.score || 0;
+        
+        // Skip generic terms like "food" and "dish" when combining labels
+        if (desc === 'food' || desc === 'dish' || desc === 'cuisine' || desc === 'meal') {
+          return false;
+        }
+        
+        // Include ingredient and cooking method terms with good confidence
+        return (FOOD_CATEGORIES.some(category => desc.includes(category)) || 
+                ['meat', 'rice', 'noodle', 'pasta', 'bread', 'potato', 'vegetable', 'fruit', 
+                 'fried', 'baked', 'roasted', 'grilled', 'stewed'].some(term => desc.includes(term)))
+                && score > 0.7;
+      })
       .map(label => label.description)
       .filter(Boolean)
-      .slice(0, 3);
-      
-    if (highConfidenceLabels.length > 0) {
-      const combinedDishName = highConfidenceLabels.join(' ');
-      console.log(`Google Vision combining high-confidence labels: ${combinedDishName}`);
+      .slice(0, 3); // Take top 3 most relevant terms
+    
+    if (relevantLabels.length > 0) {
+      const combinedDishName = relevantLabels.join(' ');
+      console.log(`Google Vision combining relevant food labels: ${combinedDishName}`);
       return combinedDishName;
+    }
+    
+    // Last resort - use the most confident food-related label, even if generic
+    const anyFoodLabel = labels.find(label => {
+      const description = label.description?.toLowerCase() || '';
+      return FOOD_CATEGORIES.some(category => description.includes(category));
+    });
+    
+    if (anyFoodLabel && anyFoodLabel.description) {
+      console.log(`Using generic food label as fallback: ${anyFoodLabel.description}`);
+      return anyFoodLabel.description;
     }
     
     // If we haven't identified a food item, return null
