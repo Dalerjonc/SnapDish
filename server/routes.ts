@@ -154,6 +154,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const numericId = parseInt(rawId);
       let lookupId: number | string = !isNaN(numericId) ? numericId : rawId;
       
+      // If it's a string ID, also compute a hash to try later as fallback
+      let hashedId: number | null = null;
+      if (typeof lookupId === 'string' && lookupId.length > 8) {
+        // Compute a hash for long string IDs (like Edamam IDs)
+        let hash = 0;
+        for (let i = 0; i < lookupId.length; i++) {
+          const char = lookupId.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+        // Ensure the hash is positive and within our ID range
+        hashedId = 10000 + (Math.abs(hash) % 89999);
+        console.log(`Generated numeric hash ${hashedId} from string ID: ${lookupId}`);
+      }
+      
       console.log(`Will try looking up recipe with ID: ${lookupId} (${typeof lookupId})`);
 
       try {
@@ -172,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json(recipe);
         }
       } catch (firstLookupError) {
-        console.log(`Recipe not found with ID ${lookupId}: ${firstLookupError.message}`);
+        console.log(`Recipe not found with ID ${lookupId}: ${firstLookupError instanceof Error ? firstLookupError.message : 'Unknown error'}`);
         
         // Try the alternative format if we get here (string->number or number->string)
         if (typeof lookupId === 'number') {
@@ -196,7 +211,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.json(recipe);
           }
         } catch (secondLookupError) {
-          console.log(`Recipe not found with alternative ID format: ${secondLookupError.message}`);
+          console.log(`Recipe not found with alternative ID format: ${secondLookupError instanceof Error ? secondLookupError.message : 'Unknown error'}`);
+          
+          // Try the hashed ID as a last resort
+          if (hashedId !== null) {
+            console.log(`Trying hashed ID as last resort: ${hashedId}`);
+            try {
+              const recipe = await recipeApiService.getRecipeById(hashedId);
+              if (recipe) {
+                console.log(`Found recipe with hashed ID: ${recipe.name}`);
+                // Cache with all formats
+                if (recipeApiService instanceof EdamamRecipeApiService) {
+                  recipeApiService.cacheRecipe(recipe);
+                }
+                return res.json(recipe);
+              }
+            } catch (hashedError) {
+              console.log(`Recipe not found with hashed ID: ${hashedError instanceof Error ? hashedError.message : 'Unknown error'}`);
+            }
+          }
         }
         
         // If all lookups failed and it's a high ID, it could be a dynamically generated recipe
@@ -341,13 +374,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const recipe = recipes[0];
           console.log("Successfully found recipe with Edamam:", recipe.name);
           
-          // Ensure recipe has a numeric ID
+          // Ensure recipe has a consistent numeric ID
           let recipeId = recipe.id;
-          if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
-            recipeId = parseInt(recipeId);
-          } else if (!recipeId) {
+          if (!recipeId) {
+            // Generate random ID if none exists
             recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
             console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
+          } else if (typeof recipeId === 'string') {
+            // Try to convert string ID to number
+            if (!isNaN(parseInt(recipeId))) {
+              recipeId = parseInt(recipeId);
+              console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
+            } else {
+              // For non-numeric IDs, use a hash function
+              // Simple hash to create a stable numeric ID from any string
+              let hash = 0;
+              for (let i = 0; i < recipeId.length; i++) {
+                const char = recipeId.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+              }
+              // Ensure the hash is positive and within our ID range
+              recipeId = 10000 + (Math.abs(hash) % 89999);
+              console.log(`Hashed string ID "${recipe.id}" to numeric ID: ${recipeId}`);
+            }
           }
           
           // Complete recipe with any missing fields and consistent ID format

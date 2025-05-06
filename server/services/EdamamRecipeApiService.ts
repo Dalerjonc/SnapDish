@@ -48,6 +48,21 @@ export class EdamamRecipeApiService implements RecipeApiService {
   private generateUniqueId(): number {
     return this.recipeIdCounter++;
   }
+  
+  // Convert any string ID to a numeric ID consistently
+  private hashStringToNumericId(str: string): number {
+    // Simple string hash function
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Ensure the hash is positive and in our recipe ID range (10000+)
+    const positiveHash = Math.abs(hash);
+    return 10000 + (positiveHash % 89999); // Range: 10000-99999
+  }
 
   async getPopularRecipes(): Promise<Recipe[]> {
     try {
@@ -180,15 +195,22 @@ export class EdamamRecipeApiService implements RecipeApiService {
       if (recipes && recipes.length > 0) {
         const recipe = recipes[0];
         
-        // Make sure we have an ID (if not, generate one)
+        // Make sure we have a numeric ID (if not, generate or convert)
         let recipeId = recipe.id;
         if (!recipeId) {
+          // Generate a unique ID if none exists
           recipeId = this.generateUniqueId();
           console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
-        } else if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
-          // Convert string ID to number if it's numeric
-          recipeId = parseInt(recipeId, 10);
-          console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
+        } else if (typeof recipeId === 'string') {
+          if (!isNaN(parseInt(recipeId))) {
+            // Convert numeric string to number
+            recipeId = parseInt(recipeId, 10);
+            console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
+          } else {
+            // Hash non-numeric string to a numeric ID
+            recipeId = this.hashStringToNumericId(recipeId);
+            console.log(`Hashed string ID "${recipe.id}" to numeric ID: ${recipeId}`);
+          }
         }
         
         // Create the processed recipe with consistent ID
@@ -221,14 +243,21 @@ export class EdamamRecipeApiService implements RecipeApiService {
       
       // Process each recipe to ensure consistent IDs and cache them
       return recipes.map(recipe => {
-        // Make sure we have an ID (if not, generate one)
+        // Make sure we have a numeric ID (if not, generate or convert)
         let recipeId = recipe.id;
         if (!recipeId) {
+          // Generate a unique ID if none exists
           recipeId = this.generateUniqueId();
           console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
-        } else if (typeof recipeId === 'string' && !isNaN(parseInt(recipeId))) {
-          // Convert string ID to number if it's numeric
-          recipeId = parseInt(recipeId, 10);
+        } else if (typeof recipeId === 'string') {
+          if (!isNaN(parseInt(recipeId))) {
+            // Convert numeric string to number
+            recipeId = parseInt(recipeId, 10);
+          } else {
+            // Hash non-numeric string to a numeric ID
+            recipeId = this.hashStringToNumericId(recipeId);
+            console.log(`Hashed string ID "${recipe.id}" to numeric ID: ${recipeId}`);
+          }
         }
         
         // Create the processed recipe with consistent ID
