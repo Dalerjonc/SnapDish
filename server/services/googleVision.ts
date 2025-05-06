@@ -142,7 +142,20 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
     try {
       console.log("No specific food labels found, using object detection");
       
-      const [objectResult] = await client.objectLocalization(imageBuffer);
+      // Make sure client exists before trying to use it
+      if (!client) {
+        throw new Error("Google Vision client not initialized");
+      }
+      
+      let objectResult: any = { localizedObjectAnnotations: [] };
+      if (client) {
+        try {
+          const result = await client.objectLocalization(imageBuffer);
+          objectResult = result[0];
+        } catch (objError) {
+          console.error("Error during object localization:", objError);
+        }
+      }
       const objects = objectResult.localizedObjectAnnotations || [];
       
       console.log("Vision API objects:", objects.map(o => `${o.name || 'unnamed'} (${o.score || 0})`).join(', '));
@@ -222,7 +235,15 @@ export async function identifyIngredients(imageBuffer: Buffer): Promise<string[]
     
     // Use both label detection and object localization for better ingredient identification
     const [labelResult] = await client.labelDetection(imageBuffer);
-    const [objectResult] = await client.objectLocalization(imageBuffer);
+    let objectResult: any = { localizedObjectAnnotations: [] };
+    if (client) {
+      try {
+        const result = await client.objectLocalization(imageBuffer);
+        objectResult = result[0];
+      } catch (objError) {
+        console.error("Error during object localization:", objError);
+      }
+    }
     
     const labels = labelResult.labelAnnotations || [];
     const objects = objectResult.localizedObjectAnnotations || [];

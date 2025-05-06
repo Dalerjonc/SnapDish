@@ -24,19 +24,39 @@ export class EdamamRecipeApiService implements RecipeApiService {
   }
   
   // Method to store a recipe in the cache
-  public cacheRecipe(recipe: Recipe): void {
+  public cacheRecipe(recipe: any): void {
     if (recipe && recipe.id) {
       console.log(`Caching recipe: ${recipe.name} with ID: ${recipe.id} (${typeof recipe.id})`);
       
-      // Cache by ID (handles both number and string types)
-      this.recipeCache.set(recipe.id, recipe);
+      // Ensure recipe has all required fields for Recipe type
+      const processedRecipe: Recipe = {
+        id: typeof recipe.id === 'string' ? this.hashStringToNumericId(recipe.id) : Number(recipe.id),
+        name: recipe.name || '',
+        image: recipe.image || null,
+        readyInMinutes: recipe.readyInMinutes || 30,
+        servings: recipe.servings || 4,
+        sourceUrl: recipe.sourceUrl || null,
+        summary: recipe.summary || null,
+        instructions: recipe.instructions || null,
+        calories: recipe.calories || null,
+        protein: recipe.protein || null,
+        carbs: recipe.carbs || null,
+        fat: recipe.fat || null,
+        diets: recipe.diets || null,
+        extendedIngredients: recipe.extendedIngredients || null,
+        analyzedInstructions: recipe.analyzedInstructions || null,
+        created_at: recipe.created_at || new Date()
+      };
+      
+      // Cache by numeric ID
+      this.recipeCache.set(processedRecipe.id, processedRecipe);
       
       // Also cache by string version of ID for consistent lookup
-      if (typeof recipe.id === 'number') {
-        this.recipeCache.set(recipe.id.toString(), recipe);
-      } else if (typeof recipe.id === 'string' && !isNaN(parseInt(recipe.id))) {
-        // Also cache by number version if ID is a numeric string
-        this.recipeCache.set(parseInt(recipe.id), recipe);
+      this.recipeCache.set(processedRecipe.id.toString(), processedRecipe);
+      
+      // If the original ID was a string, cache by that too
+      if (typeof recipe.id === 'string') {
+        this.recipeCache.set(recipe.id, processedRecipe);
       }
       
       console.log(`Recipe cache now has ${this.recipeCache.size} entries`);
@@ -178,10 +198,23 @@ export class EdamamRecipeApiService implements RecipeApiService {
           }
         }
         
-        const processedRecipe = {
-          ...recipe,
+        // Ensure recipe has all required fields for Recipe type
+        const processedRecipe: Recipe = {
           id: recipeId,
-          instructions: recipe.instructions || [],
+          name: recipe.name || '',
+          image: recipe.image || null,
+          readyInMinutes: recipe.readyInMinutes || 30,
+          servings: recipe.servings || 4,
+          sourceUrl: recipe.sourceUrl || null,
+          summary: recipe.summary || null,
+          instructions: recipe.instructions || null,
+          calories: recipe.calories || null,
+          protein: recipe.protein || null,
+          carbs: recipe.carbs || null,
+          fat: recipe.fat || null,
+          diets: recipe.diets || null,
+          extendedIngredients: recipe.extendedIngredients || null,
+          analyzedInstructions: recipe.analyzedInstructions || null,
           created_at: recipe.created_at || new Date()
         };
         
