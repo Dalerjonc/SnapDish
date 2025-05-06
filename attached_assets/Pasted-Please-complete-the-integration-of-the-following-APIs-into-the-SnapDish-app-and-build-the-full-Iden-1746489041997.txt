@@ -1,0 +1,61 @@
+Please complete the integration of the following APIs into the SnapDish app, and build the full Identify Dish flow:
+
+---
+
+🔍 1. Google Vision API (Image Recognition)
+- When the user uploads or snaps a photo of any prepared food, send the image to Google Vision API.
+- Extract the top relevant food labels from the response.
+- Display the primary detected dish name to the user (e.g., "This looks like chicken biryani").
+
+---
+
+📖 2. Edamam Recipe Search API (Recipes)
+- After the dish is identified, use the most relevant keyword from Google Vision (e.g., "chicken biryani") to query Edamam’s Recipe Search API.
+- Display a list of recipe matches with:
+  - Dish name
+  - Cooking instructions (step-by-step)
+  - Ingredients
+  - Preparation time
+  - Diet & health labels (e.g., vegetarian, gluten-free)
+
+---
+
+🥦 3. Edamam Nutrition Analysis API (Calories and Nutrients)
+- Once a recipe is selected, send its full ingredient list to Edamam’s Nutrition API.
+- Display nutrition information including:
+  - Calories
+  - Protein
+  - Carbs
+  - Fat
+  - Optional: diet quality or health score (if available)
+
+---
+
+🤖 4. OpenAI ChatGPT API (AI Chef Assistant)
+- On the result screen (after the dish and recipe are shown), include a ChatGPT assistant panel.
+- The user should be able to ask:
+  - “Can I make this dairy-free?”
+  - “What’s a faster version?”
+  - “What can I serve with this?”
+- Use GPT-4 to respond contextually, based on the identified dish or selected recipe.
+
+---
+
+✅ Full Identify Dish Flow:
+1. User uploads or snaps a photo.
+2. App shows loading screen: “Identifying…”
+3. Google Vision detects dish → shows dish name on screen
+4. Edamam API fetches 2–3 matching recipes
+5. User taps one → shows full cooking instructions + ingredients
+6. Nutrition API runs → displays calories and macros
+7. ChatGPT assistant appears to answer follow-up questions
+
+---
+
+💡 Notes:
+- Add loading and error states at each step (Vision fail, Recipe fail, etc.)
+- Use async/await where needed
+- Make sure Edamam API credentials (app ID & key) are stored securely
+- JSON credentials for Google Vision should not be exposed to frontend
+
+Let me know once this full flow is wired up, and I’ll provide any needed API keys or demo data.
