@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { imageRecognitionService } from "./services/imageRecognition";
 import { recipeApiService } from "./services/recipeApi";
+import { EdamamRecipeApiService } from "./services/EdamamRecipeApiService";
 import { openaiService } from "./services/openai";
 import multer from "multer";
 import { z } from "zod";
@@ -288,6 +289,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (recipes && recipes.length > 0) {
           const recipe = recipes[0];
           console.log("Successfully found recipe with Edamam:", recipe.name);
+          
+          // Cache the recipe for future use
+          // First check if it's an EdamamRecipeApiService to use its caching method
+          if (recipeApiService instanceof EdamamRecipeApiService) {
+            recipeApiService.cacheRecipe(recipe);
+          }
+          
           return res.json(recipe);
         }
         
@@ -347,6 +355,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
+        
+        // Cache the OpenAI-generated recipe for future getRecipeById requests
+        if (recipeApiService instanceof EdamamRecipeApiService) {
+          recipeApiService.cacheRecipe(recipe);
+          console.log("OpenAI generated recipe cached with ID:", recipe.id);
+        }
+        
         res.json(recipe);
       } catch (recipeError) {
         console.error("Error generating recipe:", recipeError);

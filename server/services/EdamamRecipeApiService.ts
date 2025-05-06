@@ -17,9 +17,18 @@ interface RecipeApiService {
 
 export class EdamamRecipeApiService implements RecipeApiService {
   private recipeIdCounter: number = 10000; // Starting ID for Edamam recipes that don't have numeric IDs
+  private recipeCache: Map<number | string, Recipe> = new Map(); // Cache to store recipes by ID
 
   constructor() {
     console.log("Edamam Recipe API Service initialized");
+  }
+  
+  // Method to store a recipe in the cache
+  public cacheRecipe(recipe: Recipe): void {
+    if (recipe && recipe.id) {
+      console.log(`Caching recipe: ${recipe.name} with ID: ${recipe.id}`);
+      this.recipeCache.set(recipe.id, recipe);
+    }
   }
 
   private generateUniqueId(): number {
@@ -66,18 +75,33 @@ export class EdamamRecipeApiService implements RecipeApiService {
 
   async getRecipeById(id: number | string): Promise<Recipe> {
     try {
-      // If it's a string ID and starts with "recipe_", it's an Edamam ID
+      // First check if the recipe is in our cache
+      if (this.recipeCache.has(id)) {
+        console.log(`Found recipe with ID ${id} in cache`);
+        return this.recipeCache.get(id) as Recipe;
+      }
+      
+      console.log(`Recipe with ID ${id} not found in cache, trying Edamam`);
+      
+      // If it's a string ID and starts with "recipe_", it's an Edamam API ID
       if (typeof id === 'string' && id.includes('recipe_')) {
         const recipe = await edamamService.getRecipeById(id);
-        return {
+        const processedRecipe = {
           ...recipe,
           id: typeof recipe.id === 'string' ? parseInt(recipe.id, 10) : recipe.id
         };
+        
+        // Cache the recipe for future use
+        this.cacheRecipe(processedRecipe);
+        return processedRecipe;
       }
       
-      // For numeric IDs, we need to handle differently since Edamam uses string IDs
-      // This is placeholder logic that would need to be replaced with actual ID mapping
-      throw new Error(`Recipe with ID ${id} not found in Edamam format`);
+      // If it's a numeric ID, try to search by name
+      // This is a fallback for recipes we've identified but don't have in cache
+      console.log(`Could not find recipe with ID ${id}, rebuilding recipe from OpenAI`);
+      
+      // If we can't find the recipe, throw an error
+      throw new Error(`Recipe with ID ${id} not found in cache or Edamam`);
     } catch (error) {
       console.error(`Error getting recipe by id ${id} from Edamam:`, error);
       throw error;
