@@ -23,6 +23,19 @@ const FOOD_CATEGORIES = [
   'sandwich', 'salad', 'soup', 'baked goods', 'bread', 'cake', 'pie', 'cookie', 'pastry'
 ];
 
+// Specific cultural rice dishes for more accurate identification
+const RICE_DISHES = [
+  { name: 'plov', alternates: ['pilaf', 'pulao', 'pilau'], origin: 'Uzbek/Central Asian' },
+  { name: 'biryani', alternates: ['biriyani', 'briyani'], origin: 'Indian/South Asian' },
+  { name: 'paella', alternates: ['spanish rice'], origin: 'Spanish' },
+  { name: 'risotto', alternates: ['italian rice'], origin: 'Italian' },
+  { name: 'jambalaya', alternates: ['cajun rice'], origin: 'Creole/Cajun' },
+  { name: 'tahdig', alternates: ['persian rice'], origin: 'Persian' },
+  { name: 'congee', alternates: ['jook', 'rice porridge'], origin: 'Chinese/East Asian' },
+  { name: 'arroz con pollo', alternates: ['chicken rice'], origin: 'Latin American' },
+  { name: 'nasi goreng', alternates: ['fried rice', 'indonesian rice'], origin: 'Indonesian' }
+];
+
 // Function to analyze uploaded image for general labels
 export async function analyzeImage(imageBuffer: Buffer) {
   try {
@@ -55,21 +68,52 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
     
     console.log("Vision API labels:", labels.map(l => `${l.description} (${l.score})`).join(', '));
     
+    // First, check for all image labels as lowercase strings for easier matching
+    const labelTexts = labels.map(label => (label.description || '').toLowerCase());
+    
+    // Check for cultural rice dishes using our dictionary
+    for (const dish of RICE_DISHES) {
+      // Check if the main dish name is in the labels
+      if (labelTexts.some(text => text.includes(dish.name))) {
+        console.log(`Cultural rice dish detected: ${dish.name} (${dish.origin})`);
+        return `${dish.origin} ${dish.name}`;
+      }
+      
+      // Check for alternate names
+      const matchedAlternate = dish.alternates.find(alt => 
+        labelTexts.some(text => text.includes(alt))
+      );
+      
+      if (matchedAlternate) {
+        console.log(`Cultural rice dish detected via alternate name: ${matchedAlternate} -> ${dish.name} (${dish.origin})`);
+        return `${dish.origin} ${dish.name}`;
+      }
+    }
+    
+    // Check if the image specifically has plov or pilaf characteristics
+    const isPlov = 
+      (labelTexts.some(text => text.includes('rice') || text.includes('pilaf')) &&
+       labelTexts.some(text => text.includes('carrot') || text.includes('meat')));
+    
+    if (isPlov) {
+      console.log("Characteristics of plov/pilaf detected");
+      return "Uzbek plov";
+    }
+    
     // Check if rice dish is detected - many rice dishes need special handling
-    const isRiceDish = labels.some(label => {
-      const description = label.description?.toLowerCase() || '';
-      return description.includes('rice') || 
-             description.includes('pilaf') || 
-             description.includes('biryani') || 
-             description.includes('paella');
-    });
+    const isRiceDish = labelTexts.some(text => 
+      text.includes('rice') || 
+      text.includes('pilaf') || 
+      text.includes('biryani') || 
+      text.includes('paella')
+    );
     
     if (isRiceDish) {
       console.log("Rice dish detected, creating specialized description");
       
       // Look for meat types and other key ingredients in the rice dish
       const meatTypes = labels.filter(label => {
-        const description = label.description?.toLowerCase() || '';
+        const description = (label.description || '').toLowerCase();
         return description.includes('beef') || 
                description.includes('chicken') || 
                description.includes('pork') || 
@@ -79,15 +123,29 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
       
       // Look for vegetables or other important ingredients
       const vegetables = labels.filter(label => {
-        const description = label.description?.toLowerCase() || '';
+        const description = (label.description || '').toLowerCase();
         return description.includes('carrot') || 
                description.includes('peas') || 
                description.includes('tomato') ||
                description.includes('vegetable');
       });
       
+      // Look for cooking methods
+      const cookingMethods = labels.filter(label => {
+        const description = (label.description || '').toLowerCase();
+        return description.includes('fried') || 
+               description.includes('steamed') || 
+               description.includes('boiled') ||
+               description.includes('roasted');
+      });
+      
       // Build a more specific dish name for rice dishes
       let dishName = '';
+      
+      // Add cooking method if found
+      if (cookingMethods.length > 0) {
+        dishName += cookingMethods[0].description + ' ';
+      }
       
       // Add meat type if found
       if (meatTypes.length > 0) {
@@ -101,7 +159,7 @@ export async function identifyDish(imageBuffer: Buffer): Promise<string | null> 
       
       // Check for specific rice dish types
       const riceDishType = labels.find(label => {
-        const description = label.description?.toLowerCase() || '';
+        const description = (label.description || '').toLowerCase();
         return description.includes('pilaf') || 
                description.includes('biryani') || 
                description.includes('paella') ||
