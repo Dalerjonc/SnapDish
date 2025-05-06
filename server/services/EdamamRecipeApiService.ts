@@ -289,10 +289,23 @@ export class EdamamRecipeApiService implements RecipeApiService {
             recipeId = this.generateUniqueId();
           }
           
+          // Ensure recipe has all required fields for Recipe type
           return {
-            ...recipe,
             id: recipeId,
-            instructions: recipe.instructions || [],
+            name: recipe.name || '',
+            image: recipe.image || null,
+            readyInMinutes: recipe.readyInMinutes || 30,
+            servings: recipe.servings || 4,
+            sourceUrl: recipe.sourceUrl || null,
+            summary: recipe.summary || null,
+            instructions: recipe.instructions || null,
+            calories: recipe.calories || null,
+            protein: recipe.protein || null,
+            carbs: recipe.carbs || null,
+            fat: recipe.fat || null,
+            diets: recipe.diets || null,
+            extendedIngredients: recipe.extendedIngredients || null,
+            analyzedInstructions: recipe.analyzedInstructions || null,
             created_at: recipe.created_at || new Date()
           };
         });
