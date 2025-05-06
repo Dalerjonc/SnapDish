@@ -213,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Create a recipe object
               const generatedRecipe = {
-                id: id, // Use the requested ID
+                id: numericId, // Use the requested numeric ID
                 name: openAIRecipeData.name || dishName,
                 image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
                 readyInMinutes: openAIRecipeData.readyInMinutes || 30,
