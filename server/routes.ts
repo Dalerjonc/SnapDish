@@ -346,16 +346,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
-      // Import the OpenAI service
-      const { OpenAIVisionImageRecognitionService } = require('./services/openaiImageRecognition');
-      
       let detectedDish;
       
       // First try to use OpenAI Vision API directly for better dish identification
       try {
         if (process.env.OPENAI_API_KEY) {
-          const openAIService = new OpenAIVisionImageRecognitionService();
-          detectedDish = await openAIService.identifyDish(imageBuffer);
+          // Use our imported imageRecognitionService which now prioritizes OpenAI
+          detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
           console.log("OpenAI Vision API result:", detectedDish);
         } else {
           // Fall back to the default service if OpenAI API key is not available
@@ -363,10 +360,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Default image recognition service result:", detectedDish);
         }
       } catch (visionError) {
-        console.error("Error with direct OpenAI Vision call:", visionError);
-        // Fall back to default image recognition service
-        detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-        console.log("Fallback image recognition result:", detectedDish);
+        console.error("Error with Vision API call:", visionError);
+        return res.status(500).json({ 
+          message: "Error processing image", 
+          error: visionError instanceof Error ? visionError.message : String(visionError)
+        });
       }
       
       if (!detectedDish) {
@@ -571,25 +569,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let ingredients: string[] = [];
       
-      // Import the OpenAI service
-      const { OpenAIVisionImageRecognitionService } = require('./services/openaiImageRecognition');
-      
-      // First try to use OpenAI Vision API directly for better ingredient identification
+      // Use our imageRecognitionService which now prioritizes OpenAI
       try {
-        if (process.env.OPENAI_API_KEY) {
-          console.log("Using OpenAI Vision API for ingredient detection");
-          const openAIService = new OpenAIVisionImageRecognitionService();
-          ingredients = await openAIService.identifyIngredients(imageBuffer);
-          console.log("OpenAI Vision API identified ingredients:", ingredients);
-        } else {
-          // Fall back to the default service if OpenAI API key is not available
-          console.log("OpenAI API key not available, using default service");
-          ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
-        }
-      } catch (visionError) {
-        console.error("Error with direct OpenAI Vision call for ingredients:", visionError);
-        // Fall back to default image recognition service
+        console.log("Using image recognition service for ingredient detection");
         ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
+        console.log("Identified ingredients:", ingredients);
+      } catch (visionError) {
+        console.error("Error identifying ingredients:", visionError);
+        return res.status(500).json({ 
+          message: "Error processing image for ingredients", 
+          error: visionError instanceof Error ? visionError.message : String(visionError) 
+        });
       }
       
       if (!ingredients || ingredients.length === 0) {
@@ -713,7 +703,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create an ingredients router
   const ingredientsRouter = express.Router();
   
-  // Identify ingredients from photo
+  // We already have a similar endpoint at /api/ingredients/identify
+  // This endpoint is kept for backward compatibility
   ingredientsRouter.post("/identify", upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
@@ -726,7 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
-      // Identify ingredients using image recognition
+      // Use our imageRecognitionService which now prioritizes OpenAI
       const ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
       
       if (!ingredients || ingredients.length === 0) {
@@ -736,7 +727,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(ingredients);
     } catch (error) {
       console.error("Error identifying ingredients:", error);
-      res.status(500).json({ message: "Error processing image" });
+      res.status(500).json({ 
+        message: "Error processing image for ingredients", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
   
