@@ -19,10 +19,167 @@ export class OpenAIRecipeApiService implements RecipeApiService {
   private recipeIdCounter: number = 50000; // Starting ID for OpenAI-generated recipes
   private recipeCache: Map<number, Recipe> = new Map(); // Cache to store recipes by ID
   private client: OpenAI;
+  
+  // Add caching for expensive API calls
+  private popularRecipesCache: Recipe[] | null = null;
+  private quickRecipesCache: Recipe[] | null = null;
+  private similarRecipesCache: Map<number, Recipe[]> = new Map();
+  private ingredientRecipesCache: Map<string, Recipe[]> = new Map();
+
+  // Cache expiration time (30 minutes)
+  private cacheExpirationMs: number = 30 * 60 * 1000;
+  private lastPopularRecipesUpdate: number = 0;
+  private lastQuickRecipesUpdate: number = 0;
 
   constructor(apiKey: string) {
     this.client = new OpenAI({ apiKey });
     console.log("OpenAI Recipe API Service initialized");
+    
+    // Initialize with some demo recipes to avoid slow initial load
+    this.initializeDemoRecipes();
+  }
+  
+  // Initialize with some pre-defined recipes for faster initial load
+  private initializeDemoRecipes() {
+    // Demo quick recipes
+    const quickRecipes: Recipe[] = [
+      {
+        id: 50001,
+        name: "15-Minute Pasta Primavera",
+        image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601",
+        readyInMinutes: 15,
+        servings: 2,
+        sourceUrl: "",
+        summary: "A quick and easy pasta dish loaded with fresh spring vegetables.",
+        instructions: ["Cook pasta according to package instructions.", "Sauté vegetables in olive oil.", "Combine pasta with vegetables and add seasoning."],
+        calories: 420,
+        protein: "12g",
+        carbs: "65g",
+        fat: "14g",
+        diets: ["vegetarian"],
+        extendedIngredients: [
+          { id: 1, name: "pasta", amount: 200, unit: "g", original: "200g pasta" },
+          { id: 2, name: "mixed vegetables", amount: 2, unit: "cups", original: "2 cups mixed vegetables" },
+          { id: 3, name: "olive oil", amount: 2, unit: "tbsp", original: "2 tablespoons olive oil" }
+        ],
+        analyzedInstructions: [{
+          name: "",
+          steps: [
+            { number: 1, step: "Cook pasta according to package instructions.", ingredients: [], equipment: [] },
+            { number: 2, step: "Sauté vegetables in olive oil.", ingredients: [], equipment: [] },
+            { number: 3, step: "Combine pasta with vegetables and add seasoning.", ingredients: [], equipment: [] }
+          ]
+        }],
+        created_at: new Date()
+      },
+      {
+        id: 50002,
+        name: "Quick Avocado Toast",
+        image: "https://images.unsplash.com/photo-1588137378633-dea1336ce1e2",
+        readyInMinutes: 5,
+        servings: 1,
+        sourceUrl: "",
+        summary: "A nutritious and quick breakfast option that's both delicious and healthy.",
+        instructions: ["Toast bread until golden brown.", "Mash avocado and spread on toast.", "Top with desired toppings."],
+        calories: 320,
+        protein: "8g",
+        carbs: "35g",
+        fat: "18g",
+        diets: ["vegetarian", "vegan"],
+        extendedIngredients: [
+          { id: 1, name: "bread", amount: 2, unit: "slices", original: "2 slices of bread" },
+          { id: 2, name: "avocado", amount: 1, unit: "", original: "1 ripe avocado" },
+          { id: 3, name: "salt", amount: 1, unit: "pinch", original: "Salt to taste" }
+        ],
+        analyzedInstructions: [{
+          name: "",
+          steps: [
+            { number: 1, step: "Toast bread until golden brown.", ingredients: [], equipment: [] },
+            { number: 2, step: "Mash avocado and spread on toast.", ingredients: [], equipment: [] },
+            { number: 3, step: "Top with desired toppings.", ingredients: [], equipment: [] }
+          ]
+        }],
+        created_at: new Date()
+      }
+    ];
+    
+    // Demo popular recipes
+    const popularRecipes: Recipe[] = [
+      {
+        id: 50003,
+        name: "Classic Margherita Pizza",
+        image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002",
+        readyInMinutes: 45,
+        servings: 4,
+        sourceUrl: "",
+        summary: "A timeless Italian classic featuring a thin crust topped with fresh tomatoes, mozzarella, and basil.",
+        instructions: ["Prepare pizza dough.", "Add toppings: tomato sauce, mozzarella, and basil.", "Bake until golden."],
+        calories: 580,
+        protein: "22g",
+        carbs: "72g",
+        fat: "24g",
+        diets: ["vegetarian"],
+        extendedIngredients: [
+          { id: 1, name: "pizza dough", amount: 1, unit: "", original: "1 pizza dough" },
+          { id: 2, name: "tomato sauce", amount: 1/2, unit: "cup", original: "1/2 cup tomato sauce" },
+          { id: 3, name: "mozzarella", amount: 200, unit: "g", original: "200g fresh mozzarella" },
+          { id: 4, name: "basil", amount: 10, unit: "leaves", original: "10 fresh basil leaves" }
+        ],
+        analyzedInstructions: [{
+          name: "",
+          steps: [
+            { number: 1, step: "Prepare pizza dough.", ingredients: [], equipment: [] },
+            { number: 2, step: "Add toppings: tomato sauce, mozzarella, and basil.", ingredients: [], equipment: [] },
+            { number: 3, step: "Bake until golden.", ingredients: [], equipment: [] }
+          ]
+        }],
+        created_at: new Date()
+      },
+      {
+        id: 50004,
+        name: "Chicken Tikka Masala",
+        image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641",
+        readyInMinutes: 60,
+        servings: 4,
+        sourceUrl: "",
+        summary: "A flavorful Indian dish featuring tender chicken in a creamy tomato sauce with aromatic spices.",
+        instructions: ["Marinate chicken in yogurt and spices.", "Grill or bake the chicken pieces.", "Prepare the masala sauce.", "Combine chicken with sauce and simmer."],
+        calories: 620,
+        protein: "45g",
+        carbs: "28g",
+        fat: "32g",
+        diets: [],
+        extendedIngredients: [
+          { id: 1, name: "chicken", amount: 1, unit: "kg", original: "1 kg boneless chicken" },
+          { id: 2, name: "yogurt", amount: 1, unit: "cup", original: "1 cup plain yogurt" },
+          { id: 3, name: "tomatoes", amount: 4, unit: "", original: "4 medium tomatoes" },
+          { id: 4, name: "cream", amount: 1/2, unit: "cup", original: "1/2 cup heavy cream" },
+          { id: 5, name: "spices", amount: 3, unit: "tbsp", original: "3 tablespoons spice blend" }
+        ],
+        analyzedInstructions: [{
+          name: "",
+          steps: [
+            { number: 1, step: "Marinate chicken in yogurt and spices.", ingredients: [], equipment: [] },
+            { number: 2, step: "Grill or bake the chicken pieces.", ingredients: [], equipment: [] },
+            { number: 3, step: "Prepare the masala sauce.", ingredients: [], equipment: [] },
+            { number: 4, step: "Combine chicken with sauce and simmer.", ingredients: [], equipment: [] }
+          ]
+        }],
+        created_at: new Date()
+      }
+    ];
+    
+    // Cache these demo recipes
+    quickRecipes.forEach(recipe => this.cacheRecipe(recipe));
+    popularRecipes.forEach(recipe => this.cacheRecipe(recipe));
+    
+    // Set the cache
+    this.quickRecipesCache = quickRecipes;
+    this.popularRecipesCache = popularRecipes;
+    
+    // Update the timestamp
+    this.lastQuickRecipesUpdate = Date.now();
+    this.lastPopularRecipesUpdate = Date.now();
   }
 
   public cacheRecipe(recipe: Recipe): void {
@@ -53,7 +210,27 @@ export class OpenAIRecipeApiService implements RecipeApiService {
 
   async getPopularRecipes(): Promise<Recipe[]> {
     console.log("Getting popular recipes with OpenAI");
+    
+    // Use cache if available and not expired
+    const now = Date.now();
+    if (this.popularRecipesCache && (now - this.lastPopularRecipesUpdate < this.cacheExpirationMs)) {
+      console.log("Returning popular recipes from cache");
+      return this.popularRecipesCache;
+    }
+    
+    // If the cache is empty or expired, make a new request
     try {
+      // Return from cache while we refresh in the background
+      if (this.popularRecipesCache) {
+        // Start a background refresh
+        this.refreshPopularRecipesCache().catch(err => 
+          console.error("Background refresh of popular recipes failed:", err)
+        );
+        
+        // Return the cached data immediately
+        return this.popularRecipesCache;
+      }
+      
       const response = await this.client.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
@@ -115,7 +292,11 @@ export class OpenAIRecipeApiService implements RecipeApiService {
           carbs: item.carbs || "0g",
           fat: item.fat || "0g",
           diets: item.diets || [],
-          extendedIngredients: Array.isArray(item.extendedIngredients) ? item.extendedIngredients : [],
+          extendedIngredients: Array.isArray(item.extendedIngredients) ? 
+            item.extendedIngredients.map((ingredient: any, index: number) => ({
+              ...ingredient,
+              id: ingredient.id || index + 1
+            })) : [],
           analyzedInstructions: [{
             name: "",
             steps: Array.isArray(item.instructions) 
@@ -143,9 +324,225 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     }
   }
 
+  // Background refresh for popular recipes
+  private async refreshPopularRecipesCache(): Promise<void> {
+    console.log("Background refresh of popular recipes started");
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+        messages: [
+          {
+            role: "system",
+            content: `You are a culinary expert. Generate 5 popular recipes with complete details in the exact JSON array format shown below:
+            [
+              {
+                "name": "Recipe Name",
+                "summary": "Brief description of the recipe",
+                "readyInMinutes": 30,
+                "servings": 4,
+                "calories": 350,
+                "protein": "25g",
+                "carbs": "30g",
+                "fat": "15g",
+                "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+                "instructions": [
+                  "Step 1 instruction",
+                  "Step 2 instruction",
+                  "Step 3 instruction"
+                ],
+                "extendedIngredients": [
+                  {"id": 1, "name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
+                  {"id": 2, "name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
+                ]
+              }
+            ]
+            Make sure each recipe has at least 5 ingredients and 3 instructions. Use realistic cooking times and nutritional values.`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 2000
+      });
+
+      const data = JSON.parse(response.choices[0].message.content || "[]");
+      
+      if (!Array.isArray(data)) {
+        throw new Error("OpenAI did not return an array of recipes");
+      }
+
+      // Process and cache the recipes
+      const recipes: Recipe[] = data.map((item: any) => {
+        // Generate a stable ID for the recipe based on its name
+        const recipeId = this.hashStringToNumericId(item.name);
+        
+        const recipe: Recipe = {
+          id: recipeId,
+          name: item.name,
+          image: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+          readyInMinutes: item.readyInMinutes || 30,
+          servings: item.servings || 4,
+          sourceUrl: "",
+          summary: item.summary || `Recipe for ${item.name}`,
+          instructions: Array.isArray(item.instructions) ? item.instructions : [],
+          calories: item.calories || 0,
+          protein: item.protein || "0g",
+          carbs: item.carbs || "0g",
+          fat: item.fat || "0g",
+          diets: item.diets || [],
+          extendedIngredients: Array.isArray(item.extendedIngredients) ? 
+            item.extendedIngredients.map((ingredient: any, index: number) => ({
+              ...ingredient,
+              id: ingredient.id || index + 1
+            })) : [],
+          analyzedInstructions: [{
+            name: "",
+            steps: Array.isArray(item.instructions) 
+              ? item.instructions.map((step: string, index: number) => ({
+                  number: index + 1,
+                  step: step,
+                  ingredients: [],
+                  equipment: []
+                }))
+              : []
+          }],
+          created_at: new Date()
+        };
+        
+        // Cache the recipe
+        this.cacheRecipe(recipe);
+        
+        return recipe;
+      });
+
+      // Update the cache and timestamp
+      this.popularRecipesCache = recipes;
+      this.lastPopularRecipesUpdate = Date.now();
+      console.log("Background refresh of popular recipes completed successfully");
+    } catch (error) {
+      console.error("Background refresh of popular recipes failed:", error);
+    }
+  }
+
+  // Background refresh for quick recipes
+  private async refreshQuickRecipesCache(): Promise<void> {
+    console.log("Background refresh of quick recipes started");
+    try {
+      const response = await this.client.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+        messages: [
+          {
+            role: "system",
+            content: `You are a culinary expert specializing in quick meals. Generate 5 recipes that can be prepared in 30 minutes or less with complete details in the exact JSON array format shown below:
+            [
+              {
+                "name": "Quick Recipe Name",
+                "summary": "Brief description of this quick recipe",
+                "readyInMinutes": 20,
+                "servings": 4,
+                "calories": 350,
+                "protein": "25g",
+                "carbs": "30g",
+                "fat": "15g",
+                "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+                "instructions": [
+                  "Step 1 instruction",
+                  "Step 2 instruction",
+                  "Step 3 instruction"
+                ],
+                "extendedIngredients": [
+                  {"id": 1, "name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
+                  {"id": 2, "name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
+                ]
+              }
+            ]
+            Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 3 instructions per recipe.`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 2000
+      });
+
+      const data = JSON.parse(response.choices[0].message.content || "[]");
+      
+      if (!Array.isArray(data)) {
+        throw new Error("OpenAI did not return an array of recipes");
+      }
+
+      // Process and cache the recipes
+      const recipes: Recipe[] = data.map((item: any) => {
+        // Generate a stable ID for the recipe based on its name
+        const recipeId = this.hashStringToNumericId(item.name);
+        
+        const recipe: Recipe = {
+          id: recipeId,
+          name: item.name,
+          image: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+          readyInMinutes: item.readyInMinutes || 20,
+          servings: item.servings || 4,
+          sourceUrl: "",
+          summary: item.summary || `Quick recipe for ${item.name}`,
+          instructions: Array.isArray(item.instructions) ? item.instructions : [],
+          calories: item.calories || 0,
+          protein: item.protein || "0g",
+          carbs: item.carbs || "0g",
+          fat: item.fat || "0g",
+          diets: item.diets || [],
+          extendedIngredients: Array.isArray(item.extendedIngredients) ? 
+            item.extendedIngredients.map((ingredient: any, index: number) => ({
+              ...ingredient,
+              id: ingredient.id || index + 1
+            })) : [],
+          analyzedInstructions: [{
+            name: "",
+            steps: Array.isArray(item.instructions) 
+              ? item.instructions.map((step: string, index: number) => ({
+                  number: index + 1,
+                  step: step,
+                  ingredients: [],
+                  equipment: []
+                }))
+              : []
+          }],
+          created_at: new Date()
+        };
+        
+        // Cache the recipe
+        this.cacheRecipe(recipe);
+        
+        return recipe;
+      });
+
+      // Update the cache and timestamp
+      this.quickRecipesCache = recipes;
+      this.lastQuickRecipesUpdate = Date.now();
+      console.log("Background refresh of quick recipes completed successfully");
+    } catch (error) {
+      console.error("Background refresh of quick recipes failed:", error);
+    }
+  }
+
   async getQuickRecipes(): Promise<Recipe[]> {
     console.log("Getting quick recipes with OpenAI");
+    
+    // Use cache if available and not expired
+    const now = Date.now();
+    if (this.quickRecipesCache && (now - this.lastQuickRecipesUpdate < this.cacheExpirationMs)) {
+      console.log("Returning quick recipes from cache");
+      return this.quickRecipesCache;
+    }
+    
+    // If the cache is empty or expired, make a new request
     try {
+      // Return from cache while we refresh in the background
+      if (this.quickRecipesCache) {
+        // Start a background refresh
+        this.refreshQuickRecipesCache().catch(err => 
+          console.error("Background refresh of quick recipes failed:", err)
+        );
+        
+        // Return the cached data immediately
+        return this.quickRecipesCache;
+      }
+      
       const response = await this.client.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
