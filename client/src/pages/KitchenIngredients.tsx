@@ -18,6 +18,11 @@ const KitchenIngredients = () => {
   // Query for recipes by ingredients
   const { data: recipes = [], isLoading: loadingRecipes } = useQuery<any[]>({
     queryKey: ["/api/recipes/by-ingredients", ingredients],
+    queryFn: () => {
+      if (ingredients.length === 0) return [];
+      console.log("Query function for ingredients:", ingredients);
+      return recipeService.getRecipesByIngredients(ingredients);
+    },
     enabled: ingredients.length > 0,
   });
 

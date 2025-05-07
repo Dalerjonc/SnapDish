@@ -16,7 +16,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 // Recipe model
 export const recipes = pgTable("recipes", {
-  id: serial("id").primaryKey(),
+  id: serial("id").primaryKey(), // For database storage
   name: text("name").notNull(),
   image: text("image"),
   readyInMinutes: integer("ready_in_minutes"),
@@ -96,7 +96,7 @@ export const insertChatSchema = createInsertSchema(chats).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type Recipe = typeof recipes.$inferSelect;
+export type Recipe = Omit<typeof recipes.$inferSelect, 'id'> & { id: number | string };
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type SavedRecipe = typeof savedRecipes.$inferSelect;
 export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
