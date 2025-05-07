@@ -49,10 +49,22 @@ export const recipeService = {
   },
 
   async getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
-    const response = await apiRequest("POST", "/api/recipes/by-ingredients", {
-      ingredients,
-    });
-    return response.json();
+    console.log("Searching for recipes with ingredients:", ingredients);
+    
+    try {
+      const response = await apiRequest("POST", "/api/recipes/by-ingredients", {
+        ingredients,
+      });
+      
+      const data = await response.json();
+      console.log("Recipe search results:", data);
+      
+      // Handle both array and single object responses
+      return Array.isArray(data) ? data : [data];
+    } catch (error) {
+      console.error("Error in getRecipesByIngredients:", error);
+      throw error;
+    }
   },
 
   async saveRecipe(recipeId: number): Promise<void> {
