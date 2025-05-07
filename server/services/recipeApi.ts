@@ -842,17 +842,25 @@ class SpoonacularRecipeApiService implements RecipeApiService {
 import { EdamamRecipeApiService } from './EdamamRecipeApiService';
 
 // Determine which service to use based on which API credentials are available
+// Import the OpenAI Recipe Service
+import { OpenAIRecipeApiService } from './OpenAIRecipeApiService';
+
+const openaiApiKey = process.env.OPENAI_API_KEY;
 const spoonacularApiKey = process.env.SPOONACULAR_API_KEY;
 const hasEdamamCredentials = process.env.EDAMAM_RECIPE_APP_ID && process.env.EDAMAM_RECIPE_APP_KEY;
 
 // Create and export the appropriate service based on available credentials
 let recipeService: RecipeApiService;
 
-if (hasEdamamCredentials) {
-  console.log("Using Edamam Recipe API service");
+// Prioritize OpenAI for all recipe functions
+if (openaiApiKey) {
+  console.log("Using OpenAI for recipe service");
+  recipeService = new OpenAIRecipeApiService(openaiApiKey);
+} else if (hasEdamamCredentials) {
+  console.log("OpenAI API key not available, using Edamam Recipe API service as fallback");
   recipeService = new EdamamRecipeApiService();
 } else if (spoonacularApiKey) {
-  console.log("Using Spoonacular Recipe API service");
+  console.log("Using Spoonacular Recipe API service as fallback");
   recipeService = new SpoonacularRecipeApiService(spoonacularApiKey);
 } else {
   console.log("No API credentials available, using mock recipe service");

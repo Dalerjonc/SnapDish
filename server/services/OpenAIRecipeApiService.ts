@@ -6,7 +6,14 @@ import { Recipe } from "@shared/schema";
 import OpenAI from "openai";
 
 // Import the RecipeApiService interface
-import { RecipeApiService } from './recipeApi';
+interface RecipeApiService {
+  getPopularRecipes(): Promise<Recipe[]>;
+  getQuickRecipes(): Promise<Recipe[]>;
+  getRecipeById(id: number): Promise<Recipe>;
+  getSimilarRecipes(id: number): Promise<Recipe[]>;
+  searchRecipeByName(query: string): Promise<Recipe>;
+  getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]>;
+}
 
 export class OpenAIRecipeApiService implements RecipeApiService {
   private recipeIdCounter: number = 50000; // Starting ID for OpenAI-generated recipes
@@ -364,7 +371,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            ${originalRecipe ? `The original recipe is for ${originalRecipe.name}, which includes ingredients like ${originalRecipe.extendedIngredients.slice(0, 3).map(i => i.name).join(', ')}. Generate recipes that use similar ingredients or cooking techniques.` : 'Generate varied but related recipes.'}
+            ${originalRecipe ? `The original recipe is for ${originalRecipe.name}, which includes ingredients like ${originalRecipe.extendedIngredients && originalRecipe.extendedIngredients.length > 0 ? originalRecipe.extendedIngredients.slice(0, 3).map(i => i.name).join(', ') : 'various ingredients'}. Generate recipes that use similar ingredients or cooking techniques.` : 'Generate varied but related recipes.'}
             Include at least one recipe that is a lighter or healthier version, and one that is a regional variation.`
           }
         ],

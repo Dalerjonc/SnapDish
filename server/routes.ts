@@ -703,6 +703,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create an ingredients router
   const ingredientsRouter = express.Router();
   
+  // Add nutrition analysis endpoint
+  ingredientsRouter.post("/analyze", async (req, res) => {
+    try {
+      const { ingredients } = req.body;
+      
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "No ingredients provided" });
+      }
+      
+      // Import the OpenAI Nutrition Service
+      const { nutritionService } = require('./services/OpenAINutritionService');
+      
+      if (!nutritionService) {
+        return res.status(500).json({ message: "Nutrition service not available" });
+      }
+      
+      const nutritionInfo = await nutritionService.analyzeIngredients(ingredients);
+      res.json(nutritionInfo);
+    } catch (error) {
+      console.error("Error analyzing ingredients nutrition:", error);
+      res.status(500).json({ 
+        message: "Error analyzing nutrition information", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
+  // Add meal plan generation endpoint
+  ingredientsRouter.post("/mealplan", async (req, res) => {
+    try {
+      const preferences = req.body;
+      
+      // Import the OpenAI Nutrition Service
+      const { nutritionService } = require('./services/OpenAINutritionService');
+      
+      if (!nutritionService) {
+        return res.status(500).json({ message: "Nutrition service not available" });
+      }
+      
+      const mealPlan = await nutritionService.generateMealPlan(preferences);
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ 
+        message: "Error generating meal plan", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
   // We already have a similar endpoint at /api/ingredients/identify
   // This endpoint is kept for backward compatibility
   ingredientsRouter.post("/identify", upload.single("image"), async (req, res) => {
