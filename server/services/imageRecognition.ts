@@ -233,24 +233,20 @@ const googleCredentialsJson = process.env.GOOGLE_CREDENTIALS_JSON;
 // Determine which service to use based on available credentials
 let selectedService: ImageRecognitionService;
 
-if (googleCredentialsJson) {
-  console.log("Google Cloud Vision credentials found, trying to use Google Vision API");
+// Prioritize OpenAI Vision API as the primary choice for dish recognition
+if (openaiApiKey) {
+  console.log("Using OpenAI Vision for image recognition (primary service)");
+  selectedService = new OpenAIVisionImageRecognitionService();
+} else if (googleCredentialsJson) {
+  console.log("OpenAI API key not found, using Google Cloud Vision API as fallback");
   try {
     const googleVisionService = new GoogleVisionImageRecognitionService();
     selectedService = googleVisionService;
   } catch (error) {
     console.error("Failed to initialize Google Vision service:", error);
-    console.log("Falling back to OpenAI Vision");
-    
-    if (openaiApiKey) {
-      selectedService = new OpenAIVisionImageRecognitionService();
-    } else {
-      selectedService = new MockImageRecognitionService();
-    }
+    console.log("No working image recognition services available, using mock service");
+    selectedService = new MockImageRecognitionService();
   }
-} else if (openaiApiKey) {
-  console.log("Using OpenAI Vision for image recognition");
-  selectedService = new OpenAIVisionImageRecognitionService();
 } else {
   console.log("No API keys available, using mock image recognition service");
   selectedService = new MockImageRecognitionService();

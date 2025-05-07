@@ -346,9 +346,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
-      // Identify the dish using Google Vision API
-      const detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-      console.log("Google Vision API result:", detectedDish);
+      // Import the OpenAI service
+      const { OpenAIVisionImageRecognitionService } = require('./services/openaiImageRecognition');
+      
+      let detectedDish;
+      
+      // First try to use OpenAI Vision API directly for better dish identification
+      try {
+        if (process.env.OPENAI_API_KEY) {
+          const openAIService = new OpenAIVisionImageRecognitionService();
+          detectedDish = await openAIService.identifyDish(imageBuffer);
+          console.log("OpenAI Vision API result:", detectedDish);
+        } else {
+          // Fall back to the default service if OpenAI API key is not available
+          detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
+          console.log("Default image recognition service result:", detectedDish);
+        }
+      } catch (visionError) {
+        console.error("Error with direct OpenAI Vision call:", visionError);
+        // Fall back to default image recognition service
+        detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
+        console.log("Fallback image recognition result:", detectedDish);
+      }
       
       if (!detectedDish) {
         console.log("No dish detected in the image");
@@ -550,8 +569,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image buffer
       const imageBuffer = req.file.buffer;
       
-      // Identify ingredients using image recognition
-      const ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
+      let ingredients: string[] = [];
+      
+      // Import the OpenAI service
+      const { OpenAIVisionImageRecognitionService } = require('./services/openaiImageRecognition');
+      
+      // First try to use OpenAI Vision API directly for better ingredient identification
+      try {
+        if (process.env.OPENAI_API_KEY) {
+          console.log("Using OpenAI Vision API for ingredient detection");
+          const openAIService = new OpenAIVisionImageRecognitionService();
+          ingredients = await openAIService.identifyIngredients(imageBuffer);
+          console.log("OpenAI Vision API identified ingredients:", ingredients);
+        } else {
+          // Fall back to the default service if OpenAI API key is not available
+          console.log("OpenAI API key not available, using default service");
+          ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
+        }
+      } catch (visionError) {
+        console.error("Error with direct OpenAI Vision call for ingredients:", visionError);
+        // Fall back to default image recognition service
+        ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
+      }
       
       if (!ingredients || ingredients.length === 0) {
         return res.status(404).json({ message: "Could not identify any ingredients in the image" });
