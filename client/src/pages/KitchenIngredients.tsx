@@ -210,8 +210,8 @@ const KitchenIngredients = () => {
             <div className="h-6 bg-neutral-200 rounded-lg animate-pulse w-2/3"></div>
             <div className="h-6 w-6 bg-neutral-200 rounded-full animate-pulse"></div>
           </div>
-          {Array(3).fill(0).map((_, index) => (
-            <div key={`skeleton-${index}`} className="flex bg-white rounded-xl overflow-hidden shadow-sm mb-3 h-24">
+          {[1, 2, 3].map((skeletonIndex) => (
+            <div key={`skeleton-${skeletonIndex}`} className="flex bg-white rounded-xl overflow-hidden shadow-sm mb-3 h-24">
               <div className="w-1/3 bg-neutral-200 animate-pulse"></div>
               <div className="w-2/3 p-3">
                 <div className="h-4 bg-neutral-200 rounded-lg animate-pulse mb-2 w-3/4"></div>

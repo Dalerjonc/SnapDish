@@ -11,7 +11,7 @@ interface RecipeCardProps {
 const RecipeCard = ({ id, title, image, readyInMinutes, difficulty = "Easy" }: RecipeCardProps) => {
   return (
     <Link href={`/recipe/${id}`}>
-      <a className="snap-start min-w-[160px] max-w-[160px] rounded-xl overflow-hidden shadow-sm bg-white hover:shadow-md transition duration-200">
+      <div className="snap-start min-w-[160px] max-w-[160px] rounded-xl overflow-hidden shadow-sm bg-white hover:shadow-md transition duration-200 cursor-pointer">
         <div className="aspect-square relative">
           <img src={image} alt={title} className="w-full h-full object-cover" />
           <div className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-sm">
@@ -27,7 +27,7 @@ const RecipeCard = ({ id, title, image, readyInMinutes, difficulty = "Easy" }: R
             <span>{difficulty}</span>
           </div>
         </div>
-      </a>
+      </div>
     </Link>
   );
 };
