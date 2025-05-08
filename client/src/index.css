@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
 
 @tailwind base;
@@ -6,72 +6,81 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 220 14.3% 14.1%;
+  /* Updated rounded corner default */
+  --radius: 1rem;
   
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
+  /* Light mode colors */
+  --background: 210 30% 98%;
+  --foreground: 224 71% 4%;
   
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 8% 46%;
   
-  --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
+  --popover: 0 0% 100% / 0.95; /* Glassmorphism */
+  --popover-foreground: 224 71% 4%;
   
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
+  --card: 0 0% 100% / 0.7; /* Glassmorphism */
+  --card-foreground: 224 71% 4%;
   
-  --primary: 17 100% 60%; /* FF6B35 */
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  
+  /* Dynamic gradients - coral to purple to blue */
+  --primary-gradient: linear-gradient(135deg, hsl(16, 100%, 66%), hsl(300, 80%, 60%), hsl(220, 80%, 60%));
+  --primary: 16 100% 66%; /* Coral */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 206 100% 27%; /* 004E89 */
+  --secondary: 250 95% 68%; /* More vibrant purple */
   --secondary-foreground: 0 0% 100%;
   
-  --accent: 120 50% 55%; /* 5CB85C */
-  --accent-foreground: 0 0% 100%;
+  --accent: 191 97% 77%; /* Bright cyan */
+  --accent-foreground: 224 71% 4%;
   
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 20% 98%;
   
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
+  --ring: 224 71% 4% / 0.2;
   
-  --chart-1: 17 100% 60%;
-  --chart-2: 206 100% 27%;
-  --chart-3: 120 50% 55%;
-  --chart-4: 0 0% 60%;
-  --chart-5: 31 89% 50%;
+  /* Gradient colors for charts and UI elements */
+  --chart-1: 16 100% 66%;
+  --chart-2: 250 95% 68%;
+  --chart-3: 191 97% 77%;
+  --chart-4: 280 75% 60%;
+  --chart-5: 340 80% 65%;
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
+  /* Dark mode - soft dark, not pure black */
+  --background: 224 30% 10%;
+  --foreground: 210 20% 98%;
   
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 215 25% 18%;
+  --muted-foreground: 217 10% 75%;
   
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 224 50% 15% / 0.85; /* Glassmorphism */
+  --popover-foreground: 210 20% 98%;
   
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
+  --card: 224 40% 15% / 0.65; /* Glassmorphism */
+  --card-foreground: 210 20% 98%;
   
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
+  --border: 215 25% 25%;
+  --input: 215 25% 25%;
   
-  --primary: 17 100% 60%;
-  --primary-foreground: 0 0% 100%;
+  /* Same gradient but with different opacity */
+  --primary-gradient: linear-gradient(135deg, hsl(16, 90%, 60%), hsl(300, 95%, 55%), hsl(220, 95%, 55%));
+  --primary: 16 90% 60%;
+  --primary-foreground: 210 20% 98%;
   
-  --secondary: 206 100% 27%;
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 250 70% 65%;
+  --secondary-foreground: 210 20% 98%;
   
-  --accent: 120 50% 55%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 191 90% 72%;
+  --accent-foreground: 222 47% 11%;
   
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 75% 50%;
+  --destructive-foreground: 210 20% 98%;
   
-  --ring: 240 4.9% 83.9%;
+  --ring: 216 15% 60% / 0.3;
 }
 
 @layer base {
@@ -80,31 +89,89 @@
   }
   
   body {
-    @apply font-sans antialiased bg-neutral-100 text-foreground;
+    @apply font-sans antialiased bg-background text-foreground bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
   }
+  
+  /* Apply extra rounded corners to all buttons */
+  button, 
+  .btn {
+    @apply rounded-3xl;
+  }
+  
+  /* Apply glassmorphism to card components */
+  .card {
+    @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 shadow-lg;
+  }
 }
 
 @layer components {
+  /* Glassmorphism classes */
+  .glass {
+    @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/30;
+  }
+  
+  .glass-card {
+    @apply glass rounded-2xl shadow-lg;
+  }
+  
+  .glass-navbar {
+    @apply glass sticky top-0 z-50 shadow-sm;
+  }
+  
+  /* Soft neomorphism for buttons */
+  .btn-neomorphic {
+    @apply rounded-3xl bg-white dark:bg-slate-800 shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.2),-5px_-5px_10px_rgba(255,255,255,0.05)];
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-blue-500;
+  }
+  
+  /* Enhanced chat bubbles with gradients and better rounding */
   .chat-bubble {
-    @apply relative rounded-[1.15rem];
+    @apply relative rounded-[1.5rem] rounded-bl-sm backdrop-blur-sm bg-neutral-50/90 dark:bg-slate-700/80 p-4 shadow-sm;
   }
   
   .chat-bubble:after {
     content: '';
-    @apply absolute -left-2 bottom-0 w-3 h-3 bg-neutral-100 rounded-br-xl;
+    @apply absolute -left-2 bottom-0 w-3 h-3 bg-neutral-50/90 dark:bg-slate-700/80 rounded-br-xl;
   }
   
   .chat-bubble-user {
-    @apply relative rounded-[1.15rem];
+    @apply relative rounded-[1.5rem] rounded-br-sm bg-gradient-to-r from-primary to-secondary p-4 text-white shadow-sm;
   }
   
   .chat-bubble-user:after {
     content: '';
     @apply absolute -right-2 bottom-0 w-3 h-3 bg-secondary rounded-bl-xl;
+  }
+  
+  /* Typing indicator animation */
+  .typing-indicator {
+    @apply flex space-x-1 opacity-70;
+  }
+  
+  .typing-indicator-dot {
+    @apply w-2 h-2 rounded-full bg-foreground;
+    animation: typing-bounce 1.4s infinite ease-in-out both;
+  }
+  
+  .typing-indicator-dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  
+  .typing-indicator-dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  
+  @keyframes typing-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
   }
   
   .hide-scrollbar::-webkit-scrollbar {
