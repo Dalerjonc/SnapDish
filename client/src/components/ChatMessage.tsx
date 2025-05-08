@@ -41,10 +41,12 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   };
 
   return (
-    <div className={`flex items-start ${isUser ? "flex-row-reverse" : ""}`}>
+    <div className={`flex items-start ${isUser ? "flex-row-reverse" : ""} mb-4`}>
       <div 
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${
-          isUser ? "ml-2 bg-primary" : "mr-2 bg-secondary"
+        className={`w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md ${
+          isUser 
+            ? "ml-2 bg-gradient-to-br from-primary to-secondary" 
+            : "mr-2 bg-gradient-to-br from-accent to-secondary"
         } flex-shrink-0`}
       >
         <i className={isUser ? "ri-user-line" : "ri-robot-line"}></i>
@@ -52,11 +54,16 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       <div 
         className={`${
           isUser 
-            ? "chat-bubble-user bg-secondary text-white" 
-            : "chat-bubble bg-neutral-100"
-        } px-4 py-3 max-w-[80%] text-sm relative`}
+            ? "chat-bubble-user" 
+            : "chat-bubble"
+        } max-w-[80%] text-sm relative`}
       >
-        {formatContent(content)}
+        <div className="message-content">
+          {formatContent(content)}
+        </div>
+        <div className="text-xs opacity-70 mt-1 text-right">
+          {new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+        </div>
       </div>
     </div>
   );

@@ -18,7 +18,8 @@ import BottomNavigation from "@/components/BottomNavigation";
 
 function Router() {
   return (
-    <div className="max-w-lg mx-auto bg-white min-h-screen relative pb-16">
+    <div className="max-w-lg mx-auto bg-background min-h-screen relative pb-16">
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20"></div>
       <Header />
       <main className="pb-16">
         <Switch>
