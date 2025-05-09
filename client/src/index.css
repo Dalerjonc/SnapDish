@@ -109,17 +109,17 @@
 }
 
 @layer components {
-  /* Glassmorphism classes */
+  /* Enhanced iOS-style Glassmorphism classes */
   .glass {
-    @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/30;
+    @apply backdrop-blur-xl bg-white/50 dark:bg-slate-900/50 border border-white/30 dark:border-slate-700/20 shadow-lg;
   }
   
   .glass-card {
-    @apply glass rounded-2xl shadow-lg;
+    @apply backdrop-blur-xl rounded-3xl shadow-xl bg-gradient-to-br from-white/60 to-white/30 dark:from-slate-800/60 dark:to-slate-800/30 border border-white/40 dark:border-slate-700/20;
   }
   
   .glass-navbar {
-    @apply glass sticky top-0 z-50 shadow-sm;
+    @apply backdrop-blur-2xl sticky top-0 z-50 shadow-md bg-white/60 dark:bg-slate-900/60 border-b border-white/30 dark:border-slate-700/30;
   }
   
   /* Soft neomorphism for buttons */
@@ -180,23 +180,56 @@
     transition: background-color 0.5s ease, color 0.5s ease;
   }
   
-  /* Enhanced chat bubbles with gradients and better rounding */
-  .chat-bubble {
-    @apply relative rounded-[1.5rem] rounded-bl-sm backdrop-blur-sm bg-neutral-50/90 dark:bg-slate-700/80 p-4 shadow-sm;
+  /* iOS-style glow effects */
+  .shadow-glow {
+    box-shadow: 0 0 15px rgba(var(--primary), 0.4), 0 0 30px rgba(var(--primary), 0.1);
   }
   
-  .chat-bubble:after {
+  .text-shadow-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+  }
+  
+  /* Add iOS-style pulse animation */
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+  }
+  
+  /* iOS-style chat bubbles with enhanced gradients and better rounding */
+  .chat-bubble-assistant {
+    @apply relative rounded-[1.6rem] rounded-bl-sm backdrop-blur-md 
+           bg-gradient-to-br from-white/80 to-white/60 dark:from-slate-800/80 dark:to-slate-800/60 
+           p-4 shadow-md border border-white/30 dark:border-slate-700/30;
+  }
+  
+  .chat-bubble-assistant:after {
     content: '';
-    @apply absolute -left-2 bottom-0 w-3 h-3 bg-neutral-50/90 dark:bg-slate-700/80 rounded-br-xl;
+    @apply absolute -left-2 bottom-0 w-3 h-3 
+           bg-gradient-to-br from-white/80 to-white/60 dark:from-slate-800/80 dark:to-slate-800/60 
+           rounded-br-xl;
   }
   
   .chat-bubble-user {
-    @apply relative rounded-[1.5rem] rounded-br-sm bg-gradient-to-r from-primary to-secondary p-4 text-white shadow-sm;
+    @apply relative rounded-[1.6rem] rounded-br-sm 
+           bg-gradient-to-br from-primary to-blue-500 
+           p-4 text-white shadow-md border border-white/10;
   }
   
   .chat-bubble-user:after {
     content: '';
-    @apply absolute -right-2 bottom-0 w-3 h-3 bg-secondary rounded-bl-xl;
+    @apply absolute -right-2 bottom-0 w-3 h-3 
+           bg-blue-500 
+           rounded-bl-xl;
   }
   
   /* Typing indicator animation */

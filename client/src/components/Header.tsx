@@ -8,19 +8,19 @@ const Header = () => {
   };
 
   return (
-    <header className="glass-navbar">
+    <header className="glass-navbar backdrop-blur-xl">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/">
             <div className="text-xl font-bold font-heading">
-              <span className="gradient-text">SnapDish</span>
+              <span className="gradient-text bg-gradient-to-r from-primary via-purple-500 to-blue-500">SnapDish</span>
             </div>
           </Link>
         </div>
         <div className="flex items-center space-x-3">
           <button 
             onClick={handleSearchClick}
-            className="p-2 rounded-full bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 shadow-sm backdrop-blur-sm"
+            className="p-2 rounded-full bg-gradient-to-br from-white/60 to-white/20 dark:from-slate-800/60 dark:to-slate-800/20 shadow-md backdrop-blur-md btn-3d-touch highlight-accent"
             aria-label="Search for recipes"
           >
             <i className="ri-search-line text-primary dark:text-primary-foreground"></i>

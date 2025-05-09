@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
 
 const BottomNavigation = () => {
   const [location] = useLocation();
@@ -10,38 +11,51 @@ const BottomNavigation = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass px-2 py-2 flex justify-around max-w-lg mx-auto shadow-lg backdrop-blur-md border-t border-white/20 dark:border-slate-700/30 pb-safe">
+    <motion.nav 
+      className="fixed bottom-0 left-0 right-0 glass-navbar px-3 py-3 flex justify-around max-w-lg mx-auto shadow-xl backdrop-blur-xl border-t border-white/20 dark:border-slate-700/20 pb-safe rounded-t-3xl"
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", damping: 20 }}
+    >
       <Link href="/">
-        <div className={`flex flex-col items-center p-2 rounded-xl ${
+        <div className={`flex flex-col items-center p-2.5 rounded-2xl btn-3d-touch ${
           isActive("/") 
-            ? "bg-gradient-to-r from-primary to-secondary text-white" 
-            : "text-foreground hover:bg-white/30 dark:hover:bg-slate-800/30"
+            ? "bg-gradient-to-br from-primary/90 to-primary/70 text-white shadow-glow" 
+            : "text-foreground hover:bg-white/20 dark:hover:bg-slate-800/20"
         }`}>
-          <i className="ri-home-5-line text-xl"></i>
+          <div className={`${isActive("/") ? "animate-pulse-subtle" : ""}`}>
+            <i className={`ri-home-5-fill text-xl ${isActive("/") ? "text-shadow-glow" : ""}`}></i>
+          </div>
           <span className="text-xs mt-1 font-medium">Home</span>
         </div>
       </Link>
+      
       <Link href="/chat">
-        <div className={`flex flex-col items-center p-2 rounded-xl ${
+        <div className={`flex flex-col items-center p-2.5 rounded-2xl btn-3d-touch ${
           isActive("/chat") 
-            ? "bg-gradient-to-r from-primary to-secondary text-white" 
-            : "text-foreground hover:bg-white/30 dark:hover:bg-slate-800/30"
+            ? "bg-gradient-to-br from-secondary/90 to-secondary/70 text-white shadow-glow" 
+            : "text-foreground hover:bg-white/20 dark:hover:bg-slate-800/20"
         }`}>
-          <i className="ri-restaurant-2-line text-xl"></i>
+          <div className={`${isActive("/chat") ? "animate-pulse-subtle" : ""}`}>
+            <i className={`ri-restaurant-2-fill text-xl ${isActive("/chat") ? "text-shadow-glow" : ""}`}></i>
+          </div>
           <span className="text-xs mt-1 font-medium">AI Chef</span>
         </div>
       </Link>
+      
       <Link href="/profile">
-        <div className={`flex flex-col items-center p-2 rounded-xl ${
+        <div className={`flex flex-col items-center p-2.5 rounded-2xl btn-3d-touch ${
           isActive("/profile") 
-            ? "bg-gradient-to-r from-primary to-secondary text-white" 
-            : "text-foreground hover:bg-white/30 dark:hover:bg-slate-800/30"
+            ? "bg-gradient-to-br from-accent/90 to-accent/70 text-white shadow-glow" 
+            : "text-foreground hover:bg-white/20 dark:hover:bg-slate-800/20"
         }`}>
-          <i className="ri-user-line text-xl"></i>
+          <div className={`${isActive("/profile") ? "animate-pulse-subtle" : ""}`}>
+            <i className={`ri-user-fill text-xl ${isActive("/profile") ? "text-shadow-glow" : ""}`}></i>
+          </div>
           <span className="text-xs mt-1 font-medium">Profile</span>
         </div>
       </Link>
-    </nav>
+    </motion.nav>
   );
 };
 
