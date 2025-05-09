@@ -6,8 +6,7 @@
 @tailwind utilities;
 
 :root {
-  /* Updated rounded corner default */
-  --radius: 1rem;
+  --radius: 0.5rem;
   
   /* Light mode colors */
   --background: 210 30% 98%;
@@ -16,24 +15,22 @@
   --muted: 220 14% 96%;
   --muted-foreground: 220 8% 46%;
   
-  --popover: 0 0% 100% / 0.95; /* Glassmorphism */
+  --popover: 0 0% 100%;
   --popover-foreground: 224 71% 4%;
   
-  --card: 0 0% 100% / 0.7; /* Glassmorphism */
+  --card: 0 0% 100%;
   --card-foreground: 224 71% 4%;
   
   --border: 220 13% 91%;
   --input: 220 13% 91%;
   
-  /* Dynamic gradients - coral to purple to blue */
-  --primary-gradient: linear-gradient(135deg, hsl(16, 100%, 66%), hsl(300, 80%, 60%), hsl(220, 80%, 60%));
-  --primary: 16 100% 66%; /* Coral */
+  --primary: 16 100% 66%;
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 250 95% 68%; /* More vibrant purple */
+  --secondary: 250 95% 68%;
   --secondary-foreground: 0 0% 100%;
   
-  --accent: 191 97% 77%; /* Bright cyan */
+  --accent: 191 97% 77%;
   --accent-foreground: 224 71% 4%;
   
   --destructive: 0 84% 60%;
@@ -41,7 +38,6 @@
   
   --ring: 224 71% 4% / 0.2;
   
-  /* Gradient colors for charts and UI elements */
   --chart-1: 16 100% 66%;
   --chart-2: 250 95% 68%;
   --chart-3: 191 97% 77%;
@@ -50,24 +46,21 @@
 }
 
 .dark {
-  /* Dark mode - soft dark, not pure black */
   --background: 224 30% 10%;
   --foreground: 210 20% 98%;
   
   --muted: 215 25% 18%;
   --muted-foreground: 217 10% 75%;
   
-  --popover: 224 50% 15% / 0.85; /* Glassmorphism */
+  --popover: 224 50% 15%;
   --popover-foreground: 210 20% 98%;
   
-  --card: 224 40% 15% / 0.65; /* Glassmorphism */
+  --card: 224 40% 15%;
   --card-foreground: 210 20% 98%;
   
   --border: 215 25% 25%;
   --input: 215 25% 25%;
   
-  /* Same gradient but with different opacity */
-  --primary-gradient: linear-gradient(135deg, hsl(16, 90%, 60%), hsl(300, 95%, 55%), hsl(220, 95%, 55%));
   --primary: 16 90% 60%;
   --primary-foreground: 210 20% 98%;
   
@@ -89,170 +82,29 @@
   }
   
   body {
-    @apply font-sans antialiased bg-background text-foreground bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20;
+    @apply font-sans antialiased bg-background text-foreground;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
   }
-  
-  /* Apply extra rounded corners to all buttons */
-  button, 
-  .btn {
-    @apply rounded-3xl;
-  }
-  
-  /* Apply glassmorphism to card components */
-  .card {
-    @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 shadow-lg;
-  }
 }
 
 @layer components {
-  /* Enhanced iOS-style Glassmorphism classes */
-  .glass {
-    @apply backdrop-blur-xl bg-white/50 dark:bg-slate-900/50 border border-white/30 dark:border-slate-700/20 shadow-lg;
+  .navbar {
+    @apply sticky top-0 z-50 shadow-sm bg-white dark:bg-slate-900 border-b border-neutral-200 dark:border-slate-700;
   }
   
-  .glass-card {
-    @apply backdrop-blur-xl rounded-3xl shadow-xl bg-gradient-to-br from-white/60 to-white/30 dark:from-slate-800/60 dark:to-slate-800/30 border border-white/40 dark:border-slate-700/20;
+  .card {
+    @apply rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700;
   }
   
-  .glass-navbar {
-    @apply backdrop-blur-2xl sticky top-0 z-50 shadow-md bg-white/60 dark:bg-slate-900/60 border-b border-white/30 dark:border-slate-700/30;
-  }
-  
-  /* Soft neomorphism for buttons */
-  .btn-neomorphic {
-    @apply rounded-3xl bg-white dark:bg-slate-800 shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.2),-5px_-5px_10px_rgba(255,255,255,0.05)];
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  
-  /* 3D Touch Feedback - Simulated */
-  .btn-3d-touch {
-    @apply relative overflow-hidden;
-    transform-style: preserve-3d;
-    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                box-shadow 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-  
-  .btn-3d-touch:active {
-    transform: scale(0.97) translateY(1px);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Floating cards with depth */
-  .floating-card {
-    @apply shadow-lg relative;
-    animation: float 6s ease-in-out infinite;
-  }
-  
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-  }
-  
-  /* Gradient text */
-  .gradient-text {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-blue-500;
-  }
-  
-  /* Vibrant highlight accents */
-  .highlight-accent {
-    @apply relative overflow-hidden;
-  }
-  
-  .highlight-accent::after {
-    content: '';
-    @apply absolute inset-0 rounded-xl;
-    background: linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
-    transform: translateX(-100%);
-    animation: shimmer 2.5s infinite;
-  }
-  
-  @keyframes shimmer {
-    100% { transform: translateX(100%); }
-  }
-  
-  /* Smart color transitions */
-  .theme-transition {
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-  
-  /* iOS-style glow effects */
-  .shadow-glow {
-    box-shadow: 0 0 15px rgba(var(--primary), 0.4), 0 0 30px rgba(var(--primary), 0.1);
-  }
-  
-  .text-shadow-glow {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
-  }
-  
-  /* Add iOS-style pulse animation */
-  .animate-pulse-subtle {
-    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes pulse-subtle {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.85;
-      transform: scale(0.98);
-    }
-  }
-  
-  /* iOS-style chat bubbles with enhanced gradients and better rounding */
   .chat-bubble-assistant {
-    @apply relative rounded-[1.6rem] rounded-bl-sm backdrop-blur-md 
-           bg-gradient-to-br from-white/80 to-white/60 dark:from-slate-800/80 dark:to-slate-800/60 
-           p-4 shadow-md border border-white/30 dark:border-slate-700/30;
-  }
-  
-  .chat-bubble-assistant:after {
-    content: '';
-    @apply absolute -left-2 bottom-0 w-3 h-3 
-           bg-gradient-to-br from-white/80 to-white/60 dark:from-slate-800/80 dark:to-slate-800/60 
-           rounded-br-xl;
+    @apply relative rounded-lg bg-white dark:bg-slate-800 p-4 shadow-sm border border-neutral-200 dark:border-slate-700;
   }
   
   .chat-bubble-user {
-    @apply relative rounded-[1.6rem] rounded-br-sm 
-           bg-gradient-to-br from-primary to-blue-500 
-           p-4 text-white shadow-md border border-white/10;
-  }
-  
-  .chat-bubble-user:after {
-    content: '';
-    @apply absolute -right-2 bottom-0 w-3 h-3 
-           bg-blue-500 
-           rounded-bl-xl;
-  }
-  
-  /* Typing indicator animation */
-  .typing-indicator {
-    @apply flex space-x-1 opacity-70;
-  }
-  
-  .typing-indicator-dot {
-    @apply w-2 h-2 rounded-full bg-foreground;
-    animation: typing-bounce 1.4s infinite ease-in-out both;
-  }
-  
-  .typing-indicator-dot:nth-child(1) {
-    animation-delay: -0.32s;
-  }
-  
-  .typing-indicator-dot:nth-child(2) {
-    animation-delay: -0.16s;
-  }
-  
-  @keyframes typing-bounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
+    @apply relative rounded-lg bg-primary p-4 text-white shadow-sm;
   }
   
   .hide-scrollbar::-webkit-scrollbar {
@@ -262,5 +114,14 @@
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  @keyframes progress-indeterminate {
+    from { left: -40%; }
+    to { left: 100%; }
+  }
+  
+  .animate-progress-indeterminate {
+    animation: progress-indeterminate 2s linear infinite;
   }
 }
