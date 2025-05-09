@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import IngredientItem from "@/components/IngredientItem";
 import InstructionStep from "@/components/InstructionStep";
 import RecipeCard from "@/components/RecipeCard";
+import NutritionDisplay from "@/components/NutritionDisplay";
 import { recipeService } from "@/lib/services";
 import { getStoredPhotoDataUrl } from "@/lib/utils";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
@@ -146,11 +147,25 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
           {/* Nutrition box */}
           <div className="bg-neutral-100 rounded-xl p-4 mb-6">
             <div className="h-5 bg-neutral-200 rounded-lg w-1/2 mb-3"></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="h-4 bg-neutral-200 rounded-lg"></div>
-              <div className="h-4 bg-neutral-200 rounded-lg"></div>
-              <div className="h-4 bg-neutral-200 rounded-lg"></div>
-              <div className="h-4 bg-neutral-200 rounded-lg"></div>
+            <div className="flex justify-center mb-4">
+              <div className="w-24 h-24 rounded-full bg-neutral-200"></div>
+            </div>
+            <div className="flex justify-between w-full">
+              <div className="w-1/3 flex flex-col items-center">
+                <div className="h-4 bg-neutral-200 rounded-lg w-1/2 mb-1"></div>
+                <div className="h-4 bg-neutral-200 rounded-lg w-3/4 mb-1"></div>
+                <div className="h-3 bg-neutral-200 rounded-lg w-1/2"></div>
+              </div>
+              <div className="w-1/3 flex flex-col items-center">
+                <div className="h-4 bg-neutral-200 rounded-lg w-1/2 mb-1"></div>
+                <div className="h-4 bg-neutral-200 rounded-lg w-3/4 mb-1"></div>
+                <div className="h-3 bg-neutral-200 rounded-lg w-1/2"></div>
+              </div>
+              <div className="w-1/3 flex flex-col items-center">
+                <div className="h-4 bg-neutral-200 rounded-lg w-1/2 mb-1"></div>
+                <div className="h-4 bg-neutral-200 rounded-lg w-3/4 mb-1"></div>
+                <div className="h-3 bg-neutral-200 rounded-lg w-1/2"></div>
+              </div>
             </div>
           </div>
           
@@ -279,25 +294,12 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
 
         {/* Nutrition Info */}
         <div className="bg-neutral-100 rounded-xl p-4 mb-6">
-          <h3 className="font-semibold font-heading mb-3">Nutrition Facts (per serving)</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-primary mr-2"></div>
-              <span className="text-sm">Calories: {recipe.calories || "N/A"}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-secondary mr-2"></div>
-              <span className="text-sm">Protein: {recipe.protein || "N/A"}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-accent mr-2"></div>
-              <span className="text-sm">Carbs: {recipe.carbs || "N/A"}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-neutral-600 mr-2"></div>
-              <span className="text-sm">Fat: {recipe.fat || "N/A"}</span>
-            </div>
-          </div>
+          <NutritionDisplay 
+            calories={recipe.calories || 0}
+            protein={recipe.protein || "0g"}
+            carbs={recipe.carbs || "0g"}
+            fat={recipe.fat || "0g"}
+          />
         </div>
 
         {/* Ingredients */}
