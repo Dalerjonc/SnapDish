@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ChatMessage from "@/components/ChatMessage";
+import TypingIndicator from "@/components/TypingIndicator";
+import AnimatedButton from "@/components/AnimatedButton";
 import { chatService } from "@/lib/services";
 import { useToast } from "@/hooks/use-toast";
 import { ChatMessage as ChatMessageType, Recipe } from "@shared/schema";
@@ -129,48 +132,93 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
     }
   };
 
+  // Animation variants for chat elements
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 10, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
+  };
+
   return (
-    <div className="h-screen flex flex-col">
+    <motion.div 
+      className="h-screen flex flex-col bg-gradient-to-br from-background to-blue-50/30 dark:from-background dark:to-blue-950/20"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       {/* Chat Header */}
-      <div className="border-b border-neutral-200 px-4 py-3 flex items-center">
-        <button onClick={handleBack} className="p-2 mr-3">
+      <motion.div 
+        className="glass-navbar px-4 py-3 flex items-center"
+        variants={itemVariants}
+      >
+        <Button 
+          onClick={handleBack} 
+          className="p-2 mr-3 btn-3d-touch rounded-full glass"
+          variant="ghost"
+        >
           <i className="ri-arrow-left-line"></i>
-        </button>
+        </Button>
         <div>
-          <h2 className="font-bold font-heading">AI Chef</h2>
-          <p className="text-xs text-neutral-500">
+          <h2 className="font-bold font-heading gradient-text text-lg">AI Chef</h2>
+          <p className="text-xs text-foreground/70">
             {recipe ? `Discussing: ${recipe.name}` : "Your AI Cooking Assistant"}
           </p>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Chat Background with Dynamic Gradient */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20 pointer-events-none"></div>
 
       {/* Chat Messages */}
-      <div 
+      <motion.div 
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto p-4 space-y-5"
+        variants={itemVariants}
       >
-        {messages.map((msg, index) => (
-          <ChatMessage key={index} message={msg} />
-        ))}
-        
-        {sendMessageMutation.isPending && (
-          <div className="flex items-start">
-            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white mr-2 flex-shrink-0">
-              <i className="ri-loader-4-line animate-spin"></i>
-            </div>
-            <div className="chat-bubble bg-neutral-100 px-4 py-3 max-w-[80%] text-sm">
-              <div className="flex space-x-2">
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce"></div>
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce delay-150"></div>
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce delay-300"></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        <AnimatePresence>
+          {messages.map((msg, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+            >
+              <ChatMessage message={msg} />
+            </motion.div>
+          ))}
+          
+          {sendMessageMutation.isPending && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <TypingIndicator label="Chef is cooking up a response" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Chat Input */}
-      <div className="border-t border-neutral-200 p-4">
+      <motion.div 
+        className="glass p-4 border-t border-white/20 dark:border-slate-700/30"
+        variants={itemVariants}
+      >
         <div className="relative">
           <Input
             type="text"
@@ -178,48 +226,49 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full border border-neutral-300 rounded-full py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            className="w-full border-none glass py-4 pl-4 pr-12 focus:ring-2 focus:ring-primary/50 text-foreground"
           />
-          <Button
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white p-2 rounded-full"
+          <AnimatedButton
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 min-w-0 h-10 w-10 flex items-center justify-center"
             onClick={handleSendMessage}
             disabled={sendMessageMutation.isPending || !message.trim()}
+            glowEffect={!!message.trim()}
           >
             <i className="ri-send-plane-fill"></i>
-          </Button>
+          </AnimatedButton>
         </div>
-        <div className="flex mt-2 overflow-x-auto hide-scrollbar snap-x gap-2">
+        <div className="flex mt-3 overflow-x-auto hide-scrollbar snap-x gap-2">
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap bg-neutral-100 rounded-full py-1.5 px-3 text-sm border-0 hover:bg-neutral-200"
+            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
             onClick={() => handleQuickPrompt("How to make it spicy?")}
           >
             How to make it spicy?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap bg-neutral-100 rounded-full py-1.5 px-3 text-sm border-0 hover:bg-neutral-200"
+            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
             onClick={() => handleQuickPrompt("Vegetarian options?")}
           >
             Vegetarian options?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap bg-neutral-100 rounded-full py-1.5 px-3 text-sm border-0 hover:bg-neutral-200"
+            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
             onClick={() => handleQuickPrompt("Low-carb version?")}
           >
             Low-carb version?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap bg-neutral-100 rounded-full py-1.5 px-3 text-sm border-0 hover:bg-neutral-200"
+            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
             onClick={() => handleQuickPrompt("Wine pairing?")}
           >
             Wine pairing?
           </Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
