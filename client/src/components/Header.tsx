@@ -9,15 +9,15 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="px-4 py-3 flex items-center justify-between">
+      <div className="px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center">
               <img 
                 src="/snapdish-logo-final.png" 
                 alt="SnapDish Logo" 
-                className="h-10 mr-2" 
-                style={{ marginTop: '4px' }}
+                className="h-16 mr-2" 
+                style={{ margin: '2px 0' }}
               />
             </div>
           </Link>
