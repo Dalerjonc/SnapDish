@@ -12,9 +12,12 @@ const Header = () => {
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/">
-            <div className="text-xl font-bold font-heading text-neutral-800">
-              <span className="text-primary">Snap</span>
-              <span className="text-secondary">Dish</span>
+            <div className="flex items-center">
+              <img 
+                src="/snapdish-logo.svg" 
+                alt="SnapDish Logo" 
+                className="h-10 mr-2" 
+              />
             </div>
           </Link>
         </div>
