@@ -15,7 +15,6 @@ import Profile from "@/pages/Profile";
 import Search from "@/pages/Search";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
-import AppFavicon from "@/components/AppFavicon";
 
 function Router() {
   return (
@@ -44,7 +43,6 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppFavicon />
       <TooltipProvider>
         <Toaster />
         <Router />
