@@ -86,11 +86,11 @@ const Home = () => {
     >
       {/* Hero Banner - Compact Version */}
       <motion.div 
-        className="glass-card p-3 mb-4 overflow-hidden"
+        className="card p-3 mb-4 overflow-hidden"
         variants={itemVariants}
       >
-        <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text">
-          <h2 className="text-lg font-bold text-transparent">Hungry but not sure what to cook?</h2>
+        <div>
+          <h2 className="text-lg font-bold text-primary">Hungry but not sure what to cook?</h2>
           <p className="text-sm text-foreground/80">Snap a photo of ingredients or dish for AI suggestions</p>
         </div>
       </motion.div>

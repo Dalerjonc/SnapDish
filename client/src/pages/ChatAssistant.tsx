@@ -162,26 +162,26 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
     >
       {/* Chat Header */}
       <motion.div 
-        className="glass-navbar px-4 py-3 flex items-center"
+        className="navbar px-4 py-3 flex items-center"
         variants={itemVariants}
       >
         <Button 
           onClick={handleBack} 
-          className="p-2 mr-3 btn-3d-touch rounded-full glass"
+          className="p-2 mr-3 rounded-full"
           variant="ghost"
         >
           <i className="ri-arrow-left-line"></i>
         </Button>
         <div>
-          <h2 className="font-bold font-heading gradient-text text-lg">AI Chef</h2>
+          <h2 className="font-bold font-heading text-primary text-lg">AI Chef</h2>
           <p className="text-xs text-foreground/70">
             {recipe ? `Discussing: ${recipe.name}` : "Your AI Cooking Assistant"}
           </p>
         </div>
       </motion.div>
 
-      {/* Chat Background with Dynamic Gradient */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-blue-50/30 dark:to-blue-950/20 pointer-events-none"></div>
+      {/* Chat Background */}
+      <div className="fixed inset-0 -z-10 bg-background pointer-events-none"></div>
 
       {/* Chat Messages */}
       <motion.div 
@@ -216,7 +216,7 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
 
       {/* Chat Input */}
       <motion.div 
-        className="glass p-4 border-t border-white/20 dark:border-slate-700/30"
+        className="bg-white dark:bg-slate-900 p-4 border-t border-neutral-200 dark:border-slate-700"
         variants={itemVariants}
       >
         <div className="relative">
