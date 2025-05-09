@@ -14,9 +14,10 @@ const Header = () => {
           <Link href="/">
             <div className="flex items-center">
               <img 
-                src="/snapdish-logo-new.svg" 
+                src="/snapdish-logo-final.png" 
                 alt="SnapDish Logo" 
                 className="h-10 mr-2" 
+                style={{ marginTop: '4px' }}
               />
             </div>
           </Link>
