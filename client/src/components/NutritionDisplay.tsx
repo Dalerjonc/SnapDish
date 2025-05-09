@@ -31,11 +31,19 @@ const NutritionDisplay = ({ calories, protein, carbs, fat, className }: Nutritio
       <div className="flex items-center mb-4">
         <div className="text-2xl font-bold mr-3">{calories}</div>
         <div className="flex-1">
-          <div className="h-2 bg-gray-200 rounded-full w-full">
-            {/* Single color bar for calories */}
+          <div className="h-2 bg-gray-200 rounded-full w-full overflow-hidden flex">
+            {/* Break down calories by macronutrient proportions */}
             <div 
-              className="h-2 rounded-full bg-purple-600" 
-              style={{ width: '100%' }}
+              className="h-2 bg-blue-600" 
+              style={{ width: `${carbsPercent}%` }}
+            ></div>
+            <div 
+              className="h-2 bg-orange-600" 
+              style={{ width: `${fatPercent}%` }}
+            ></div>
+            <div 
+              className="h-2 bg-purple-800" 
+              style={{ width: `${proteinPercent}%` }}
             ></div>
           </div>
           <div className="text-xs text-gray-500 mt-1">calories</div>
