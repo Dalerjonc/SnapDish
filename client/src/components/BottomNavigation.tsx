@@ -12,7 +12,7 @@ const BottomNavigation = () => {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 navbar px-3 py-3 flex justify-around max-w-lg mx-auto shadow-md border-t border-neutral-200 dark:border-slate-700"
+      className="bottom-navbar left-0 right-0 px-3 py-3 flex justify-around max-w-lg mx-auto shadow-md"
     >
       <Link href="/">
         <div className={`flex flex-col items-center p-2 ${

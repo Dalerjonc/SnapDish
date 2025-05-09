@@ -186,7 +186,7 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
       {/* Chat Messages */}
       <motion.div 
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-5"
+        className="flex-1 overflow-y-auto p-4 pb-20 space-y-5"
         variants={itemVariants}
       >
         <AnimatePresence>

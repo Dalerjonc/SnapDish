@@ -79,7 +79,7 @@ const Home = () => {
   // Actual rendered UI
   return (
     <motion.div 
-      className="h-[calc(100vh-140px)] flex flex-col px-4 py-3"
+      className="flex flex-col px-4 py-3 pb-20"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
