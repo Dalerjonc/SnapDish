@@ -32,9 +32,9 @@ const NutritionDisplay = ({ calories, protein, carbs, fat, className }: Nutritio
         <div className="text-2xl font-bold mr-3">{calories}</div>
         <div className="flex-1">
           <div className="h-2 bg-gray-200 rounded-full w-full">
-            {/* We'll use a gradient line that matches the macro colors */}
+            {/* Single color bar for calories */}
             <div 
-              className="h-2 rounded-full bg-gradient-to-r from-purple-800 via-blue-600 to-orange-600" 
+              className="h-2 rounded-full bg-purple-600" 
               style={{ width: '100%' }}
             ></div>
           </div>
