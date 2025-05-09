@@ -125,11 +125,59 @@
   /* Soft neomorphism for buttons */
   .btn-neomorphic {
     @apply rounded-3xl bg-white dark:bg-slate-800 shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] dark:shadow-[5px_5px_10px_rgba(0,0,0,0.2),-5px_-5px_10px_rgba(255,255,255,0.05)];
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  /* 3D Touch Feedback - Simulated */
+  .btn-3d-touch {
+    @apply relative overflow-hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                box-shadow 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .btn-3d-touch:active {
+    transform: scale(0.97) translateY(1px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Floating cards with depth */
+  .floating-card {
+    @apply shadow-lg relative;
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
   }
   
   /* Gradient text */
   .gradient-text {
     @apply text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-blue-500;
+  }
+  
+  /* Vibrant highlight accents */
+  .highlight-accent {
+    @apply relative overflow-hidden;
+  }
+  
+  .highlight-accent::after {
+    content: '';
+    @apply absolute inset-0 rounded-xl;
+    background: linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+    transform: translateX(-100%);
+    animation: shimmer 2.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  
+  /* Smart color transitions */
+  .theme-transition {
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
   
   /* Enhanced chat bubbles with gradients and better rounding */
