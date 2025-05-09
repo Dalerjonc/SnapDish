@@ -132,16 +132,25 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
   return (
     <div className="h-screen flex flex-col">
       {/* Chat Header */}
-      <div className="border-b border-neutral-200 px-4 py-3 flex items-center">
-        <button onClick={handleBack} className="p-2 mr-3">
-          <i className="ri-arrow-left-line"></i>
-        </button>
-        <div>
-          <h2 className="font-bold font-heading">AI Chef</h2>
-          <p className="text-xs text-neutral-500">
-            {recipe ? `Discussing: ${recipe.name}` : "Your AI Cooking Assistant"}
-          </p>
+      <div className="border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <button onClick={handleBack} className="p-2 mr-3">
+            <i className="ri-arrow-left-line"></i>
+          </button>
+          <div>
+            <h2 className="font-bold font-heading">AI Chef</h2>
+            <p className="text-xs text-neutral-500">
+              {recipe ? `Discussing: ${recipe.name}` : "Your AI Cooking Assistant"}
+            </p>
+          </div>
         </div>
+        <button 
+          onClick={() => navigate('/search')} 
+          className="p-2 rounded-full hover:bg-neutral-100"
+          aria-label="Search for recipes"
+        >
+          <i className="ri-search-line text-neutral-600 text-xl"></i>
+        </button>
       </div>
 
       {/* Chat Messages */}
