@@ -16,36 +16,61 @@ const Home = () => {
     queryKey: ["/api/recipes/quick"],
   });
 
-  // Loading skeleton for the home page
+  // Loading skeleton for the home page with iOS-style shimmer effect
   const renderSkeletonHome = () => (
-    <div className="h-[calc(100vh-140px)] flex flex-col px-4 py-3 animate-pulse">
+    <div className="h-[calc(100vh-140px)] flex flex-col px-4 py-3">
       {/* Hero Banner Skeleton */}
-      <div className="bg-neutral-200 rounded-xl p-3 mb-3 h-14"></div>
+      <motion.div 
+        className="glass-card h-16 mb-4 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="p-3">
+          <div className="h-4 bg-primary/20 rounded-full w-2/3 mb-2"></div>
+          <div className="h-3 bg-primary/10 rounded-full w-1/2"></div>
+        </div>
+      </motion.div>
 
-      {/* Main Container - Skeleton */}
+      {/* Main Container - iOS-style Skeleton */}
       <div className="flex flex-col h-full">
-        {/* Main Options - Big Buttons Skeleton */}
-        <div className="flex flex-col gap-3 flex-grow mb-3">
-          {/* Identify Dish - Skeleton */}
-          <div className="bg-neutral-200 rounded-xl flex-1 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 bg-neutral-300 rounded-full mb-2"></div>
-            <div className="h-4 bg-neutral-300 rounded-lg w-1/3 mb-1"></div>
-            <div className="h-3 bg-neutral-300 rounded-lg w-1/2"></div>
-          </div>
+        {/* Main Options - Big Buttons iOS-style Skeleton */}
+        <div className="flex flex-col gap-4 flex-grow mb-4">
+          {/* Identify Dish - iOS-style Skeleton */}
+          <motion.div 
+            className="glass-card flex-1 flex flex-col items-center justify-center p-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 50, delay: 0.1 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full mb-3"></div>
+            <div className="h-5 bg-primary/20 rounded-xl w-1/3 mb-2"></div>
+            <div className="h-4 bg-primary/10 rounded-xl w-1/2"></div>
+          </motion.div>
           
-          {/* What's in My Kitchen - Skeleton */}
-          <div className="bg-neutral-200 rounded-xl flex-1 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 bg-neutral-300 rounded-full mb-2"></div>
-            <div className="h-4 bg-neutral-300 rounded-lg w-2/5 mb-1"></div>
-            <div className="h-3 bg-neutral-300 rounded-lg w-3/5"></div>
-          </div>
+          {/* What's in My Kitchen - iOS-style Skeleton */}
+          <motion.div 
+            className="glass-card flex-1 flex flex-col items-center justify-center p-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 50, delay: 0.2 }}
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-secondary/30 to-secondary/10 rounded-full mb-3"></div>
+            <div className="h-5 bg-secondary/20 rounded-xl w-2/5 mb-2"></div>
+            <div className="h-4 bg-secondary/10 rounded-xl w-3/5"></div>
+          </motion.div>
         </div>
 
-        {/* Category Buttons - Skeleton */}
-        <div className="grid grid-cols-2 gap-3 h-16">
-          <div className="bg-neutral-200 rounded-xl flex items-center justify-center h-full"></div>
-          <div className="bg-neutral-200 rounded-xl flex items-center justify-center h-full"></div>
-        </div>
+        {/* Category Buttons - iOS-style Skeleton */}
+        <motion.div 
+          className="grid grid-cols-2 gap-4 h-20"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 50, delay: 0.3 }}
+        >
+          <div className="glass-card rounded-xl flex items-center justify-center h-full"></div>
+          <div className="glass-card rounded-xl flex items-center justify-center h-full"></div>
+        </motion.div>
       </div>
     </div>
   );

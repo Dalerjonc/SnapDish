@@ -7,7 +7,9 @@ import { recipeService, imageService } from "@/lib/services";
 import { queryClient } from "@/lib/queryClient";
 import ImageUploader from "@/components/ImageUploader";
 import RecipeCardHorizontal from "@/components/RecipeCardHorizontal";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 const KitchenIngredients = () => {
   const [activeTab, setActiveTab] = useState("type");
@@ -143,44 +145,83 @@ const KitchenIngredients = () => {
               </button>
             </div>
 
-            {/* Selected Ingredients */}
+            {/* Selected Ingredients - iOS Style */}
             <div className="flex flex-wrap gap-2 mb-4">
               {ingredients.map((ingredient, index) => (
-                <div key={index} className="bg-neutral-100 rounded-full py-1 px-3 text-sm flex items-center">
-                  {ingredient}
-                  <button
-                    className="ml-1 text-neutral-500"
+                <motion.div 
+                  key={index} 
+                  className="bg-gradient-to-r from-primary/20 to-secondary/20 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 shadow-sm rounded-full py-1.5 px-4 text-sm font-medium flex items-center"
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="gradient-text">{ingredient}</span>
+                  <motion.button
+                    className="ml-2 bg-white/50 dark:bg-slate-800/50 rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
                     onClick={() => handleRemoveIngredient(ingredient)}
+                    whileHover={{ rotate: 90 }}
+                    whileTap={{ scale: 0.8 }}
                   >
-                    <i className="ri-close-line"></i>
-                  </button>
-                </div>
+                    <i className="ri-close-line text-xs text-primary/80"></i>
+                  </motion.button>
+                </motion.div>
               ))}
             </div>
 
             <div className="relative w-full mb-4">
-              <Button
-                className="w-full bg-primary text-white font-medium py-3 rounded-lg"
-                onClick={handleFindRecipes}
-                disabled={findRecipesMutation.isPending || ingredients.length === 0}
+              <motion.div 
+                whileTap={{ scale: 0.98 }}
+                className="w-full"
               >
-                {findRecipesMutation.isPending ? (
-                  <>
-                    <div className="flex items-center justify-center">
+                <Button
+                  className="w-full glass-card text-primary font-medium py-3 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 backdrop-blur-md shadow-lg border border-white/30"
+                  onClick={handleFindRecipes}
+                  disabled={findRecipesMutation.isPending || ingredients.length === 0}
+                >
+                  {findRecipesMutation.isPending ? (
+                    <div className="flex items-center justify-center space-x-2">
                       <span>Searching</span>
-                      <span className="animate-pulse">...</span>
+                      <div className="typing-indicator">
+                        <div className="typing-indicator-dot"></div>
+                        <div className="typing-indicator-dot"></div>
+                        <div className="typing-indicator-dot"></div>
+                      </div>
                     </div>
-                  </>
-                ) : (
-                  "Find Recipes"
-                )}
-              </Button>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <span className="mr-2">Find Recipes</span>
+                      <i className="ri-search-line"></i>
+                    </div>
+                  )}
+                </Button>
+              </motion.div>
               
-              {/* Animated Progress Bar */}
+              {/* iOS-style Progress Indicator */}
               {findRecipesMutation.isPending && (
-                <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
-                  <div className="h-full w-[40%] bg-white absolute animate-progress-indeterminate"></div>
-                </div>
+                <motion.div 
+                  className="absolute bottom-0 left-0 h-1 bg-primary/10 w-full rounded-b-full overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-primary to-secondary absolute"
+                    initial={{ width: "0%" }}
+                    animate={{ 
+                      width: ["0%", "40%", "60%", "80%", "100%"],
+                      x: ["0%", "0%", "0%", "0%", "100%"] 
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity,
+                      ease: "easeInOut" 
+                    }}
+                  />
+                </motion.div>
               )}
             </div>
           </div>
@@ -211,27 +252,25 @@ const KitchenIngredients = () => {
       {/* Results */}
       {(loadingRecipes || findRecipesMutation.isPending) && (
         <div className="py-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="h-6 bg-neutral-200 rounded-lg animate-pulse w-2/3"></div>
-            <div className="h-6 w-6 bg-neutral-200 rounded-full animate-pulse"></div>
-          </div>
-          {[1, 2, 3].map((skeletonIndex) => (
-            <div key={`skeleton-${skeletonIndex}`} className="flex bg-white rounded-xl overflow-hidden shadow-sm mb-3 h-24">
-              <div className="w-1/3 bg-neutral-200 animate-pulse"></div>
-              <div className="w-2/3 p-3">
-                <div className="h-4 bg-neutral-200 rounded-lg animate-pulse mb-2 w-3/4"></div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/4"></div>
-                  <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/4"></div>
-                </div>
-                <div className="h-3 bg-neutral-200 rounded-lg animate-pulse w-1/3"></div>
-              </div>
-            </div>
-          ))}
-          {/* Loading progress indicator */}
-          <div className="w-full h-1 bg-neutral-200 rounded-full overflow-hidden mt-4">
-            <div className="h-full w-[40%] bg-primary absolute animate-progress-indeterminate"></div>
-          </div>
+          <motion.div 
+            className="mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="text-base font-semibold font-heading mb-3">
+              <span className="gradient-text">
+                {ingredients.length > 0 
+                  ? `Found ${ingredients.length} recipes` 
+                  : "Searching..."}
+              </span>
+            </h3>
+            <LoadingSkeleton 
+              type="search"
+              message="Searching..."
+              count={3}
+            />
+          </motion.div>
         </div>
       )}
 
