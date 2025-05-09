@@ -226,13 +226,12 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full border-none glass py-4 pl-4 pr-12 focus:ring-2 focus:ring-primary/50 text-foreground"
+            className="w-full border border-neutral-200 dark:border-slate-700 py-4 pl-4 pr-12 focus:ring-2 focus:ring-primary/50 text-foreground"
           />
           <AnimatedButton
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 min-w-0 h-10 w-10 flex items-center justify-center"
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 min-w-0 h-10 w-10 flex items-center justify-center ${message.trim() ? 'bg-primary text-white' : ''}`}
             onClick={handleSendMessage}
             disabled={sendMessageMutation.isPending || !message.trim()}
-            glowEffect={!!message.trim()}
           >
             <i className="ri-send-plane-fill"></i>
           </AnimatedButton>
@@ -240,28 +239,28 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
         <div className="flex mt-3 overflow-x-auto hide-scrollbar snap-x gap-2">
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
+            className="snap-start whitespace-nowrap rounded-full py-1.5 px-3 text-sm border-neutral-200 dark:border-slate-700 hover:bg-neutral-100 dark:hover:bg-slate-800/50"
             onClick={() => handleQuickPrompt("How to make it spicy?")}
           >
             How to make it spicy?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
+            className="snap-start whitespace-nowrap rounded-full py-1.5 px-3 text-sm border-neutral-200 dark:border-slate-700 hover:bg-neutral-100 dark:hover:bg-slate-800/50"
             onClick={() => handleQuickPrompt("Vegetarian options?")}
           >
             Vegetarian options?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
+            className="snap-start whitespace-nowrap rounded-full py-1.5 px-3 text-sm border-neutral-200 dark:border-slate-700 hover:bg-neutral-100 dark:hover:bg-slate-800/50"
             onClick={() => handleQuickPrompt("Low-carb version?")}
           >
             Low-carb version?
           </Button>
           <Button
             variant="outline"
-            className="snap-start whitespace-nowrap glass btn-3d-touch rounded-full py-1.5 px-3 text-sm border-white/20 dark:border-slate-700/30 hover:bg-white/30 dark:hover:bg-slate-800/30"
+            className="snap-start whitespace-nowrap rounded-full py-1.5 px-3 text-sm border-neutral-200 dark:border-slate-700 hover:bg-neutral-100 dark:hover:bg-slate-800/50"
             onClick={() => handleQuickPrompt("Wine pairing?")}
           >
             Wine pairing?

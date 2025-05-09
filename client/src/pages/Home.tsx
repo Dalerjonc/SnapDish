@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import OptionCard from "@/components/OptionCard";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeCardHorizontal from "@/components/RecipeCardHorizontal";
-import FloatingCard from "@/components/FloatingCard";
+import Card from "@/components/Card";
 import AnimatedButton from "@/components/AnimatedButton";
 
 const Home = () => {
@@ -101,32 +101,32 @@ const Home = () => {
         <div className="flex flex-col gap-4 flex-grow mb-4">
           {/* Identify Dish - Full Width */}
           <motion.div variants={itemVariants}>
-            <FloatingCard className="flex-1 p-6">
+            <Card className="flex-1 p-6">
               <Link href="/identify-dish">
-                <div className="flex flex-col items-center justify-center btn-3d-touch">
-                  <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white rounded-full mb-3 shadow-lg highlight-accent">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 flex items-center justify-center bg-primary text-white rounded-full mb-3">
                     <i className="ri-camera-line text-3xl"></i>
                   </div>
-                  <h3 className="text-lg font-semibold gradient-text">Identify Dish</h3>
+                  <h3 className="text-lg font-semibold text-primary">Identify Dish</h3>
                   <p className="text-sm text-foreground/70 text-center mt-1">Snap a photo of any meal</p>
                 </div>
               </Link>
-            </FloatingCard>
+            </Card>
           </motion.div>
           
           {/* What's in My Kitchen - Full Width */}
           <motion.div variants={itemVariants}>
-            <FloatingCard className="flex-1 p-6" delay={0.2}>
+            <Card className="flex-1 p-6">
               <Link href="/kitchen-ingredients">
-                <div className="flex flex-col items-center justify-center btn-3d-touch">
-                  <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-accent to-secondary text-white rounded-full mb-3 shadow-lg highlight-accent">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 flex items-center justify-center bg-primary text-white rounded-full mb-3">
                     <i className="ri-shopping-basket-2-line text-3xl"></i>
                   </div>
-                  <h3 className="text-lg font-semibold gradient-text">What's in My Kitchen</h3>
+                  <h3 className="text-lg font-semibold text-primary">What's in My Kitchen</h3>
                   <p className="text-sm text-foreground/70 text-center mt-1">Find recipes based on what you have</p>
                 </div>
               </Link>
-            </FloatingCard>
+            </Card>
           </motion.div>
         </div>
 
