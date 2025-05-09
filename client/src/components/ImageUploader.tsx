@@ -110,50 +110,48 @@ const ImageUploader = ({ onImageSelect, title, description, className = "", isPr
   };
 
   return (
-    <div className={`glass-card p-6 text-center ${className}`}>
-      <div className="border-2 border-dashed border-white/30 dark:border-slate-700/50 backdrop-blur-md rounded-2xl p-8 mb-4 flex flex-col items-center justify-center">
+    <div className={`bg-neutral-100 rounded-xl p-6 text-center ${className}`}>
+      <div className="border-2 border-dashed border-neutral-300 rounded-xl p-8 mb-4 flex flex-col items-center justify-center">
         {previewUrl ? (
-          <div className="w-full mb-6 relative">
+          <div className="w-full mb-4 relative">
             <img 
               src={previewUrl} 
               alt="Preview" 
-              className={`mx-auto max-h-48 rounded-2xl shadow-lg ${isProcessing ? 'opacity-60 filter blur-[1px]' : ''}`} 
+              className={`mx-auto max-h-48 rounded-lg ${isProcessing ? 'opacity-60 filter blur-[1px]' : ''}`} 
             />
             {isProcessing && (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="glass p-4 rounded-full shadow-lg">
-                  <div className="w-10 h-10 border-4 border-transparent border-t-primary border-r-secondary rounded-full animate-spin"></div>
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
+                  <div className="w-10 h-10 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
                 </div>
-                <div className="mt-4 glass px-6 py-3 rounded-full shadow-lg">
-                  <p className="text-sm font-medium gradient-text">Scanning image and analyzing ingredients...</p>
+                <div className="mt-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
+                  <p className="text-sm font-medium text-neutral-800">Scanning image and analyzing ingredients...</p>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="glass-card p-8 mb-6 rounded-full w-24 h-24 flex items-center justify-center">
-            <i className="ri-camera-3-line text-4xl text-primary dark:text-accent"></i>
-          </div>
+          <i className="ri-camera-3-line text-5xl text-neutral-400 mb-4"></i>
         )}
         
-        <h3 className="text-lg font-medium mb-2 gradient-text">{title}</h3>
-        <p className="text-sm text-foreground/70 mb-5">{description}</p>
+        <p className="text-neutral-600 mb-2">{title}</p>
+        <p className="text-xs text-neutral-500 mb-4">{description}</p>
         
-        <div className="flex space-x-4">
+        <div className="flex space-x-3">
           <Button 
             variant="default" 
-            className="btn-neomorphic bg-gradient-to-r from-primary to-secondary text-white font-medium py-3 px-6 text-sm flex items-center shadow-lg"
+            className="bg-primary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
             onClick={openCamera}
           >
-            <i className="ri-camera-line mr-2"></i> Camera
+            <i className="ri-camera-line mr-1"></i> Camera
           </Button>
           
           <Button 
             variant="default" 
-            className="btn-neomorphic bg-gradient-to-r from-accent to-secondary text-white font-medium py-3 px-6 text-sm flex items-center shadow-lg"
+            className="bg-secondary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
             onClick={triggerFileInput}
           >
-            <i className="ri-image-line mr-2"></i> Upload
+            <i className="ri-image-line mr-1"></i> Upload
           </Button>
           
           <input

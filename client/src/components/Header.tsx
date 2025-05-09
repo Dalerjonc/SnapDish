@@ -8,22 +8,23 @@ const Header = () => {
   };
 
   return (
-    <header className="navbar">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/">
-            <div className="text-xl font-bold font-heading">
-              <span className="text-primary">SnapDish</span>
+            <div className="text-xl font-bold font-heading text-neutral-800">
+              <span className="text-primary">Snap</span>
+              <span className="text-secondary">Dish</span>
             </div>
           </Link>
         </div>
         <div className="flex items-center space-x-3">
           <button 
             onClick={handleSearchClick}
-            className="p-2 rounded-full bg-neutral-100 dark:bg-slate-800 shadow-sm"
+            className="p-2 rounded-full hover:bg-neutral-100"
             aria-label="Search for recipes"
           >
-            <i className="ri-search-line text-primary dark:text-primary-foreground"></i>
+            <i className="ri-search-line text-neutral-600"></i>
           </button>
         </div>
       </div>
