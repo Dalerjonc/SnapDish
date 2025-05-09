@@ -54,7 +54,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
             transition: {
               duration: 2,
               repeat: Infinity,
-              repeatType: 'loop'
+              repeatType: "loop" as const
             }
           }
         };
@@ -65,7 +65,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
             transition: {
               duration: 1.5,
               repeat: Infinity,
-              repeatType: 'loop'
+              repeatType: "loop" as const
             }
           }
         };

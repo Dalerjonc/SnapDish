@@ -119,7 +119,7 @@
   }
   
   .glass-navbar {
-    @apply backdrop-blur-2xl sticky top-0 z-50 shadow-md bg-white/60 dark:bg-slate-900/60 border-b border-white/30 dark:border-slate-700/30;
+    @apply backdrop-blur-md relative z-10 shadow-sm bg-white/60 dark:bg-slate-900/60 border-b border-white/30 dark:border-slate-700/30;
   }
   
   /* Soft neomorphism for buttons */
