@@ -137,9 +137,7 @@ const Home = () => {
         >
           <Link href="/popular-recipes">
             <AnimatedButton 
-              className="h-full w-full font-medium text-sm"
-              gradient={true}
-              glowEffect={true}
+              className="h-full w-full font-medium text-sm bg-primary text-white"
               iconLeft={<i className="ri-fire-line text-lg"></i>}
             >
               Popular Recipes
@@ -148,9 +146,7 @@ const Home = () => {
           
           <Link href="/quick-recipes">
             <AnimatedButton 
-              className="h-full w-full font-medium text-sm"
-              gradient={true}
-              glowEffect={true}
+              className="h-full w-full font-medium text-sm bg-primary text-white"
               iconLeft={<i className="ri-time-line text-lg"></i>}
             >
               Quick & Easy

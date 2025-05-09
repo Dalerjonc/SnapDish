@@ -44,47 +44,23 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div className={`flex items-start ${isUser ? "flex-row-reverse" : ""} mb-5`}>
       {/* Avatar */}
-      <motion.div 
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
+      <div 
+        className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
           isUser 
-            ? "ml-2 bg-gradient-to-br from-primary to-blue-500 shadow-glow" 
-            : "mr-2 bg-gradient-to-br from-accent to-secondary shadow-glow"
+            ? "ml-2 bg-primary" 
+            : "mr-2 bg-gray-400"
         } flex-shrink-0`}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 15 }}
       >
-        <motion.i 
-          className={isUser ? "ri-user-fill" : "ri-restaurant-2-fill text-lg"}
-          initial={{ rotate: -30 }}
-          animate={{ rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200 }}
-        ></motion.i>
-      </motion.div>
+        <i className={isUser ? "ri-user-fill" : "ri-restaurant-2-fill text-lg"}></i>
+      </div>
 
       {/* Message Bubble */}
-      <motion.div 
+      <div 
         className={`${
           isUser 
-            ? "chat-bubble-user glass shadow-lg px-4 py-3 border border-white/10 dark:border-slate-700/20" 
-            : "chat-bubble-assistant glass shadow-lg px-4 py-3 border border-white/10 dark:border-slate-700/20"
+            ? "chat-bubble-user" 
+            : "chat-bubble-assistant"
         } max-w-[80%] text-sm relative`}
-        initial={{ 
-          opacity: 0, 
-          x: isUser ? 20 : -20,
-          scale: 0.95
-        }}
-        animate={{ 
-          opacity: 1, 
-          x: 0,
-          scale: 1
-        }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 200, 
-          damping: 20,
-          delay: 0.1 
-        }}
       >
         <div className="message-content">
           {formatContent(content)}
@@ -92,7 +68,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
         <div className="text-xs opacity-70 mt-1.5 text-right font-light">
           {new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
