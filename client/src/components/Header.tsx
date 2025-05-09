@@ -14,7 +14,7 @@ const Header = () => {
           <Link href="/">
             <div className="flex items-center">
               <img 
-                src="/snapdish-logo.svg" 
+                src="/snapdish-logo-new.svg" 
                 alt="SnapDish Logo" 
                 className="h-10 mr-2" 
               />
