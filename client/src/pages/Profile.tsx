@@ -125,14 +125,14 @@ const Profile = () => {
       <h1 className="text-2xl font-bold mb-6 text-center">My Profile</h1>
       
       {/* User Info Card */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center mb-4">
-          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-primary/20 dark:bg-primary/40 rounded-full flex items-center justify-center">
             <i className="ri-user-3-line text-primary text-3xl"></i>
           </div>
           <div className="ml-4">
             <h2 className="text-lg font-semibold">Guest User</h2>
-            <p className="text-sm text-neutral-500">Joined May 2025</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Joined May 2025</p>
           </div>
         </div>
         
@@ -147,10 +147,10 @@ const Profile = () => {
       
       {/* Profile Dialog */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="dark:text-neutral-400">
               Update your profile information.
             </DialogDescription>
           </DialogHeader>
@@ -160,7 +160,7 @@ const Profile = () => {
               <Label htmlFor="name">Display Name</Label>
               <input 
                 id="name" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background dark:bg-gray-700 dark:border-gray-600 px-3 py-2 text-sm"
                 placeholder="Guest User" 
               />
             </div>
@@ -169,7 +169,7 @@ const Profile = () => {
               <Label htmlFor="email">Email Address</Label>
               <input 
                 id="email" 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background dark:bg-gray-700 dark:border-gray-600 px-3 py-2 text-sm"
                 placeholder="email@example.com" 
               />
             </div>
@@ -194,31 +194,31 @@ const Profile = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card 
-          className="p-4 text-center cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 text-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:bg-gray-800 dark:border-gray-700"
           onClick={goToSavedRecipes}
         >
           <div className="text-2xl font-bold text-primary mb-1">{savedRecipes}</div>
-          <div className="text-sm text-neutral-500">Saved Recipes</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Saved Recipes</div>
         </Card>
         <Card 
-          className="p-4 text-center cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 text-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:bg-gray-800 dark:border-gray-700"
           onClick={goToMealPlans}
         >
           <div className="text-2xl font-bold text-secondary mb-1">0</div>
-          <div className="text-sm text-neutral-500">Meal Plans</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Meal Plans</div>
         </Card>
       </div>
       
       {/* Preferences */}
       <h2 className="text-lg font-semibold mb-3">Preferences</h2>
-      <Card className="mb-6">
+      <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
         <div 
-          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 border-b dark:border-gray-700 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={() => setDietaryDialogOpen(true)}
         >
           <div>
             <div className="font-medium">Dietary Restrictions</div>
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400">
               {dietaryRestriction === 'none' ? 'Set your dietary preferences' : 
                `Current: ${dietaryRestriction.charAt(0).toUpperCase() + dietaryRestriction.slice(1)}`}
             </div>
@@ -228,10 +228,10 @@ const Profile = () => {
         
         {/* Dietary Restrictions Dialog */}
         <Dialog open={dietaryDialogOpen} onOpenChange={setDietaryDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
             <DialogHeader>
               <DialogTitle>Dietary Restrictions</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-neutral-400">
                 Select your dietary preferences to get personalized recipes.
               </DialogDescription>
             </DialogHeader>
@@ -275,12 +275,12 @@ const Profile = () => {
           </DialogContent>
         </Dialog>
         <div 
-          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 border-b dark:border-gray-700 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={() => setSkillDialogOpen(true)}
         >
           <div>
             <div className="font-medium">Cooking Skill Level</div>
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400">
               {cookingSkill === 'beginner' ? 'Set your cooking expertise' : 
                `Current: ${cookingSkill.charAt(0).toUpperCase() + cookingSkill.slice(1)}`}
             </div>
@@ -290,10 +290,10 @@ const Profile = () => {
         
         {/* Cooking Skill Level Dialog */}
         <Dialog open={skillDialogOpen} onOpenChange={setSkillDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
             <DialogHeader>
               <DialogTitle>Cooking Skill Level</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-neutral-400">
                 Select your cooking expertise level to get appropriate recipes.
               </DialogDescription>
             </DialogHeader>
@@ -325,12 +325,12 @@ const Profile = () => {
           </DialogContent>
         </Dialog>
         <div 
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={() => setUnitDialogOpen(true)}
         >
           <div>
             <div className="font-medium">Measurement Units</div>
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-neutral-500 dark:text-neutral-400">
               Current: {measurementUnit === 'metric' ? 'Metric' : 'Imperial'}
             </div>
           </div>
@@ -339,10 +339,10 @@ const Profile = () => {
         
         {/* Measurement Units Dialog */}
         <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
             <DialogHeader>
               <DialogTitle>Measurement Units</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="dark:text-neutral-400">
                 Choose your preferred measurement system for recipes.
               </DialogDescription>
             </DialogHeader>
