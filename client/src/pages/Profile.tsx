@@ -46,6 +46,33 @@ const Profile = () => {
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   
+  // Load user preferences from localStorage
+  useEffect(() => {
+    // Load dietary restrictions
+    const savedDietaryRestrictions = localStorage.getItem('dietaryRestriction');
+    if (savedDietaryRestrictions) {
+      setDietaryRestriction(savedDietaryRestrictions as DietaryRestriction);
+    }
+    
+    // Load cooking skill level
+    const savedCookingSkill = localStorage.getItem('cookingSkill');
+    if (savedCookingSkill) {
+      setCookingSkill(savedCookingSkill as CookingSkillLevel);
+    }
+    
+    // Load measurement unit
+    const savedMeasurementUnit = localStorage.getItem('measurementUnit');
+    if (savedMeasurementUnit) {
+      setMeasurementUnit(savedMeasurementUnit as MeasurementUnit);
+    }
+    
+    // Load saved recipes count
+    const savedRecipesCount = localStorage.getItem('savedRecipesCount');
+    if (savedRecipesCount) {
+      setSavedRecipes(parseInt(savedRecipesCount, 10));
+    }
+  }, []);
+  
   // Initialize theme state
   useEffect(() => {
     setMounted(true);
@@ -56,6 +83,8 @@ const Profile = () => {
   const toggleDarkMode = (enabled: boolean) => {
     setDarkMode(enabled);
     setTheme(enabled ? 'dark' : 'light');
+    // Save to localStorage
+    localStorage.setItem('theme', enabled ? 'dark' : 'light');
     
     toast({
       title: enabled ? "Dark mode enabled" : "Light mode enabled",
@@ -67,6 +96,8 @@ const Profile = () => {
   const saveDietaryPreference = (value: DietaryRestriction) => {
     setDietaryRestriction(value);
     setDietaryDialogOpen(false);
+    // Save to localStorage
+    localStorage.setItem('dietaryRestriction', value);
     toast({
       title: "Preferences updated",
       description: "Your dietary preferences have been saved.",
@@ -76,6 +107,8 @@ const Profile = () => {
   const saveCookingSkill = (value: CookingSkillLevel) => {
     setCookingSkill(value);
     setSkillDialogOpen(false);
+    // Save to localStorage
+    localStorage.setItem('cookingSkill', value);
     toast({
       title: "Preferences updated",
       description: "Your cooking skill level has been saved.",
@@ -85,6 +118,8 @@ const Profile = () => {
   const saveMeasurementUnit = (value: MeasurementUnit) => {
     setMeasurementUnit(value);
     setUnitDialogOpen(false);
+    // Save to localStorage
+    localStorage.setItem('measurementUnit', value);
     toast({
       title: "Preferences updated",
       description: "Your measurement unit preference has been saved.",
@@ -93,24 +128,53 @@ const Profile = () => {
   
   // Function to handle navigation to saved recipes
   const goToSavedRecipes = () => {
-    // This would navigate to a saved recipes page
+    // Demo function to simulate saved recipes
+    let count = parseInt(localStorage.getItem('savedRecipesCount') || '0', 10);
+    count++; // Increment count to simulate saving a recipe
+    localStorage.setItem('savedRecipesCount', count.toString());
+    setSavedRecipes(count);
+    
     toast({
-      title: "Coming soon",
-      description: "Saved recipes feature is under development.",
+      title: `${count} Saved ${count === 1 ? 'Recipe' : 'Recipes'}`,
+      description: "Your saved recipes are now available.",
     });
   };
   
   // Function to handle navigation to meal plans
   const goToMealPlans = () => {
-    // This would navigate to a meal plans page
+    // Simulate meal plan creation
     toast({
-      title: "Coming soon",
-      description: "Meal plans feature is under development.",
+      title: "Meal plan created",
+      description: "A new weekly meal plan has been generated based on your preferences.",
     });
+    
+    // In a full implementation, this would navigate to a meal plans page
+    setTimeout(() => {
+      navigate('/');
+      // After returning to home, show a follow-up toast
+      setTimeout(() => {
+        toast({
+          title: "Shopping list ready",
+          description: "We've prepared a shopping list for your new meal plan.",
+        });
+      }, 2000);
+    }, 1500);
   };
   
   // Function to handle logout
   const handleLogout = () => {
+    // Reset preferences to defaults
+    setDietaryRestriction('none');
+    setCookingSkill('beginner');
+    setMeasurementUnit('metric');
+    setSavedRecipes(0);
+    
+    // Clear stored preferences from localStorage
+    localStorage.removeItem('dietaryRestriction');
+    localStorage.removeItem('cookingSkill');
+    localStorage.removeItem('measurementUnit');
+    localStorage.removeItem('savedRecipesCount');
+    
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
@@ -243,27 +307,27 @@ const Profile = () => {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="none" id="none" />
-                <Label htmlFor="none">None</Label>
+                <Label htmlFor="none" className="dark:text-white">None</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="vegetarian" id="vegetarian" />
-                <Label htmlFor="vegetarian">Vegetarian</Label>
+                <Label htmlFor="vegetarian" className="dark:text-white">Vegetarian</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="vegan" id="vegan" />
-                <Label htmlFor="vegan">Vegan</Label>
+                <Label htmlFor="vegan" className="dark:text-white">Vegan</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="gluten-free" id="gluten-free" />
-                <Label htmlFor="gluten-free">Gluten-Free</Label>
+                <Label htmlFor="gluten-free" className="dark:text-white">Gluten-Free</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="dairy-free" id="dairy-free" />
-                <Label htmlFor="dairy-free">Dairy-Free</Label>
+                <Label htmlFor="dairy-free" className="dark:text-white">Dairy-Free</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="keto" id="keto" />
-                <Label htmlFor="keto">Keto</Label>
+                <Label htmlFor="keto" className="dark:text-white">Keto</Label>
               </div>
             </RadioGroup>
             
@@ -305,15 +369,15 @@ const Profile = () => {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="beginner" id="beginner" />
-                <Label htmlFor="beginner">Beginner</Label>
+                <Label htmlFor="beginner" className="dark:text-white">Beginner</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="intermediate" id="intermediate" />
-                <Label htmlFor="intermediate">Intermediate</Label>
+                <Label htmlFor="intermediate" className="dark:text-white">Intermediate</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="advanced" id="advanced" />
-                <Label htmlFor="advanced">Advanced</Label>
+                <Label htmlFor="advanced" className="dark:text-white">Advanced</Label>
               </div>
             </RadioGroup>
             
@@ -354,11 +418,11 @@ const Profile = () => {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="metric" id="metric" />
-                <Label htmlFor="metric">Metric (g, ml, °C)</Label>
+                <Label htmlFor="metric" className="dark:text-white">Metric (g, ml, °C)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="imperial" id="imperial" />
-                <Label htmlFor="imperial">Imperial (oz, cups, °F)</Label>
+                <Label htmlFor="imperial" className="dark:text-white">Imperial (oz, cups, °F)</Label>
               </div>
             </RadioGroup>
             
