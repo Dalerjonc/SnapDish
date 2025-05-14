@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 interface ImageUploaderProps {
@@ -11,7 +11,21 @@ interface ImageUploaderProps {
 
 const ImageUploader = ({ onImageSelect, title, description, className = "", isProcessing = false }: ImageUploaderProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Clean up camera stream when component unmounts
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -74,45 +88,109 @@ const ImageUploader = ({ onImageSelect, title, description, className = "", isPr
 
   const openCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const videoElement = document.createElement('video');
-      const canvasElement = document.createElement('canvas');
+      // Close existing camera if it's active
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+
+      // Get new camera stream
+      const newStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', // Prefer back camera on mobile
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
       
-      videoElement.srcObject = stream;
-      videoElement.play();
+      setStream(newStream);
+      setIsCameraActive(true);
       
-      setTimeout(() => {
-        const context = canvasElement.getContext('2d');
-        canvasElement.width = videoElement.videoWidth;
-        canvasElement.height = videoElement.videoHeight;
-        
-        if (context) {
-          context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-        }
-        
-        // Convert canvas to file
-        canvasElement.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-            onImageSelect(file);
-            setPreviewUrl(URL.createObjectURL(blob));
-          }
-          
-          // Stop all tracks to release camera
-          const tracks = stream.getTracks();
-          tracks.forEach(track => track.stop());
-        }, 'image/jpeg');
-      }, 500);
+      // Connect stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.play();
+      }
     } catch (error) {
       console.error("Error accessing camera:", error);
       alert("Could not access camera. Please try uploading an image instead.");
     }
   };
 
+  const takePhoto = () => {
+    if (!videoRef.current || !canvasRef.current || !stream) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw the current video frame to the canvas
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert canvas to file
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+          onImageSelect(file);
+          setPreviewUrl(URL.createObjectURL(blob));
+        }
+        
+        // Close camera
+        closeCamera();
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  const closeCamera = () => {
+    if (stream) {
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const cancelCamera = () => {
+    closeCamera();
+  };
+
   return (
-    <div className={`bg-neutral-100 rounded-xl p-6 text-center ${className}`}>
-      <div className="border-2 border-dashed border-neutral-300 rounded-xl p-8 mb-4 flex flex-col items-center justify-center">
-        {previewUrl ? (
+    <div className={`bg-neutral-100 dark:bg-gray-800 rounded-xl p-6 text-center ${className}`}>
+      <div className="border-2 border-dashed border-neutral-300 dark:border-gray-600 rounded-xl p-4 md:p-8 mb-4 flex flex-col items-center justify-center">
+        {isCameraActive ? (
+          <div className="w-full relative mb-4">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline
+              className="mx-auto max-h-60 rounded-lg border border-gray-300 dark:border-gray-700"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            
+            <div className="mt-4 flex justify-center space-x-3">
+              <Button 
+                variant="default" 
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
+                onClick={takePhoto}
+              >
+                <i className="ri-camera-line mr-1"></i> Take Photo
+              </Button>
+              
+              <Button 
+                variant="default" 
+                className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
+                onClick={cancelCamera}
+              >
+                <i className="ri-close-line mr-1"></i> Cancel
+              </Button>
+            </div>
+          </div>
+        ) : previewUrl ? (
           <div className="w-full mb-4 relative">
             <img 
               src={previewUrl} 
@@ -131,37 +209,41 @@ const ImageUploader = ({ onImageSelect, title, description, className = "", isPr
             )}
           </div>
         ) : (
-          <i className="ri-camera-3-line text-5xl text-neutral-400 mb-4"></i>
+          <i className="ri-camera-3-line text-5xl text-neutral-400 dark:text-gray-500 mb-4"></i>
         )}
         
-        <p className="text-neutral-600 mb-2">{title}</p>
-        <p className="text-xs text-neutral-500 mb-4">{description}</p>
-        
-        <div className="flex space-x-3">
-          <Button 
-            variant="default" 
-            className="bg-primary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
-            onClick={openCamera}
-          >
-            <i className="ri-camera-line mr-1"></i> Camera
-          </Button>
-          
-          <Button 
-            variant="default" 
-            className="bg-secondary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
-            onClick={triggerFileInput}
-          >
-            <i className="ri-image-line mr-1"></i> Upload
-          </Button>
-          
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-          />
-        </div>
+        {!isCameraActive && (
+          <>
+            <p className="text-neutral-600 dark:text-gray-300 mb-2">{title}</p>
+            <p className="text-xs text-neutral-500 dark:text-gray-400 mb-4">{description}</p>
+            
+            <div className="flex space-x-3">
+              <Button 
+                variant="default" 
+                className="bg-primary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
+                onClick={openCamera}
+              >
+                <i className="ri-camera-line mr-1"></i> Camera
+              </Button>
+              
+              <Button 
+                variant="default" 
+                className="bg-secondary text-white font-medium py-2 px-5 rounded-full text-sm flex items-center"
+                onClick={triggerFileInput}
+              >
+                <i className="ri-image-line mr-1"></i> Upload
+              </Button>
+              
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
