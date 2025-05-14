@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useTheme } from "next-themes";
 import { 
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
   RadioGroup,
   RadioGroupItem
 } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +28,8 @@ type MeasurementUnit = 'metric' | 'imperial';
 const Profile = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   
   // State for user metrics
   const [savedRecipes, setSavedRecipes] = useState<number>(0);
@@ -34,12 +38,30 @@ const Profile = () => {
   const [dietaryRestriction, setDietaryRestriction] = useState<DietaryRestriction>('none');
   const [cookingSkill, setCookingSkill] = useState<CookingSkillLevel>('beginner');
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('metric');
+  const [darkMode, setDarkMode] = useState(false);
   
   // State for dialogs
   const [dietaryDialogOpen, setDietaryDialogOpen] = useState(false);
   const [skillDialogOpen, setSkillDialogOpen] = useState(false);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  
+  // Initialize theme state
+  useEffect(() => {
+    setMounted(true);
+    setDarkMode(theme === 'dark');
+  }, [theme]);
+  
+  // Toggle dark mode
+  const toggleDarkMode = (enabled: boolean) => {
+    setDarkMode(enabled);
+    setTheme(enabled ? 'dark' : 'light');
+    
+    toast({
+      title: enabled ? "Dark mode enabled" : "Light mode enabled",
+      description: `Theme preference has been saved.`,
+    });
+  };
   
   // Function to handle saving preferences
   const saveDietaryPreference = (value: DietaryRestriction) => {
@@ -352,8 +374,15 @@ const Profile = () => {
       {/* Settings */}
       <h2 className="text-lg font-semibold mb-3">Settings</h2>
       <Card>
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="font-medium">Dark Mode</div>
+          <Switch 
+            checked={darkMode}
+            onCheckedChange={toggleDarkMode}
+          />
+        </div>
         <div 
-          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={() => {
             toast({
               title: "Coming soon",
@@ -365,7 +394,7 @@ const Profile = () => {
           <i className="ri-arrow-right-s-line text-neutral-400"></i>
         </div>
         <div 
-          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={() => {
             toast({
               title: "Coming soon",
@@ -377,7 +406,7 @@ const Profile = () => {
           <i className="ri-arrow-right-s-line text-neutral-400"></i>
         </div>
         <div 
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           onClick={handleLogout}
         >
           <div className="font-medium text-red-500">Log Out</div>
