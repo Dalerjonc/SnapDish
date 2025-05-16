@@ -348,64 +348,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let detectedDish;
       
-      // First try to use OpenAI Vision API directly for better dish identification
+      // First try to use OpenAI Vision API for dish identification
       try {
-        if (process.env.OPENAI_API_KEY) {
-          // Use our imported imageRecognitionService which now prioritizes OpenAI
-          detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-          console.log("OpenAI Vision API result:", detectedDish);
-        } else {
-          // Fall back to the default service if OpenAI API key is not available
-          detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-          console.log("Default image recognition service result:", detectedDish);
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error("OpenAI API key not configured");
+        }
+        
+        // Use OpenAI Vision API for dish identification
+        detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
+        console.log("OpenAI Vision API identified dish:", detectedDish);
+        
+        if (!detectedDish) {
+          return res.status(404).json({ 
+            message: "Could not identify any dish in the image. Please try with a clearer image of the food."
+          });
         }
       } catch (visionError) {
-        console.error("Error with Vision API call:", visionError);
+        console.error("Error with OpenAI Vision API call:", visionError);
         return res.status(500).json({ 
-          message: "Error processing image", 
+          message: "Error identifying the dish", 
           error: visionError instanceof Error ? visionError.message : String(visionError)
         });
       }
       
-      if (!detectedDish) {
-        console.log("No dish detected in the image");
-        return res.status(404).json({ message: "Could not identify any dish in the image" });
-      }
-      
       try {
-        // Use the detected dish name to search for recipes through Edamam API
-        console.log("Searching for recipes for:", detectedDish);
+        // Now search for the identified dish using Edamam Recipe API
+        console.log("Searching for recipes for identified dish:", detectedDish);
         
-        let recipes: any[] = [];
-        
-        try {
-          // First try to get recipes from Edamam
-          recipes = await recipeApiService.searchRecipeByName(detectedDish)
-            .then(recipe => [recipe]) // Convert single recipe to array
-            .catch(async (err) => {
-              console.log("Error getting recipe from Edamam, trying by ingredients:", err);
-              // If recipe search fails, try searching by the dish name as ingredient
-              return await recipeApiService.getRecipesByIngredients([detectedDish]);
-            });
-          
-          console.log(`Found ${recipes.length} recipes through Edamam API`);
-        } catch (edamamError) {
-          console.error("Edamam search failed:", edamamError);
-          // If Edamam search fails, fall back to OpenAI recipe generation
-          console.log("Falling back to OpenAI recipe generation");
+        // Check if we have Edamam credentials configured
+        if (!process.env.EDAMAM_RECIPE_APP_ID || !process.env.EDAMAM_RECIPE_APP_KEY) {
+          console.warn("Edamam Recipe API credentials not configured, falling back to OpenAI for recipe generation");
+          throw new Error("Edamam API credentials missing");
         }
         
-        // If we got recipes from Edamam, use the first one
-        if (recipes && recipes.length > 0) {
-          const recipe = recipes[0];
-          console.log("Successfully found recipe with Edamam:", recipe.name);
+        // First attempt: Direct search by dish name
+        let recipe;
+        
+        try {
+          console.log("Searching Edamam for recipe by name:", detectedDish);
+          recipe = await recipeApiService.searchRecipeByName(detectedDish);
+          console.log("Found recipe with Edamam by name:", recipe.name);
+        } catch (nameSearchError) {
+          console.warn("Error searching by name, trying ingredient search:", nameSearchError);
           
+          // Second attempt: Try searching by ingredients
+          try {
+            console.log("Searching Edamam with dish as ingredient:", detectedDish);
+            const ingredientRecipes = await recipeApiService.getRecipesByIngredients([detectedDish]);
+            
+            if (ingredientRecipes && ingredientRecipes.length > 0) {
+              recipe = ingredientRecipes[0];
+              console.log("Found recipe with Edamam by ingredient:", recipe.name);
+            } else {
+              throw new Error("No recipes found by ingredient search");
+            }
+          } catch (ingredientSearchError) {
+            console.warn("Error in ingredient search:", ingredientSearchError);
+            throw new Error("Edamam could not find matching recipes");
+          }
+        }
+        
+        // Process the Edamam recipe to ensure consistent ID format
+        if (recipe) {
           // Ensure recipe has a consistent numeric ID
           let recipeId = recipe.id;
+          
           if (!recipeId) {
             // Generate random ID if none exists
             recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
-            console.log(`Generated new ID ${recipeId} for recipe: ${recipe.name}`);
+            console.log(`Generated new ID ${recipeId} for Edamam recipe: ${recipe.name}`);
           } else if (typeof recipeId === 'string') {
             // Try to convert string ID to number
             if (!isNaN(parseInt(recipeId))) {
@@ -413,7 +424,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
             } else {
               // For non-numeric IDs, use a hash function
-              // Simple hash to create a stable numeric ID from any string
               let hash = 0;
               for (let i = 0; i < recipeId.length; i++) {
                 const char = recipeId.charCodeAt(i);
@@ -431,34 +441,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...recipe,
             id: recipeId,
             instructions: recipe.instructions || [],
+            summary: recipe.summary || `Recipe for ${detectedDish}`,
             created_at: new Date()
           };
           
-          // Cache the recipe with both string and numeric versions of the ID
+          // Cache the recipe
           if (recipeApiService instanceof EdamamRecipeApiService) {
             console.log(`Caching Edamam recipe with ID: ${completeRecipe.id}`);
             recipeApiService.cacheRecipe(completeRecipe);
           }
           
+          console.log("Successfully returned Edamam recipe for:", detectedDish);
           return res.json(completeRecipe);
         }
         
-        // If we get here, Edamam didn't return recipes, so fall back to OpenAI
-        console.log("No Edamam recipes found, generating with OpenAI for:", detectedDish);
-        
+      } catch (edamamError) {
+        // Edamam search failed, fall back to OpenAI for recipe generation
+        console.warn("Edamam search failed, falling back to OpenAI recipe generation:", edamamError);
+      }
+      
+      // If we get here, Edamam didn't return a recipe, generate with OpenAI
+      console.log("Generating recipe with OpenAI for:", detectedDish);
+      
+      try {
         // Generate recipe with OpenAI
         const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
         console.log("Generated recipe with OpenAI:", openAIRecipeData.name || detectedDish);
         
         // Generate a consistent numeric ID for the recipe
-        const recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
-        console.log(`Generated recipe ID: ${recipeId}`);
+        const recipeId = 50000 + Math.floor(Math.random() * 49999); // Generate ID between 50000-99999 (different range from Edamam)
         
         // Convert OpenAI recipe to our format
         const recipe = {
-          id: recipeId, // Use consistent numeric ID format
+          id: recipeId,
           name: openAIRecipeData.name || detectedDish,
-          image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
+          image: openAIRecipeData.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
           readyInMinutes: openAIRecipeData.readyInMinutes || 30,
           servings: openAIRecipeData.servings || 4,
           sourceUrl: "",
@@ -498,31 +515,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Check if we got a valid recipe with all required fields
         if (!recipe || !recipe.id || !recipe.name) {
-          console.log("Invalid recipe generated:", recipe);
-          return res.status(404).json({ message: "Could not generate valid recipe for the identified dish" });
+          console.error("Invalid recipe generated:", recipe);
+          return res.status(404).json({ 
+            message: "Could not generate valid recipe for the identified dish"
+          });
         }
         
-        console.log("Successfully identified dish:", recipe.name, "with ID:", recipe.id);
+        console.log("Successfully generated OpenAI recipe for:", recipe.name, "with ID:", recipe.id);
         
-        // Cache the OpenAI-generated recipe for future getRecipeById requests
+        // Cache the OpenAI-generated recipe
         if (recipeApiService instanceof EdamamRecipeApiService) {
           recipeApiService.cacheRecipe(recipe);
-          
-          // Verify the recipe is cached properly
-          console.log(`Verifying recipe cache for ID: ${recipe.id}`);
-          try {
-            const cachedRecipe = await recipeApiService.getRecipeById(recipe.id);
-            console.log(`Recipe successfully cached and retrieved: ${cachedRecipe.name}`);
-          } catch (cacheError) {
-            console.error("Failed to verify recipe in cache:", cacheError);
-          }
         }
         
-        res.json(recipe);
-      } catch (recipeError) {
-        console.error("Error generating recipe:", recipeError);
+        return res.json(recipe);
+      } catch (openaiError) {
+        console.error("Error generating recipe with OpenAI:", openaiError);
         return res.status(500).json({ 
-          message: `Error processing recipe data: ${recipeError instanceof Error ? recipeError.message : String(recipeError)}`
+          message: "Failed to generate recipe with AI",
+          error: openaiError instanceof Error ? openaiError.message : String(openaiError)
         });
       }
     } catch (error) {
