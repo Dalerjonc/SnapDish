@@ -337,17 +337,17 @@ const Profile = () => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card 
           className="p-4 text-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:bg-gray-800 dark:border-gray-700"
-          onClick={goToSavedRecipes}
+          onClick={() => setHistoryDialogOpen(true)}
         >
-          <div className="text-2xl font-bold text-primary mb-1">{savedRecipes}</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">Saved Recipes</div>
+          <div className="text-2xl font-bold text-primary mb-1">{cookingHistory.length}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Cooking History</div>
         </Card>
         <Card 
           className="p-4 text-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:bg-gray-800 dark:border-gray-700"
-          onClick={() => setHistoryDialogOpen(true)}
+          onClick={goToSavedRecipes}
         >
-          <div className="text-2xl font-bold text-secondary mb-1">{cookingHistory.length}</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">Cooking History</div>
+          <div className="text-2xl font-bold text-secondary mb-1">{savedRecipes}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Saved Recipes</div>
         </Card>
       </div>
       
