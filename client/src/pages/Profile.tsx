@@ -193,26 +193,7 @@ const Profile = () => {
     });
   };
   
-  // Function to handle navigation to meal plans
-  const goToMealPlans = () => {
-    // Simulate meal plan creation
-    toast({
-      title: "Meal plan created",
-      description: "A new weekly meal plan has been generated based on your preferences.",
-    });
-    
-    // In a full implementation, this would navigate to a meal plans page
-    setTimeout(() => {
-      navigate('/');
-      // After returning to home, show a follow-up toast
-      setTimeout(() => {
-        toast({
-          title: "Shopping list ready",
-          description: "We've prepared a shopping list for your new meal plan.",
-        });
-      }, 2000);
-    }, 1500);
-  };
+
   
   // Functions to save notification settings
   const saveNotificationSettings = () => {
@@ -363,10 +344,10 @@ const Profile = () => {
         </Card>
         <Card 
           className="p-4 text-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors dark:bg-gray-800 dark:border-gray-700"
-          onClick={goToMealPlans}
+          onClick={() => setHistoryDialogOpen(true)}
         >
-          <div className="text-2xl font-bold text-secondary mb-1">0</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">Meal Plans</div>
+          <div className="text-2xl font-bold text-secondary mb-1">{cookingHistory.length}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Cooking History</div>
         </Card>
       </div>
       
@@ -532,26 +513,6 @@ const Profile = () => {
         </Dialog>
       </Card>
       
-      {/* History */}
-      <h2 className="text-lg font-semibold mb-3">History</h2>
-      <Card className="mb-6">
-        <div 
-          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          onClick={() => setHistoryDialogOpen(true)}
-        >
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center bg-primary/20 text-primary rounded-full mr-3">
-              <i className="ri-history-line text-lg"></i>
-            </div>
-            <div>
-              <div className="font-medium">Cooking History</div>
-              <p className="text-xs text-neutral-600">{cookingHistory.length} items saved</p>
-            </div>
-          </div>
-          <i className="ri-arrow-right-s-line text-neutral-400"></i>
-        </div>
-      </Card>
-
       {/* Settings */}
       <h2 className="text-lg font-semibold mb-3">Settings</h2>
       <Card>
