@@ -6,6 +6,7 @@ import ImageUploader from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { storePhotoDataUrl } from "@/lib/utils";
+import { addToHistory } from "@shared/historyUtils";
 
 const IdentifyDish = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -17,6 +18,9 @@ const IdentifyDish = () => {
     onSuccess: (data) => {
       // Make sure data contains valid recipe information
       if (data && data.id && data.name) {
+        // Add to cooking history
+        addToHistory(data, 'identify');
+        
         toast({
           title: "Success!",
           description: `Identified: ${data.name}`,

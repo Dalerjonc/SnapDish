@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { getHistoryFromStorage, clearHistory as clearHistoryUtil } from "@shared/historyUtils";
 
 // User preference types
 type DietaryRestriction = 'none' | 'vegetarian' | 'vegan' | 'gluten-free' | 'dairy-free' | 'keto';
@@ -58,6 +59,10 @@ const Profile = () => {
   // State for account settings
   const [username, setUsername] = useState('Chef User');
   const [email, setEmail] = useState('user@snapdish.com');
+  
+  // State for history
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [cookingHistory, setCookingHistory] = useState<any[]>([]);
   
   // Load user preferences from localStorage
   useEffect(() => {
@@ -116,6 +121,9 @@ const Profile = () => {
     if (savedEmail) {
       setEmail(savedEmail);
     }
+    
+    // Load cooking history using utility
+    setCookingHistory(getHistoryFromStorage());
   }, []);
   
   // Initialize theme state
@@ -230,6 +238,24 @@ const Profile = () => {
       title: "Account settings saved",
       description: "Your account information has been updated.",
     });
+  };
+  
+  // Function to clear cooking history
+  const clearHistory = () => {
+    clearHistoryUtil();
+    setCookingHistory([]);
+    setHistoryDialogOpen(false);
+    toast({
+      title: "History cleared",
+      description: "Your cooking history has been cleared.",
+    });
+  };
+  
+  // Function to view recipe from history
+  const viewRecipeFromHistory = (historyItem: any) => {
+    setHistoryDialogOpen(false);
+    // Navigate to recipe detail page with full recipe data available offline
+    navigate(`/recipe/${historyItem.id}?name=${encodeURIComponent(historyItem.name)}&fromHistory=true`);
   };
 
   // Function to handle logout
@@ -506,6 +532,26 @@ const Profile = () => {
         </Dialog>
       </Card>
       
+      {/* History */}
+      <h2 className="text-lg font-semibold mb-3">History</h2>
+      <Card className="mb-6">
+        <div 
+          className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          onClick={() => setHistoryDialogOpen(true)}
+        >
+          <div className="flex items-center">
+            <div className="w-10 h-10 flex items-center justify-center bg-primary/20 text-primary rounded-full mr-3">
+              <i className="ri-history-line text-lg"></i>
+            </div>
+            <div>
+              <div className="font-medium">Cooking History</div>
+              <p className="text-xs text-neutral-600">{cookingHistory.length} items saved</p>
+            </div>
+          </div>
+          <i className="ri-arrow-right-s-line text-neutral-400"></i>
+        </div>
+      </Card>
+
       {/* Settings */}
       <h2 className="text-lg font-semibold mb-3">Settings</h2>
       <Card>
@@ -641,6 +687,68 @@ const Profile = () => {
             <Button onClick={saveAccountSettings} className="w-full">
               Save Changes
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Cooking History Dialog */}
+      <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Cooking History</DialogTitle>
+            <DialogDescription>
+              Your saved dishes and recipes. Accessible offline anytime.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            {cookingHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <i className="ri-history-line text-4xl text-neutral-300 mb-3"></i>
+                <p className="text-neutral-500 mb-2">No cooking history yet</p>
+                <p className="text-sm text-neutral-400">Start identifying dishes or finding recipes to build your history!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {cookingHistory.map((item, index) => (
+                  <div 
+                    key={index}
+                    className="p-3 border rounded-lg cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                    onClick={() => viewRecipeFromHistory(item)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-neutral-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <i className="ri-restaurant-line text-neutral-400"></i>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{item.name}</h4>
+                        <p className="text-xs text-neutral-500">
+                          {item.source === 'identify' ? 'Dish Identified' : 'From Ingredients'} • {item.date}
+                        </p>
+                      </div>
+                      <i className="ri-arrow-right-s-line text-neutral-400"></i>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex-shrink-0">
+            <div className="flex w-full gap-2">
+              <Button variant="outline" onClick={() => setHistoryDialogOpen(false)} className="flex-1">
+                Close
+              </Button>
+              {cookingHistory.length > 0 && (
+                <Button variant="destructive" onClick={clearHistory} className="flex-1">
+                  Clear History
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -9,6 +9,7 @@ import NutritionDisplay from "@/components/NutritionDisplay";
 import { recipeService } from "@/lib/services";
 import { getStoredPhotoDataUrl } from "@/lib/utils";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
+import { getHistoryFromStorage } from "@shared/historyUtils";
 
 const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   const [, navigate] = useLocation();
@@ -41,17 +42,30 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
 
-  // Extract dish name from URL query params for OpenAI generation
+  // Extract dish name and history flag from URL query params
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const dishName = searchParams.get('name');
+  const fromHistory = searchParams.get('fromHistory') === 'true';
   
   console.log("Recipe detail with dish name from URL:", dishName);
+  console.log("From history:", fromHistory);
   
-  // Get recipe details - custom fetcher to debug issues
+  // Get recipe details - check history first for offline access
   const { data: recipe, isLoading, error } = useQuery<Recipe>({
-    queryKey: [`/api/recipes/${validRecipeId}`],
+    queryKey: [`/api/recipes/${validRecipeId}`, fromHistory],
     queryFn: async () => {
-      console.log("Fetching recipe with ID:", validRecipeId, "with dish name:", dishName);
+      console.log("Fetching recipe with ID:", validRecipeId, "with dish name:", dishName, "from history:", fromHistory);
+      
+      // If accessing from history, try to load from localStorage first
+      if (fromHistory) {
+        const historyItems = getHistoryFromStorage();
+        const historyItem = historyItems.find(item => item.id.toString() === validRecipeId?.toString());
+        if (historyItem && historyItem.recipe) {
+          console.log("Loading recipe from offline history");
+          return historyItem.recipe;
+        }
+      }
+      
       try {
         // If we have a dish name, include it in the API request
         const url = dishName 

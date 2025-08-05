@@ -8,6 +8,7 @@ import { queryClient } from "@/lib/queryClient";
 import ImageUploader from "@/components/ImageUploader";
 import RecipeCardHorizontal from "@/components/RecipeCardHorizontal";
 import { useToast } from "@/hooks/use-toast";
+import { addToHistory } from "@shared/historyUtils";
 
 const KitchenIngredients = () => {
   const [activeTab, setActiveTab] = useState("type");
@@ -56,6 +57,12 @@ const KitchenIngredients = () => {
     mutationFn: (ingredientList: string[]) => recipeService.getRecipesByIngredients(ingredientList),
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/recipes/by-ingredients", ingredients], data);
+      
+      // Add found recipes to history
+      data.forEach((recipe: any) => {
+        addToHistory(recipe, 'ingredients');
+      });
+      
       toast({
         title: `Found ${data.length} recipes`,
         description: "Recipes that match your ingredients",
