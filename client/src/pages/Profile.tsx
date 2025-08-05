@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 // User preference types
@@ -45,6 +46,18 @@ const Profile = () => {
   const [skillDialogOpen, setSkillDialogOpen] = useState(false);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  
+  // State for notification settings
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [recipeRecommendations, setRecipeRecommendations] = useState(true);
+  const [cookingReminders, setCookingReminders] = useState(false);
+  
+  // State for account settings
+  const [username, setUsername] = useState('Chef User');
+  const [email, setEmail] = useState('user@snapdish.com');
   
   // Load user preferences from localStorage
   useEffect(() => {
@@ -70,6 +83,38 @@ const Profile = () => {
     const savedRecipesCount = localStorage.getItem('savedRecipesCount');
     if (savedRecipesCount) {
       setSavedRecipes(parseInt(savedRecipesCount, 10));
+    }
+    
+    // Load notification settings
+    const savedPushNotifications = localStorage.getItem('pushNotifications');
+    if (savedPushNotifications !== null) {
+      setPushNotifications(savedPushNotifications === 'true');
+    }
+    
+    const savedEmailNotifications = localStorage.getItem('emailNotifications');
+    if (savedEmailNotifications !== null) {
+      setEmailNotifications(savedEmailNotifications === 'true');
+    }
+    
+    const savedRecipeRecommendations = localStorage.getItem('recipeRecommendations');
+    if (savedRecipeRecommendations !== null) {
+      setRecipeRecommendations(savedRecipeRecommendations === 'true');
+    }
+    
+    const savedCookingReminders = localStorage.getItem('cookingReminders');
+    if (savedCookingReminders !== null) {
+      setCookingReminders(savedCookingReminders === 'true');
+    }
+    
+    // Load account settings
+    const savedUsername = localStorage.getItem('username');
+    if (savedUsername) {
+      setUsername(savedUsername);
+    }
+    
+    const savedEmail = localStorage.getItem('email');
+    if (savedEmail) {
+      setEmail(savedEmail);
     }
   }, []);
   
@@ -161,6 +206,32 @@ const Profile = () => {
     }, 1500);
   };
   
+  // Functions to save notification settings
+  const saveNotificationSettings = () => {
+    localStorage.setItem('pushNotifications', pushNotifications.toString());
+    localStorage.setItem('emailNotifications', emailNotifications.toString());
+    localStorage.setItem('recipeRecommendations', recipeRecommendations.toString());
+    localStorage.setItem('cookingReminders', cookingReminders.toString());
+    
+    setNotificationDialogOpen(false);
+    toast({
+      title: "Notification settings saved",
+      description: "Your notification preferences have been updated.",
+    });
+  };
+  
+  // Functions to save account settings
+  const saveAccountSettings = () => {
+    localStorage.setItem('username', username);
+    localStorage.setItem('email', email);
+    
+    setAccountDialogOpen(false);
+    toast({
+      title: "Account settings saved",
+      description: "Your account information has been updated.",
+    });
+  };
+
   // Function to handle logout
   const handleLogout = () => {
     // Reset preferences to defaults
@@ -447,24 +518,14 @@ const Profile = () => {
         </div>
         <div 
           className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          onClick={() => {
-            toast({
-              title: "Coming soon",
-              description: "Notification settings will be available in a future update.",
-            });
-          }}
+          onClick={() => setNotificationDialogOpen(true)}
         >
           <div className="font-medium">Notifications</div>
           <i className="ri-arrow-right-s-line text-neutral-400"></i>
         </div>
         <div 
           className="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          onClick={() => {
-            toast({
-              title: "Coming soon",
-              description: "Account settings will be available in a future update.",
-            });
-          }}
+          onClick={() => setAccountDialogOpen(true)}
         >
           <div className="font-medium">Account Settings</div>
           <i className="ri-arrow-right-s-line text-neutral-400"></i>
@@ -477,6 +538,112 @@ const Profile = () => {
           <i className="ri-arrow-right-s-line text-neutral-400"></i>
         </div>
       </Card>
+      
+      {/* Notification Settings Dialog */}
+      <Dialog open={notificationDialogOpen} onOpenChange={setNotificationDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notification Settings</DialogTitle>
+            <DialogDescription>
+              Manage your notification preferences to get the alerts you want.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="push-notifications" className="text-sm font-medium">
+                Push Notifications
+              </Label>
+              <Switch
+                id="push-notifications"
+                checked={pushNotifications}
+                onCheckedChange={setPushNotifications}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email-notifications" className="text-sm font-medium">
+                Email Notifications
+              </Label>
+              <Switch
+                id="email-notifications"
+                checked={emailNotifications}
+                onCheckedChange={setEmailNotifications}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="recipe-recommendations" className="text-sm font-medium">
+                Recipe Recommendations
+              </Label>
+              <Switch
+                id="recipe-recommendations"
+                checked={recipeRecommendations}
+                onCheckedChange={setRecipeRecommendations}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="cooking-reminders" className="text-sm font-medium">
+                Cooking Reminders
+              </Label>
+              <Switch
+                id="cooking-reminders"
+                checked={cookingReminders}
+                onCheckedChange={setCookingReminders}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={saveNotificationSettings} className="w-full">
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Account Settings Dialog */}
+      <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Account Settings</DialogTitle>
+            <DialogDescription>
+              Update your account information and preferences.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={saveAccountSettings} className="w-full">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
