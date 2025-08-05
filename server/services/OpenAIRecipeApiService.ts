@@ -9,7 +9,7 @@ import OpenAI from "openai";
 interface RecipeApiService {
   getPopularRecipes(): Promise<Recipe[]>;
   getQuickRecipes(): Promise<Recipe[]>;
-  getRecipeById(id: number): Promise<Recipe>;
+  getRecipeById(id: number | string): Promise<Recipe>;
   getSimilarRecipes(id: number): Promise<Recipe[]>;
   searchRecipeByName(query: string): Promise<Recipe>;
   getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]>;
@@ -17,7 +17,7 @@ interface RecipeApiService {
 
 export class OpenAIRecipeApiService implements RecipeApiService {
   private recipeIdCounter: number = 50000; // Starting ID for OpenAI-generated recipes
-  private recipeCache: Map<number, Recipe> = new Map(); // Cache to store recipes by ID
+  private recipeCache: Map<number | string, Recipe> = new Map(); // Cache to store recipes by ID
   private client: OpenAI;
   
   // Add caching for expensive API calls
@@ -188,9 +188,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
       return;
     }
 
-    // Store the recipe in our cache
+    // Store the recipe in our cache with original ID type
     console.log(`Caching recipe: ${recipe.name} with ID: ${recipe.id} (${typeof recipe.id})`);
-    this.recipeCache.set(Number(recipe.id), recipe);
+    this.recipeCache.set(recipe.id, recipe);
   }
 
   private generateUniqueId(): number {
@@ -632,7 +632,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     }
   }
 
-  async getRecipeById(id: number): Promise<Recipe> {
+  async getRecipeById(id: number | string): Promise<Recipe> {
     console.log("Looking for recipe with ID", id, "type:", typeof id);
     
     // Check if the recipe is in our cache
@@ -919,8 +919,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
   async getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
     console.log(`Getting recipes with ingredients: ${ingredients.join(', ')} using OpenAI`);
     
-    // Use a special consistent ID for ingredient-based searches
-    const byIngredientsId = "by-ingredients";
+    // Create unique ID based on the specific ingredients to avoid conflicts
+    const ingredientsKey = ingredients.sort().join('-').toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const byIngredientsId = `ingredients-${ingredientsKey}`;
     
     try {
       // Create a modified prompt that's more specific about what we want
@@ -1018,10 +1019,12 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         }];
       }
 
-      // Process and cache the recipes with a consistent ID for ingredients-based recipes
+      // Process and cache the recipes with unique IDs for ingredients-based recipes
       const recipes: Recipe[] = data.map((item: any, index: number) => {
+        // Create unique ID for each recipe using ingredients and recipe name
+        const uniqueId = `${byIngredientsId}-${this.hashStringToNumericId(item.name || `recipe-${index}`)}`;
         const recipe: Recipe = {
-          id: byIngredientsId, // Use the consistent ID
+          id: uniqueId, // Use unique ID for each recipe
           name: item.name,
           image: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
           readyInMinutes: item.readyInMinutes || 30,
@@ -1064,8 +1067,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
       console.error(`Error getting recipes by ingredients with OpenAI:`, error);
       
       // Return a fallback recipe if OpenAI call fails completely
+      const fallbackId = `${byIngredientsId}-fallback`;
       const fallbackRecipe: Recipe = {
-        id: byIngredientsId,
+        id: fallbackId,
         name: `${ingredients[0].charAt(0).toUpperCase() + ingredients[0].slice(1)} Special`,
         image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
         readyInMinutes: 25,
