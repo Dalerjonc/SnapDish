@@ -256,6 +256,7 @@ const KitchenIngredients = () => {
                 image={recipe.image}
                 readyInMinutes={recipe.readyInMinutes}
                 calories={recipe.calories}
+                source="ingredients"
               />
             ))}
           </div>

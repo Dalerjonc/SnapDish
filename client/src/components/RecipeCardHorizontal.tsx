@@ -1,16 +1,31 @@
 import { Link } from "wouter";
 
 interface RecipeCardHorizontalProps {
-  id: number;
+  id: number | string;
   title: string;
   image: string;
   readyInMinutes: number;
   calories?: number;
+  source?: 'ingredients' | 'history' | 'default';
 }
 
-const RecipeCardHorizontal = ({ id, title, image, readyInMinutes, calories }: RecipeCardHorizontalProps) => {
+const RecipeCardHorizontal = ({ id, title, image, readyInMinutes, calories, source = 'default' }: RecipeCardHorizontalProps) => {
+  // Build URL with appropriate query parameters based on source
+  const getRecipeUrl = () => {
+    const baseUrl = `/recipe/${id}`;
+    const params = new URLSearchParams();
+    
+    if (source === 'ingredients') {
+      params.set('fromIngredients', 'true');
+    } else if (source === 'history') {
+      params.set('fromHistory', 'true');
+    }
+    
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  };
+
   return (
-    <Link href={`/recipe/${id}`}>
+    <Link href={getRecipeUrl()}>
       <div className="flex bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition duration-200 cursor-pointer">
         <div className="w-1/3 relative">
           <img src={image} alt={title} className="w-full h-full object-cover" />

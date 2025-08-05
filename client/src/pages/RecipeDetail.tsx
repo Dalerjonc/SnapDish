@@ -44,10 +44,11 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
 
-  // Extract dish name and history flag from URL query params
+  // Extract dish name, history flag, and source from URL query params
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const dishName = searchParams.get('name');
   const fromHistory = searchParams.get('fromHistory') === 'true';
+  const fromIngredients = searchParams.get('fromIngredients') === 'true';
   
   console.log("Recipe detail with dish name from URL:", dishName);
   console.log("From history:", fromHistory);
@@ -104,8 +105,14 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   });
 
   const handleBack = () => {
-    // Using a string path instead of number to avoid type errors
-    navigate("/");
+    // Navigate back based on where the user came from
+    if (fromIngredients) {
+      navigate("/kitchen-ingredients");
+    } else if (fromHistory) {
+      navigate("/profile");
+    } else {
+      navigate("/");
+    }
   };
 
   const handleShare = async () => {
