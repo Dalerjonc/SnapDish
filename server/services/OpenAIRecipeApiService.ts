@@ -916,6 +916,83 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     }
   }
 
+  // Generate intelligent fallback recipes based on ingredients
+  private generateFallbackRecipes(ingredients: string[]): any[] {
+    // Create recipe based on ingredient combinations
+    const primaryIngredient = ingredients[0];
+    const secondaryIngredients = ingredients.slice(1);
+    
+    // Determine recipe type based on ingredients
+    let recipeName: string;
+    let cookingMethod: string[];
+    let cookingTime: number;
+    
+    if (ingredients.some(ing => ing.toLowerCase().includes('bread'))) {
+      recipeName = `Gourmet ${ingredients.filter(ing => !ing.toLowerCase().includes('bread')).join(' & ')} Toast`;
+      cookingMethod = [
+        "Toast the bread slices until golden brown and crispy",
+        `Prepare ${secondaryIngredients.join(', ')} by washing and chopping as needed`,
+        "Layer the prepared ingredients on the toasted bread",
+        "Season with salt and pepper to taste, then serve immediately"
+      ];
+      cookingTime = 10;
+    } else if (ingredients.some(ing => ing.toLowerCase().includes('egg'))) {
+      recipeName = `${ingredients.filter(ing => !ing.toLowerCase().includes('egg')).join(' & ')} Scramble`;
+      cookingMethod = [
+        "Crack eggs into a bowl and whisk until well combined",
+        `Prepare ${secondaryIngredients.join(', ')} by dicing or chopping into small pieces`,
+        "Heat a non-stick pan over medium heat with a little oil or butter",
+        "Add prepared ingredients to the pan and cook for 2-3 minutes",
+        "Pour in the beaten eggs and gently scramble until cooked through",
+        "Season with salt and pepper, then serve hot"
+      ];
+      cookingTime = 15;
+    } else if (ingredients.some(ing => ['tomato', 'onion', 'garlic'].includes(ing.toLowerCase()))) {
+      recipeName = `Rustic ${ingredients.join(' & ')} Sauté`;
+      cookingMethod = [
+        "Heat olive oil in a large skillet over medium-high heat",
+        `Dice ${ingredients.join(', ')} into uniform pieces`,
+        "Add firmer ingredients first and cook for 3-4 minutes",
+        "Add softer ingredients and season with salt, pepper, and herbs",
+        "Cook until vegetables are tender and caramelized",
+        "Serve as a side dish or over rice/pasta"
+      ];
+      cookingTime = 20;
+    } else {
+      recipeName = `Creative ${ingredients.join(' & ')} Medley`;
+      cookingMethod = [
+        `Clean and prepare all ingredients: ${ingredients.join(', ')}`,
+        "Heat oil in a large pan over medium heat",
+        "Add ingredients in order of cooking time needed",
+        "Season with salt, pepper, and your favorite spices",
+        "Cook until everything is tender and well combined",
+        "Adjust seasoning and serve hot"
+      ];
+      cookingTime = 25;
+    }
+    
+    return [{
+      name: recipeName,
+      summary: `A delicious and creative way to use ${ingredients.join(', ')} with simple cooking techniques that bring out the best flavors.`,
+      readyInMinutes: cookingTime,
+      servings: ingredients.length >= 3 ? 3 : 2,
+      calories: 280 + (ingredients.length * 30),
+      protein: ingredients.some(ing => ing.toLowerCase().includes('egg')) ? "18g" : "8g",
+      carbs: ingredients.some(ing => ing.toLowerCase().includes('bread')) ? "35g" : "20g",
+      fat: "12g",
+      instructions: cookingMethod,
+      extendedIngredients: ingredients.map((ingredient, index) => ({
+        id: index + 1,
+        name: ingredient,
+        amount: 1,
+        unit: ingredient.toLowerCase().includes('bread') ? "slice" : 
+              ingredient.toLowerCase().includes('egg') ? "piece" : "cup",
+        original: `1 ${ingredient.toLowerCase().includes('bread') ? "slice" : 
+                      ingredient.toLowerCase().includes('egg') ? "piece" : "cup"} ${ingredient}`
+      }))
+    }];
+  }
+
   async getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
     console.log(`Getting recipes with ingredients: ${ingredients.join(', ')} using OpenAI`);
     
@@ -930,33 +1007,41 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         messages: [
           {
             role: "system",
-            content: `You are a culinary expert. Generate 3 recipes that use these ingredients: ${ingredients.join(', ')}. 
-            Return the recipes in the exact JSON array format shown below:
-            [
-              {
-                "name": "Recipe Name Using These Ingredients",
-                "summary": "Brief description of this recipe",
-                "readyInMinutes": 30,
-                "servings": 4,
-                "calories": 350,
-                "protein": "25g",
-                "carbs": "30g",
-                "fat": "15g",
-                "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
-                "instructions": [
-                  "Step 1 instruction",
-                  "Step 2 instruction",
-                  "Step 3 instruction"
-                ],
-                "extendedIngredients": [
-                  {"id": 1, "name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
-                  {"id": 2, "name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
-                ]
-              }
-            ]
-            The recipes should prominently feature the specified ingredients. You may add additional common ingredients like salt, pepper, oil, etc. 
-            Prioritize recipes where most or all of the specified ingredients are used. Always include at least 4 detailed instructions per recipe.
-            You MUST return an array of recipe objects, not a single object. Make sure to include ID values for all ingredients.`
+            content: `You are a culinary expert. Create 3 creative and delicious recipes using these available ingredients: ${ingredients.join(', ')}. 
+            Return the response in this exact JSON format:
+            {
+              "recipes": [
+                {
+                  "name": "Creative Recipe Name That Uses The Ingredients",
+                  "summary": "Appetizing description of this dish and why it's delicious",
+                  "readyInMinutes": 25,
+                  "servings": 2,
+                  "calories": 400,
+                  "protein": "22g",
+                  "carbs": "35g",
+                  "fat": "16g",
+                  "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+                  "instructions": [
+                    "Detailed step 1 with specific actions and techniques",
+                    "Detailed step 2 explaining the cooking process",
+                    "Detailed step 3 with timing and visual cues",
+                    "Final step for serving and presentation"
+                  ],
+                  "extendedIngredients": [
+                    {"id": 1, "name": "first_ingredient", "amount": 2, "unit": "pieces", "original": "2 pieces first_ingredient"},
+                    {"id": 2, "name": "second_ingredient", "amount": 1, "unit": "cup", "original": "1 cup second_ingredient"}
+                  ]
+                }
+              ]
+            }
+            
+            IMPORTANT GUIDELINES:
+            - Each recipe must creatively use MOST or ALL of the provided ingredients: ${ingredients.join(', ')}
+            - Add only common pantry items (salt, pepper, oil, butter) if needed
+            - Provide 4-6 detailed cooking steps with specific techniques and timing
+            - Make recipe names appetizing and descriptive
+            - Include realistic cooking times and nutritional estimates
+            - Ensure each recipe is actually cookable and delicious`
           }
         ],
         response_format: { type: "json_object" },
@@ -965,58 +1050,18 @@ export class OpenAIRecipeApiService implements RecipeApiService {
 
       let data;
       try {
-        data = JSON.parse(response.choices[0].message.content || "[]");
+        const rawData = JSON.parse(response.choices[0].message.content || '{"recipes": []}');
+        data = rawData.recipes || [];
+        
         if (!Array.isArray(data)) {
           console.error("OpenAI did not return an array of recipes, got:", typeof data);
-          // If we didn't get an array, create one with a fallback recipe
-          data = [{
-            name: `${ingredients[0].charAt(0).toUpperCase() + ingredients[0].slice(1)} and ${ingredients.length > 1 ? ingredients[1] : ''} Recipe`,
-            summary: `A delicious recipe using ${ingredients.join(', ')}.`,
-            readyInMinutes: 30,
-            servings: 4,
-            calories: 350,
-            protein: "20g",
-            carbs: "30g",
-            fat: "15g",
-            instructions: [
-              `Prepare ${ingredients.join(' and ')}.`,
-              "Cook according to your preference.",
-              "Serve hot and enjoy!"
-            ],
-            extendedIngredients: ingredients.map((ingredient, index) => ({
-              id: index + 1,
-              name: ingredient,
-              amount: 1,
-              unit: "cup",
-              original: `1 cup ${ingredient}`
-            }))
-          }];
+          // Create better fallback recipes with proper cooking steps based on ingredients
+          data = this.generateFallbackRecipes(ingredients);
         }
       } catch (parseError) {
         console.error("Error parsing OpenAI response:", parseError);
         // Return a fallback recipe if parsing fails
-        data = [{
-          name: `${ingredients[0].charAt(0).toUpperCase() + ingredients[0].slice(1)} Recipe`,
-          summary: `A simple recipe using ${ingredients[0]}.`,
-          readyInMinutes: 20,
-          servings: 2,
-          calories: 300,
-          protein: "15g",
-          carbs: "25g",
-          fat: "10g",
-          instructions: [
-            `Prepare ${ingredients[0]}.`,
-            "Cook according to your preference.",
-            "Serve hot and enjoy!"
-          ],
-          extendedIngredients: ingredients.map((ingredient, index) => ({
-            id: index + 1,
-            name: ingredient,
-            amount: 1,
-            unit: "cup",
-            original: `1 cup ${ingredient}`
-          }))
-        }];
+        data = this.generateFallbackRecipes(ingredients);
       }
 
       // Process and cache the recipes with unique IDs for ingredients-based recipes
