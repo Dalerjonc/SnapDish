@@ -64,6 +64,10 @@ const Profile = () => {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [cookingHistory, setCookingHistory] = useState<any[]>([]);
   
+  // State for saved recipes
+  const [savedRecipesDialogOpen, setSavedRecipesDialogOpen] = useState(false);
+  const [savedRecipesList, setSavedRecipesList] = useState<any[]>([]);
+  
   // Load user preferences from localStorage
   useEffect(() => {
     // Load dietary restrictions
@@ -124,6 +128,14 @@ const Profile = () => {
     
     // Load cooking history using utility
     setCookingHistory(getHistoryFromStorage());
+    
+    // Load saved recipes
+    const savedRecipesData = localStorage.getItem('savedRecipes');
+    if (savedRecipesData) {
+      const recipes = JSON.parse(savedRecipesData);
+      setSavedRecipesList(recipes);
+      setSavedRecipes(recipes.length);
+    }
   }, []);
   
   // Initialize theme state
@@ -179,18 +191,28 @@ const Profile = () => {
     });
   };
   
-  // Function to handle navigation to saved recipes
+  // Function to handle viewing saved recipes
   const goToSavedRecipes = () => {
-    // Demo function to simulate saved recipes
-    let count = parseInt(localStorage.getItem('savedRecipesCount') || '0', 10);
-    count++; // Increment count to simulate saving a recipe
-    localStorage.setItem('savedRecipesCount', count.toString());
-    setSavedRecipes(count);
+    setSavedRecipesDialogOpen(true);
+  };
+  
+  // Function to remove recipe from saved list
+  const removeSavedRecipe = (recipeId: number | string) => {
+    const updatedList = savedRecipesList.filter(recipe => recipe.id !== recipeId);
+    setSavedRecipesList(updatedList);
+    setSavedRecipes(updatedList.length);
+    localStorage.setItem('savedRecipes', JSON.stringify(updatedList));
     
     toast({
-      title: `${count} Saved ${count === 1 ? 'Recipe' : 'Recipes'}`,
-      description: "Your saved recipes are now available.",
+      title: "Recipe removed",
+      description: "Recipe removed from saved recipes.",
     });
+  };
+  
+  // Function to view recipe from saved list
+  const viewSavedRecipe = (recipe: any) => {
+    setSavedRecipesDialogOpen(false);
+    navigate(`/recipe/${recipe.id}?name=${encodeURIComponent(recipe.name)}`);
   };
   
 
@@ -710,6 +732,65 @@ const Profile = () => {
                 </Button>
               )}
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Saved Recipes Dialog */}
+      <Dialog open={savedRecipesDialogOpen} onOpenChange={setSavedRecipesDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Saved Recipes</DialogTitle>
+            <DialogDescription>
+              Your favorite recipes saved for quick access.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            {savedRecipesList.length === 0 ? (
+              <div className="text-center py-8">
+                <i className="ri-heart-line text-4xl text-neutral-300 mb-3"></i>
+                <p className="text-neutral-500 mb-2">No saved recipes yet</p>
+                <p className="text-sm text-neutral-400">Save recipes by tapping the heart icon when viewing a recipe!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {savedRecipesList.map((recipe, index) => (
+                  <div 
+                    key={index}
+                    className="p-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-neutral-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {recipe.image ? (
+                          <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <i className="ri-restaurant-line text-neutral-400"></i>
+                        )}
+                      </div>
+                      <div className="flex-1 cursor-pointer" onClick={() => viewSavedRecipe(recipe)}>
+                        <h4 className="font-medium text-sm">{recipe.name}</h4>
+                        <p className="text-xs text-neutral-500">
+                          {recipe.readyInMinutes ? `${recipe.readyInMinutes} min` : ''} • {recipe.servings ? `${recipe.servings} servings` : ''}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeSavedRecipe(recipe.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                      >
+                        <i className="ri-heart-fill text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex-shrink-0">
+            <Button variant="outline" onClick={() => setSavedRecipesDialogOpen(false)} className="w-full">
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

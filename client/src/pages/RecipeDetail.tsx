@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { recipeService } from "@/lib/services";
 import { getStoredPhotoDataUrl } from "@/lib/utils";
 import { AnalyzedInstruction, Recipe } from "@shared/schema";
 import { getHistoryFromStorage } from "@shared/historyUtils";
+import { useToast } from "@/hooks/use-toast";
 
 const RecipeDetail = ({ params }: { params?: { id: string } }) => {
   const [, navigate] = useLocation();
@@ -41,6 +42,7 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
 
   // Track if user has saved this recipe
   const [isSaved, setIsSaved] = useState(false);
+  const { toast } = useToast();
 
   // Extract dish name and history flag from URL query params
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -120,8 +122,56 @@ const RecipeDetail = ({ params }: { params?: { id: string } }) => {
     }
   };
 
+  // Check if recipe is already saved
+  useEffect(() => {
+    if (recipe && validRecipeId) {
+      const savedRecipesData = localStorage.getItem('savedRecipes');
+      if (savedRecipesData) {
+        const savedRecipes = JSON.parse(savedRecipesData);
+        const isRecipeSaved = savedRecipes.some((savedRecipe: any) => 
+          savedRecipe.id.toString() === validRecipeId.toString()
+        );
+        setIsSaved(isRecipeSaved);
+      }
+    }
+  }, [recipe, validRecipeId]);
+
   const handleSave = () => {
-    setIsSaved(!isSaved);
+    if (!recipe || !validRecipeId) return;
+
+    const savedRecipesData = localStorage.getItem('savedRecipes');
+    let savedRecipes = savedRecipesData ? JSON.parse(savedRecipesData) : [];
+
+    if (isSaved) {
+      // Remove from saved recipes
+      savedRecipes = savedRecipes.filter((savedRecipe: any) => 
+        savedRecipe.id.toString() !== validRecipeId.toString()
+      );
+      setIsSaved(false);
+      toast({
+        title: "Recipe removed",
+        description: "Recipe removed from saved recipes.",
+      });
+    } else {
+      // Add to saved recipes
+      const recipeToSave = {
+        id: recipe.id || validRecipeId,
+        name: recipe.name,
+        image: recipe.image,
+        readyInMinutes: recipe.readyInMinutes,
+        servings: recipe.servings,
+        calories: recipe.calories,
+        dateAdded: new Date().toISOString()
+      };
+      savedRecipes.push(recipeToSave);
+      setIsSaved(true);
+      toast({
+        title: "Recipe saved",
+        description: "Recipe added to your saved recipes!",
+      });
+    }
+
+    localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
   };
 
   const handleChatWithAI = () => {
