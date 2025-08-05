@@ -64,7 +64,7 @@ class RealOpenAIService implements OpenAIService {
       }));
 
       // Prepare system message
-      let systemMessage = "You are a helpful cooking assistant that provides advice about recipes, cooking techniques, ingredient substitutions, and other food-related questions. Keep responses concise but informative.";
+      let systemMessage = "You are a cooking assistant and chef that ONLY answers questions about cooking, recipes, ingredients, food preparation, nutrition, and kitchen techniques. If someone asks about anything unrelated to food or cooking (like history, politics, sports, technology, etc.), politely respond with a short message: 'I can only help with cooking and food-related questions. How can I assist you with your cooking today?' Keep cooking responses concise but informative.";
       
       if (recipeContext) {
         // Add recipe context to the system message if available
