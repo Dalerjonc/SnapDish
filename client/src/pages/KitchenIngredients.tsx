@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addToHistory } from "@shared/historyUtils";
 
 const KitchenIngredients = () => {
-  const [activeTab, setActiveTab] = useState("type");
+  const [activeTab, setActiveTab] = useState("photo");
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
@@ -121,13 +121,13 @@ const KitchenIngredients = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="type" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs defaultValue="photo" value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="w-full border-b border-neutral-200 mb-6 grid grid-cols-2">
-          <TabsTrigger value="type" className="py-2 px-4 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium text-sm">
-            Type Ingredients
-          </TabsTrigger>
           <TabsTrigger value="photo" className="py-2 px-4 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium text-sm">
             Snap Photo
+          </TabsTrigger>
+          <TabsTrigger value="type" className="py-2 px-4 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium text-sm">
+            Type Ingredients
           </TabsTrigger>
         </TabsList>
 
