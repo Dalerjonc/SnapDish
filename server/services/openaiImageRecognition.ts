@@ -156,7 +156,7 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
               ]
             }
             
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil."
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil."
             The instructions MUST be an array of strings, where each string is a separate step. The analyzedInstructions must match the instructions array.
             Each object in the steps array should correspond to an instruction in the instructions array.`
           },

@@ -268,7 +268,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
           }
         ],
 
@@ -365,7 +365,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
           }
         ],
 
@@ -463,7 +463,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
           }
         ],
 
@@ -580,7 +580,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
           }
         ],
 
@@ -681,7 +681,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 {"name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
               ]
             }
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." The recipe should be creative and unique. Include at least 6 ingredients and 6 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." The recipe should be creative and unique. Include at least 6 ingredients and 6 short instructions.`
           }
         ],
 
@@ -778,7 +778,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
               }
             ]
             ${originalRecipe ? `The original recipe is for ${originalRecipe.name}, which includes ingredients like ${originalRecipe.extendedIngredients && originalRecipe.extendedIngredients.length > 0 ? originalRecipe.extendedIngredients.slice(0, 3).map(i => i.name).join(', ') : 'various ingredients'}. Generate recipes that use similar ingredients or cooking techniques.` : 'Generate varied but related recipes.'}
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Include at least one recipe that is a lighter or healthier version, and one that is a regional variation.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Include at least one recipe that is a lighter or healthier version, and one that is a regional variation.`
           }
         ],
 
@@ -869,7 +869,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 {"name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
               ]
             }
-            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Research this dish and provide accurate, authentic ingredients and instructions. If it's a cultural dish, respect its traditional preparation. Include at least 6 ingredients and 6 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Research this dish and provide accurate, authentic ingredients and instructions. If it's a cultural dish, respect its traditional preparation. Include at least 6 ingredients and 6 short instructions.`
           }
         ],
 
@@ -1047,7 +1047,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
             IMPORTANT GUIDELINES:
             - Each recipe must creatively use MOST or ALL of the provided ingredients: ${ingredients.join(', ')}
             - Add only common pantry items (salt, pepper, oil, butter) if needed
-            - CRITICAL: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues.
+            - CRITICAL: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 20 words per step). Include important details like time, temperature, amounts, and visual/sensory cues.
             - GOOD: "Heat 2 tbsp olive oil in large skillet over medium heat until shimmering." / "Add beaten eggs and cook for 3-4 minutes until set." / "Season with 1/2 tsp salt and pepper to taste."
             - BAD: "Heat oil." / "Add eggs." / "Season."
             - Provide 5-6 detailed cooking steps with clear actions
