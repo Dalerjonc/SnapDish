@@ -51,7 +51,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         servings: 2,
         sourceUrl: "",
         summary: "A quick and easy pasta dish loaded with fresh spring vegetables.",
-        instructions: ["Cook pasta according to package instructions.", "Sauté vegetables in olive oil.", "Combine pasta with vegetables and add seasoning."],
+        instructions: ["Boil 4 cups salted water in large pot over high heat.", "Add 200g pasta and cook for 8-10 minutes until al dente.", "Heat 2 tbsp olive oil in large skillet over medium heat.", "Add mixed vegetables and sauté for 5-6 minutes until tender.", "Drain pasta and add to skillet with vegetables.", "Toss for 1-2 minutes until well combined. Season with salt and pepper."],
         calories: 420,
         protein: "12g",
         carbs: "65g",
@@ -65,9 +65,12 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         analyzedInstructions: [{
           name: "",
           steps: [
-            { number: 1, step: "Cook pasta according to package instructions.", ingredients: [], equipment: [] },
-            { number: 2, step: "Sauté vegetables in olive oil.", ingredients: [], equipment: [] },
-            { number: 3, step: "Combine pasta with vegetables and add seasoning.", ingredients: [], equipment: [] }
+            { number: 1, step: "Boil 4 cups salted water in large pot over high heat.", ingredients: [], equipment: [] },
+            { number: 2, step: "Add 200g pasta and cook for 8-10 minutes until al dente.", ingredients: [], equipment: [] },
+            { number: 3, step: "Heat 2 tbsp olive oil in large skillet over medium heat.", ingredients: [], equipment: [] },
+            { number: 4, step: "Add mixed vegetables and sauté for 5-6 minutes until tender.", ingredients: [], equipment: [] },
+            { number: 5, step: "Drain pasta and add to skillet with vegetables.", ingredients: [], equipment: [] },
+            { number: 6, step: "Toss for 1-2 minutes until well combined. Season with salt and pepper.", ingredients: [], equipment: [] }
           ]
         }],
         created_at: new Date()
@@ -80,7 +83,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         servings: 1,
         sourceUrl: "",
         summary: "A nutritious and quick breakfast option that's both delicious and healthy.",
-        instructions: ["Toast bread until golden brown.", "Mash avocado and spread on toast.", "Top with desired toppings."],
+        instructions: ["Toast 2 slices bread in toaster for 2-3 minutes until golden brown.", "Mash 1 ripe avocado with fork until smooth and creamy.", "Spread mashed avocado evenly on warm toast using knife.", "Sprinkle with pinch of salt and pepper to taste."],
         calories: 320,
         protein: "8g",
         carbs: "35g",
@@ -94,9 +97,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         analyzedInstructions: [{
           name: "",
           steps: [
-            { number: 1, step: "Toast bread until golden brown.", ingredients: [], equipment: [] },
-            { number: 2, step: "Mash avocado and spread on toast.", ingredients: [], equipment: [] },
-            { number: 3, step: "Top with desired toppings.", ingredients: [], equipment: [] }
+            { number: 1, step: "Toast 2 slices bread in toaster for 2-3 minutes until golden brown.", ingredients: [], equipment: [] },
+            { number: 2, step: "Mash 1 ripe avocado with fork until smooth and creamy.", ingredients: [], equipment: [] },
+            { number: 3, step: "Spread mashed avocado evenly on warm toast using knife.", ingredients: [], equipment: [] },
+            { number: 4, step: "Sprinkle with pinch of salt and pepper to taste.", ingredients: [], equipment: [] }
           ]
         }],
         created_at: new Date()
@@ -113,7 +117,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         servings: 4,
         sourceUrl: "",
         summary: "A timeless Italian classic featuring a thin crust topped with fresh tomatoes, mozzarella, and basil.",
-        instructions: ["Prepare pizza dough.", "Add toppings: tomato sauce, mozzarella, and basil.", "Bake until golden."],
+        instructions: ["Preheat oven to 475°F and place pizza stone inside if available.", "Roll pizza dough on floured surface to 12-inch circle.", "Spread 1/2 cup tomato sauce evenly, leaving 1-inch border for crust.", "Distribute 200g fresh mozzarella pieces over sauce.", "Bake for 12-15 minutes until crust is golden and cheese bubbles.", "Remove from oven and top with fresh basil leaves. Slice and serve immediately."],
         calories: 580,
         protein: "22g",
         carbs: "72g",
@@ -128,9 +132,12 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         analyzedInstructions: [{
           name: "",
           steps: [
-            { number: 1, step: "Prepare pizza dough.", ingredients: [], equipment: [] },
-            { number: 2, step: "Add toppings: tomato sauce, mozzarella, and basil.", ingredients: [], equipment: [] },
-            { number: 3, step: "Bake until golden.", ingredients: [], equipment: [] }
+            { number: 1, step: "Preheat oven to 475°F and place pizza stone inside if available.", ingredients: [], equipment: [] },
+            { number: 2, step: "Roll pizza dough on floured surface to 12-inch circle.", ingredients: [], equipment: [] },
+            { number: 3, step: "Spread 1/2 cup tomato sauce evenly, leaving 1-inch border for crust.", ingredients: [], equipment: [] },
+            { number: 4, step: "Distribute 200g fresh mozzarella pieces over sauce.", ingredients: [], equipment: [] },
+            { number: 5, step: "Bake for 12-15 minutes until crust is golden and cheese bubbles.", ingredients: [], equipment: [] },
+            { number: 6, step: "Remove from oven and top with fresh basil leaves. Slice and serve immediately.", ingredients: [], equipment: [] }
           ]
         }],
         created_at: new Date()
@@ -143,7 +150,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         servings: 4,
         sourceUrl: "",
         summary: "A flavorful Indian dish featuring tender chicken in a creamy tomato sauce with aromatic spices.",
-        instructions: ["Marinate chicken in yogurt and spices.", "Grill or bake the chicken pieces.", "Prepare the masala sauce.", "Combine chicken with sauce and simmer."],
+        instructions: ["Cut 1 kg chicken into bite-sized pieces and place in bowl.", "Mix with 1 cup yogurt and 2 tbsp spice blend. Marinate for 30 minutes.", "Heat 2 tbsp oil in large skillet over medium-high heat until shimmering.", "Add marinated chicken and cook for 8-10 minutes until browned on all sides.", "In same pan, add diced tomatoes and cook for 5 minutes until softened.", "Stir in 1/2 cup cream and simmer for 10-15 minutes until sauce thickens. Serve hot."],
         calories: 620,
         protein: "45g",
         carbs: "28g",
@@ -159,10 +166,12 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         analyzedInstructions: [{
           name: "",
           steps: [
-            { number: 1, step: "Marinate chicken in yogurt and spices.", ingredients: [], equipment: [] },
-            { number: 2, step: "Grill or bake the chicken pieces.", ingredients: [], equipment: [] },
-            { number: 3, step: "Prepare the masala sauce.", ingredients: [], equipment: [] },
-            { number: 4, step: "Combine chicken with sauce and simmer.", ingredients: [], equipment: [] }
+            { number: 1, step: "Cut 1 kg chicken into bite-sized pieces and place in bowl.", ingredients: [], equipment: [] },
+            { number: 2, step: "Mix with 1 cup yogurt and 2 tbsp spice blend. Marinate for 30 minutes.", ingredients: [], equipment: [] },
+            { number: 3, step: "Heat 2 tbsp oil in large skillet over medium-high heat until shimmering.", ingredients: [], equipment: [] },
+            { number: 4, step: "Add marinated chicken and cook for 8-10 minutes until browned on all sides.", ingredients: [], equipment: [] },
+            { number: 5, step: "In same pan, add diced tomatoes and cook for 5 minutes until softened.", ingredients: [], equipment: [] },
+            { number: 6, step: "Stir in 1/2 cup cream and simmer for 10-15 minutes until sauce thickens. Serve hot.", ingredients: [], equipment: [] }
           ]
         }],
         created_at: new Date()
@@ -249,9 +258,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 "fat": "15g",
                 "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                 "instructions": [
-                  "Heat oil in pan over medium heat.",
-                  "Add ingredients and cook for 5 minutes.",
-                  "Season with salt and pepper. Serve hot."
+                  "Heat 2 tbsp olive oil in large skillet over medium heat.",
+                  "Add diced onions and cook for 3-4 minutes until translucent.",
+                  "Season with salt and pepper. Serve immediately while hot."
                 ],
                 "extendedIngredients": [
                   {"name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
@@ -259,10 +268,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 
@@ -346,9 +355,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 "fat": "15g",
                 "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                 "instructions": [
-                  "Heat oil in pan over medium heat.",
-                  "Add ingredients and cook for 5 minutes.",
-                  "Season with salt and pepper. Serve hot."
+                  "Heat 2 tbsp olive oil in large skillet over medium heat.",
+                  "Add diced onions and cook for 3-4 minutes until translucent.",
+                  "Season with salt and pepper. Serve immediately while hot."
                 ],
                 "extendedIngredients": [
                   {"id": 1, "name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
@@ -356,10 +365,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Make sure each recipe has at least 5 ingredients and 5 short instructions.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 
@@ -444,9 +453,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 "fat": "15g",
                 "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                 "instructions": [
-                  "Heat oil in pan over medium heat.",
-                  "Add ingredients and cook for 5 minutes.",
-                  "Season with salt and pepper. Serve hot."
+                  "Heat 2 tbsp olive oil in large skillet over medium heat.",
+                  "Add diced onions and cook for 3-4 minutes until translucent.",
+                  "Season with salt and pepper. Serve immediately while hot."
                 ],
                 "extendedIngredients": [
                   {"id": 1, "name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
@@ -454,10 +463,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 
@@ -561,9 +570,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 "fat": "15g",
                 "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                 "instructions": [
-                  "Heat oil in pan over medium heat.",
-                  "Add ingredients and cook for 5 minutes.",
-                  "Season with salt and pepper. Serve hot."
+                  "Heat 2 tbsp olive oil in large skillet over medium heat.",
+                  "Add diced onions and cook for 3-4 minutes until translucent.",
+                  "Season with salt and pepper. Serve immediately while hot."
                 ],
                 "extendedIngredients": [
                   {"name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
@@ -571,10 +580,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 ]
               }
             ]
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Ensure all recipes can truly be made in 30 minutes or less. Include at least 5 ingredients and 5 short instructions per recipe.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 
@@ -672,10 +681,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 {"name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
               ]
             }
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." The recipe should be creative and unique. Include at least 6 ingredients and 6 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." The recipe should be creative and unique. Include at least 6 ingredients and 6 short instructions.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 1500
       });
 
@@ -758,9 +767,9 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 "fat": "15g",
                 "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                 "instructions": [
-                  "Heat oil in pan over medium heat.",
-                  "Add ingredients and cook for 5 minutes.",
-                  "Season with salt and pepper. Serve hot."
+                  "Heat 2 tbsp olive oil in large skillet over medium heat.",
+                  "Add diced onions and cook for 3-4 minutes until translucent.",
+                  "Season with salt and pepper. Serve immediately while hot."
                 ],
                 "extendedIngredients": [
                   {"name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups ingredient1"},
@@ -769,10 +778,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
               }
             ]
             ${originalRecipe ? `The original recipe is for ${originalRecipe.name}, which includes ingredients like ${originalRecipe.extendedIngredients && originalRecipe.extendedIngredients.length > 0 ? originalRecipe.extendedIngredients.slice(0, 3).map(i => i.name).join(', ') : 'various ingredients'}. Generate recipes that use similar ingredients or cooking techniques.` : 'Generate varied but related recipes.'}
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Include at least one recipe that is a lighter or healthier version, and one that is a regional variation.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Include at least one recipe that is a lighter or healthier version, and one that is a regional variation.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 
@@ -860,10 +869,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                 {"name": "ingredient2", "amount": 1, "unit": "tbsp", "original": "1 tablespoon ingredient2"}
               ]
             }
-            IMPORTANT: Write cooking instructions using SHORT, SIMPLE sentences. Each step should be one clear action. Use everyday words. Keep each instruction under 15 words. Example: "Heat oil in pan." NOT "Heat the olive oil in a large skillet over medium-high heat until shimmering." Research this dish and provide accurate, authentic ingredients and instructions. If it's a cultural dish, respect its traditional preparation. Include at least 6 ingredients and 6 short instructions.`
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil." Research this dish and provide accurate, authentic ingredients and instructions. If it's a cultural dish, respect its traditional preparation. Include at least 6 ingredients and 6 short instructions.`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 1500
       });
 
@@ -1022,10 +1031,10 @@ export class OpenAIRecipeApiService implements RecipeApiService {
                   "fat": "16g",
                   "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
                   "instructions": [
-                    "Heat oil in pan over medium heat.",
-                    "Add ingredients and cook for 5 minutes.",
-                    "Season with salt and pepper.",
-                    "Serve hot with garnish."
+                    "Heat 2 tbsp olive oil in large skillet over medium heat until shimmering.",
+                    "Add diced onions and cook for 3-4 minutes until translucent.",
+                    "Season with 1/2 tsp salt and pepper to taste.",
+                    "Serve immediately while hot with fresh garnish."
                   ],
                   "extendedIngredients": [
                     {"id": 1, "name": "first_ingredient", "amount": 2, "unit": "pieces", "original": "2 pieces first_ingredient"},
@@ -1038,16 +1047,16 @@ export class OpenAIRecipeApiService implements RecipeApiService {
             IMPORTANT GUIDELINES:
             - Each recipe must creatively use MOST or ALL of the provided ingredients: ${ingredients.join(', ')}
             - Add only common pantry items (salt, pepper, oil, butter) if needed
-            - CRITICAL: Write cooking instructions as SHORT, SIMPLE sentences. Maximum 10 words per step. One action per step only.
-            - GOOD: "Heat oil in pan." / "Add eggs. Cook 3 minutes." / "Season with salt."
-            - BAD: "Heat the olive oil in a large skillet over medium-high heat until shimmering" / "Carefully add the beaten eggs and cook for approximately 3 minutes"
-            - Provide 5-6 short cooking steps with clear actions
+            - CRITICAL: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues.
+            - GOOD: "Heat 2 tbsp olive oil in large skillet over medium heat until shimmering." / "Add beaten eggs and cook for 3-4 minutes until set." / "Season with 1/2 tsp salt and pepper to taste."
+            - BAD: "Heat oil." / "Add eggs." / "Season."
+            - Provide 5-6 detailed cooking steps with clear actions
             - Make recipe names appetizing and descriptive
             - Include realistic cooking times and nutritional estimates
             - Ensure each recipe is actually cookable and delicious`
           }
         ],
-        response_format: { type: "json_object" },
+
         max_tokens: 2000
       });
 

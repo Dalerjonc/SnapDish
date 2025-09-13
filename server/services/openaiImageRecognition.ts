@@ -121,9 +121,9 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
               "carbs": "30g",
               "fat": "15g",
               "instructions": [
-                "First instruction step",
-                "Second instruction step",
-                "Third instruction step"
+                "Heat 2 tbsp olive oil in large skillet over medium heat until shimmering.",
+                "Add diced onions and cook for 3-4 minutes until translucent.",
+                "Season with salt and pepper. Serve immediately while hot."
               ],
               "extendedIngredients": [
                 {"name": "ingredient1", "amount": 2, "unit": "cups", "original": "2 cups of ingredient1"},
@@ -135,19 +135,19 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
                   "steps": [
                     {
                       "number": 1,
-                      "step": "First instruction step",
+                      "step": "Heat 2 tbsp olive oil in large skillet over medium heat until shimmering.",
                       "ingredients": [],
                       "equipment": []
                     },
                     {
                       "number": 2,
-                      "step": "Second instruction step",
+                      "step": "Add diced onions and cook for 3-4 minutes until translucent.",
                       "ingredients": [],
                       "equipment": []
                     },
                     {
                       "number": 3,
-                      "step": "Third instruction step",
+                      "step": "Season with salt and pepper. Serve immediately while hot.",
                       "ingredients": [],
                       "equipment": []
                     }
@@ -156,7 +156,8 @@ export class OpenAIVisionImageRecognitionService implements ImageRecognitionServ
               ]
             }
             
-            IMPORTANT: The instructions MUST be an array of strings, where each string is a separate step. The analyzedInstructions must match the instructions array.
+            IMPORTANT: Write cooking instructions in clear, step-by-step format. Each step should describe one main action. Use short, simple sentences (max 15 words per step). Include important details like time, temperature, amounts, and visual/sensory cues. Example: "Heat 2 tbsp olive oil in a large skillet over medium heat until shimmering." NOT: "Heat the oil."
+            The instructions MUST be an array of strings, where each string is a separate step. The analyzedInstructions must match the instructions array.
             Each object in the steps array should correspond to an instruction in the instructions array.`
           },
           {
