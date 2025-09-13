@@ -12,7 +12,7 @@ import { addToHistory } from "@shared/historyUtils";
 
 const KitchenIngredients = () => {
   const [activeTab, setActiveTab] = useState("type");
-  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [ingredients, setIngredients] = useState<string[]>(["chicken breast", "rice", "broccoli"]);
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
