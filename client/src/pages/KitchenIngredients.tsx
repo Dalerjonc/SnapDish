@@ -270,14 +270,14 @@ const KitchenIngredients = () => {
           <div className="overflow-x-auto hide-scrollbar snap-x flex gap-4 -mx-4 px-4">
             <div className="snap-start rounded-xl overflow-hidden shadow-sm bg-white aspect-square min-w-[160px] max-w-[160px]">
               <img 
-                src="https://images.unsplash.com/photo-1584473457409-2a40b9841397" 
+                src="https://images.unsplash.com/photo-1542838132-92c53300491e" 
                 alt="Vegetable spread" 
                 className="w-full h-full object-cover" 
               />
             </div>
             <div className="snap-start rounded-xl overflow-hidden shadow-sm bg-white aspect-square min-w-[160px] max-w-[160px]">
               <img 
-                src="https://images.unsplash.com/photo-1567306226408-c02fe98d5b0e" 
+                src="https://images.unsplash.com/photo-1540420773420-3366772f4999" 
                 alt="Fresh herbs and vegetables" 
                 className="w-full h-full object-cover" 
               />
