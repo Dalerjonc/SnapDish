@@ -183,10 +183,10 @@ const KitchenIngredients = () => {
                 )}
               </Button>
               
-              {/* Animated Progress Bar */}
+              {/* Percentage Progress Bar */}
               {findRecipesMutation.isPending && (
-                <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
-                  <div className="h-full w-[40%] bg-white absolute animate-progress-indeterminate"></div>
+                <div className="absolute bottom-0 left-0 h-2 bg-white/30 w-full rounded-b-lg overflow-hidden">
+                  <div className="h-full bg-white animate-pulse" style={{ width: '80%' }}></div>
                 </div>
               )}
             </div>
@@ -204,12 +204,13 @@ const KitchenIngredients = () => {
           
           {identifyIngredientsMutation.isPending && (
             <div className="text-center py-4 mb-2 bg-primary/5 rounded-lg border border-primary/20">
-              <p className="text-sm font-medium text-primary">Analyzing ingredients with AI vision<span className="animate-pulse">...</span></p>
+              <p className="text-sm font-medium text-primary">Analyzing ingredients with AI vision</p>
               <p className="text-xs text-neutral-600 mt-1">This might take a few seconds</p>
               {/* Progress indicator */}
-              <div className="w-full h-1 bg-primary/10 rounded-full overflow-hidden mt-3 mx-auto max-w-xs">
-                <div className="h-full w-[40%] bg-primary absolute animate-progress-indeterminate"></div>
+              <div className="w-full bg-primary/10 rounded-full h-2 mt-3 mx-auto max-w-xs">
+                <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '65%' }}></div>
               </div>
+              <p className="text-xs text-primary mt-2 font-medium">65% Complete</p>
             </div>
           )}
         </TabsContent>

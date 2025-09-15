@@ -199,11 +199,12 @@ const ImageUploader = ({ onImageSelect, title, description, className = "", isPr
             />
             {isProcessing && (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
-                  <div className="w-10 h-10 border-4 border-transparent border-t-primary border-r-primary rounded-full animate-spin"></div>
-                </div>
-                <div className="mt-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
-                  <p className="text-sm font-medium text-neutral-800">Scanning image and analyzing ingredients...</p>
+                <div className="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-lg shadow-lg max-w-xs w-full">
+                  <p className="text-sm font-medium text-neutral-800 mb-3 text-center">Scanning image and analyzing ingredients...</p>
+                  <div className="w-full bg-neutral-200 rounded-full h-2 mb-2">
+                    <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+                  </div>
+                  <p className="text-xs text-neutral-600 text-center">75% Complete</p>
                 </div>
               </div>
             )}

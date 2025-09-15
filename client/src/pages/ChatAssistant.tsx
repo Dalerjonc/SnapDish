@@ -156,14 +156,14 @@ const ChatAssistant = ({ params }: { params?: { recipeId: string } }) => {
         {sendMessageMutation.isPending && (
           <div className="flex items-start">
             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-white mr-2 flex-shrink-0">
-              <i className="ri-loader-4-line animate-spin"></i>
+              <i className="ri-message-3-line"></i>
             </div>
             <div className="chat-bubble bg-neutral-100 px-4 py-3 max-w-[80%] text-sm">
-              <div className="flex space-x-2">
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce"></div>
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce delay-150"></div>
-                <div className="h-2 w-2 bg-neutral-300 rounded-full animate-bounce delay-300"></div>
+              <p className="text-xs text-neutral-600 mb-2">AI is thinking...</p>
+              <div className="w-full bg-neutral-200 rounded-full h-1.5">
+                <div className="bg-secondary h-1.5 rounded-full animate-pulse" style={{ width: '60%' }}></div>
               </div>
+              <p className="text-xs text-neutral-500 mt-1">60% Complete</p>
             </div>
           </div>
         )}
