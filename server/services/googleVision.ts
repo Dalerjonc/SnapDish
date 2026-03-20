@@ -5,13 +5,24 @@
 
 import * as vision from '@google-cloud/vision';
 
-// Create Vision client using JSON credentials directly from the root folder
+// Create Vision client using environment variable credentials
+// Set GOOGLE_APPLICATION_CREDENTIALS env var to the path of your service account JSON file,
+// or set GOOGLE_CLOUD_CREDENTIALS_JSON to the JSON content directly.
 let client: vision.ImageAnnotatorClient | null = null;
 try {
-  client = new vision.ImageAnnotatorClient({
-    keyFilename: './service-account.json'
-  });
-  console.log("Google Vision client created");
+  if (process.env.GOOGLE_CLOUD_CREDENTIALS_JSON) {
+    // Support inline JSON credentials via environment variable
+    const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS_JSON);
+    client = new vision.ImageAnnotatorClient({ credentials });
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    // Standard Google ADC via file path env var
+    client = new vision.ImageAnnotatorClient({
+      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
+    });
+  } else {
+    console.warn("Google Vision: No credentials configured. Set GOOGLE_CLOUD_CREDENTIALS_JSON or GOOGLE_APPLICATION_CREDENTIALS.");
+  }
+  if (client) console.log("Google Vision client created");
 } catch (error) {
   console.error("Failed to create Google Vision client:", error);
 }
