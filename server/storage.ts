@@ -20,7 +20,11 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: { username: string; password: string }): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByAppleId(appleId: string): Promise<User | undefined>;
+  createUser(user: { username: string; password?: string; email?: string; googleId?: string; appleId?: string }): Promise<User>;
+  updateUser(id: number, data: Partial<{ googleId: string; appleId: string; email: string }>): Promise<User>;
 
   // Recipe save/unsave
   saveRecipe(userId: number, recipeId: string): Promise<void>;
@@ -58,8 +62,34 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(data: { username: string; password: string }): Promise<User> {
-    const [user] = await db.insert(users).values(data).returning();
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return user;
+  }
+
+  async getUserByAppleId(appleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.appleId, appleId));
+    return user;
+  }
+
+  async createUser(data: { username: string; password?: string; email?: string; googleId?: string; appleId?: string }): Promise<User> {
+    const [user] = await db.insert(users).values({
+      username: data.username,
+      password: data.password ?? "",
+      email: data.email,
+      googleId: data.googleId,
+      appleId: data.appleId,
+    }).returning();
+    return user;
+  }
+
+  async updateUser(id: number, data: Partial<{ googleId: string; appleId: string; email: string }>): Promise<User> {
+    const [user] = await db.update(users).set(data).where(eq(users.id, id)).returning();
     return user;
   }
 

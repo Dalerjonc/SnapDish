@@ -6,13 +6,16 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(), // bcrypt hash
+  password: text("password").notNull().default(""), // bcrypt hash (empty for OAuth-only users)
+  googleId: text("google_id").unique(),
+  appleId: text("apple_id").unique(),
+  email: text("email").unique(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
-});
+}).partial({ password: true });
 
 // Recipe model
 export const recipes = pgTable("recipes", {

@@ -6,6 +6,7 @@ import { recipeApiService } from "./services/recipeApi";
 import { EdamamRecipeApiService } from "./services/EdamamRecipeApiService";
 import { openaiService } from "./services/openai";
 import { requireAuth, getCurrentUserId, hashPassword, verifyPassword } from "./auth";
+import passport from "passport";
 import multer from "multer";
 import { z } from "zod";
 import { ingredientsSearchSchema, chatMessageSchema, loginSchema, signupSchema } from "@shared/schema";
@@ -109,12 +110,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/auth/me", (req, res) => {
-    if (!req.session?.userId) {
-      return res.status(401).json({ message: "Not authenticated" });
+  app.get("/api/auth/me", async (req, res) => {
+    if (req.session?.userId) {
+      return res.json({ id: req.session.userId, username: req.session.username });
     }
-    res.json({ id: req.session.userId, username: req.session.username });
+    // Also support passport session (OAuth)
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      const u = req.user as any;
+      req.session.userId = u.id;
+      req.session.username = u.username;
+      return res.json({ id: u.id, username: u.username });
+    }
+    return res.status(401).json({ message: "Not authenticated" });
   });
+
+  // ─── Google OAuth ─────────────────────────────────────────────────────────
+
+  app.get("/api/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
+
+  app.get("/api/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login?error=google" }),
+    (req, res) => {
+      // Set session values for compatibility with existing session-based auth
+      if (req.user) {
+        const u = req.user as any;
+        req.session.userId = u.id;
+        req.session.username = u.username;
+      }
+      res.redirect("/");
+    }
+  );
+
+  // ─── Apple Sign In ────────────────────────────────────────────────────────
+
+  app.get("/api/auth/apple",
+    passport.authenticate("apple")
+  );
+
+  app.post("/api/auth/apple/callback",
+    passport.authenticate("apple", { failureRedirect: "/login?error=apple" }),
+    (req, res) => {
+      if (req.user) {
+        const u = req.user as any;
+        req.session.userId = u.id;
+        req.session.username = u.username;
+      }
+      res.redirect("/");
+    }
+  );
 
   // ─── Subscription Routes ──────────────────────────────────────────────────
 
