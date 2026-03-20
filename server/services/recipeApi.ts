@@ -7,8 +7,8 @@ import { Recipe, Ingredient, AnalyzedInstruction } from "@shared/schema";
 interface RecipeApiService {
   getPopularRecipes(): Promise<Recipe[]>;
   getQuickRecipes(): Promise<Recipe[]>;
-  getRecipeById(id: number): Promise<Recipe>;
-  getSimilarRecipes(id: number): Promise<Recipe[]>;
+  getRecipeById(id: string | number): Promise<Recipe>;
+  getSimilarRecipes(id: string | number): Promise<Recipe[]>;
   searchRecipeByName(query: string): Promise<Recipe>;
   getRecipesByIngredients(ingredients: string[]): Promise<Recipe[]>;
 }
@@ -17,7 +17,7 @@ class MockRecipeApiService implements RecipeApiService {
   // Sample recipes data
   private readonly sampleRecipes: Recipe[] = [
     {
-      id: 15,
+      id: "mock_15",
       name: "Shurpa",
       image: "https://images.unsplash.com/photo-1609501676725-7186f017a4b5",
       readyInMinutes: 120,
@@ -141,7 +141,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 1,
+      id: "mock_1",
       name: "Pasta with Tomato Sauce",
       image: "https://images.unsplash.com/photo-1548940740-204726a19be3",
       readyInMinutes: 30,
@@ -273,7 +273,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 2,
+      id: "mock_2",
       name: "Vegetable Stir Fry",
       image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141",
       readyInMinutes: 25,
@@ -318,7 +318,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 3,
+      id: "mock_3",
       name: "Pasta Carbonara",
       image: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f",
       readyInMinutes: 30,
@@ -351,7 +351,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 4,
+      id: "mock_4",
       name: "Grilled Salmon",
       image: "https://images.unsplash.com/photo-1564834724105-918b73d98218",
       readyInMinutes: 20,
@@ -369,7 +369,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 5,
+      id: "mock_5",
       name: "Beef Tacos",
       image: "https://images.unsplash.com/photo-1528712306091-ed0763094c98",
       readyInMinutes: 35,
@@ -387,7 +387,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 6,
+      id: "mock_6",
       name: "Avocado Toast",
       image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445",
       readyInMinutes: 10,
@@ -405,7 +405,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 7,
+      id: "mock_7",
       name: "Greek Yogurt Bowl",
       image: "https://images.unsplash.com/photo-1593584785033-9c7604d0863f",
       readyInMinutes: 5,
@@ -423,7 +423,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 8,
+      id: "mock_8",
       name: "Mediterranean Salad",
       image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd",
       readyInMinutes: 15,
@@ -441,7 +441,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 9,
+      id: "mock_9",
       name: "Breakfast Toast",
       image: "https://images.unsplash.com/photo-1484723091739-30a097e8f929",
       readyInMinutes: 10,
@@ -459,7 +459,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 10,
+      id: "mock_10",
       name: "Pasta with Meatballs",
       image: "https://images.unsplash.com/photo-1622973536968-3ead9e780960",
       readyInMinutes: 45,
@@ -477,7 +477,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 11,
+      id: "mock_11",
       name: "Creamy Garlic Pasta",
       image: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8",
       readyInMinutes: 25,
@@ -495,7 +495,7 @@ class MockRecipeApiService implements RecipeApiService {
       created_at: new Date()
     },
     {
-      id: 12,
+      id: "mock_12",
       name: "Plov (Rice Pilaf)",
       image: "https://images.unsplash.com/photo-1568716508386-cde42ce1d4b7",
       readyInMinutes: 60,
@@ -624,22 +624,20 @@ class MockRecipeApiService implements RecipeApiService {
   ];
 
   // Helper function to find a recipe by ID
-  private findRecipeById(id: number): Recipe | undefined {
-    return this.sampleRecipes.find(recipe => recipe.id === id);
+  private findRecipeById(id: string | number): Recipe | undefined {
+    const strId = String(id);
+    return this.sampleRecipes.find(recipe => String(recipe.id) === strId);
   }
 
   async getPopularRecipes(): Promise<Recipe[]> {
-    // In a real implementation, we would call the Spoonacular API
-    // For the mock, return a subset of sample recipes as "popular"
     return this.sampleRecipes.slice(0, 4);
   }
 
   async getQuickRecipes(): Promise<Recipe[]> {
-    // Return recipes that take 15 minutes or less
-    return this.sampleRecipes.filter(recipe => recipe.readyInMinutes <= 15);
+    return this.sampleRecipes.filter(recipe => (recipe.readyInMinutes ?? 999) <= 15);
   }
 
-  async getRecipeById(id: number): Promise<Recipe> {
+  async getRecipeById(id: string | number): Promise<Recipe> {
     const recipe = this.findRecipeById(id);
     if (!recipe) {
       throw new Error(`Recipe with ID ${id} not found`);
@@ -647,24 +645,20 @@ class MockRecipeApiService implements RecipeApiService {
     return recipe;
   }
 
-  async getSimilarRecipes(id: number): Promise<Recipe[]> {
-    // Find the source recipe
+  async getSimilarRecipes(id: string | number): Promise<Recipe[]> {
     const sourceRecipe = this.findRecipeById(id);
     if (!sourceRecipe) {
       throw new Error(`Recipe with ID ${id} not found`);
     }
     
-    // Get recipes that might be similar (excluding the source recipe)
     return this.sampleRecipes
-      .filter(recipe => recipe.id !== id)
+      .filter(recipe => String(recipe.id) !== String(id))
       .filter(recipe => {
-        // Consider similar if they share a diet type or take similar time to prepare
-        const sharedDiets = sourceRecipe.diets.some(diet => recipe.diets.includes(diet));
-        const similarTime = Math.abs(recipe.readyInMinutes - sourceRecipe.readyInMinutes) <= 10;
-        
+        const sharedDiets = (sourceRecipe.diets ?? []).some(diet => (recipe.diets ?? []).includes(diet));
+        const similarTime = Math.abs((recipe.readyInMinutes ?? 0) - (sourceRecipe.readyInMinutes ?? 0)) <= 10;
         return sharedDiets || similarTime;
       })
-      .slice(0, 2); // Return top 2 similar recipes
+      .slice(0, 2);
   }
 
   async searchRecipeByName(query: string): Promise<Recipe> {
@@ -768,7 +762,7 @@ class SpoonacularRecipeApiService implements RecipeApiService {
     return data.results.map(this.mapSpoonacularToRecipe);
   }
 
-  async getRecipeById(id: number): Promise<Recipe> {
+  async getRecipeById(id: string | number): Promise<Recipe> {
     const data = await this.fetchFromApi(
       `/recipes/${id}/information?includeNutrition=true`
     );
@@ -776,7 +770,7 @@ class SpoonacularRecipeApiService implements RecipeApiService {
     return this.mapSpoonacularToRecipe(data);
   }
 
-  async getSimilarRecipes(id: number): Promise<Recipe[]> {
+  async getSimilarRecipes(id: string | number): Promise<Recipe[]> {
     const data = await this.fetchFromApi(
       `/recipes/${id}/similar?number=2`
     );
@@ -812,7 +806,7 @@ class SpoonacularRecipeApiService implements RecipeApiService {
   // Helper to map Spoonacular API response to our Recipe model
   private mapSpoonacularToRecipe(data: any): Recipe {
     return {
-      id: data.id,
+      id: String(data.id),
       name: data.title,
       image: data.image,
       readyInMinutes: data.readyInMinutes,
@@ -838,10 +832,9 @@ class SpoonacularRecipeApiService implements RecipeApiService {
   }
 }
 
-// Import the Edamam Recipe Service
+// Import the Edamam Recipe Service (uses string IDs, DB-persisted cache)
 import { EdamamRecipeApiService } from './EdamamRecipeApiService';
 
-// Determine which service to use based on which API credentials are available
 // Import the OpenAI Recipe Service
 import { OpenAIRecipeApiService } from './OpenAIRecipeApiService';
 
@@ -850,15 +843,15 @@ const spoonacularApiKey = process.env.SPOONACULAR_API_KEY;
 const hasEdamamCredentials = process.env.EDAMAM_RECIPE_APP_ID && process.env.EDAMAM_RECIPE_APP_KEY;
 
 // Create and export the appropriate service based on available credentials
+// Priority: Edamam (with real recipes + DB cache) > OpenAI > Spoonacular > Mock
 let recipeService: RecipeApiService;
 
-// Prioritize OpenAI for all recipe functions
-if (openaiApiKey) {
-  console.log("Using OpenAI for recipe service");
-  recipeService = new OpenAIRecipeApiService(openaiApiKey);
-} else if (hasEdamamCredentials) {
-  console.log("OpenAI API key not available, using Edamam Recipe API service as fallback");
+if (hasEdamamCredentials) {
+  console.log("Using Edamam Recipe API service (string IDs, DB-persisted cache)");
   recipeService = new EdamamRecipeApiService();
+} else if (openaiApiKey) {
+  console.log("Edamam credentials not available, falling back to OpenAI recipe service");
+  recipeService = new OpenAIRecipeApiService(openaiApiKey);
 } else if (spoonacularApiKey) {
   console.log("Using Spoonacular Recipe API service as fallback");
   recipeService = new SpoonacularRecipeApiService(spoonacularApiKey);

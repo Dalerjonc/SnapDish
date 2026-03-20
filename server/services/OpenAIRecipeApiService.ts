@@ -44,7 +44,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     // Demo quick recipes
     const quickRecipes: Recipe[] = [
       {
-        id: 50001,
+        id: "openai_50001",
         name: "15-Minute Pasta Primavera",
         image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601",
         readyInMinutes: 15,
@@ -76,7 +76,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         created_at: new Date()
       },
       {
-        id: 50002,
+        id: "openai_50002",
         name: "Quick Avocado Toast",
         image: "https://images.unsplash.com/photo-1588137378633-dea1336ce1e2",
         readyInMinutes: 5,
@@ -110,7 +110,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     // Demo popular recipes
     const popularRecipes: Recipe[] = [
       {
-        id: 50003,
+        id: "openai_50003",
         name: "Classic Margherita Pizza",
         image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002",
         readyInMinutes: 45,
@@ -143,7 +143,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
         created_at: new Date()
       },
       {
-        id: 50004,
+        id: "openai_50004",
         name: "Chicken Tikka Masala",
         image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641",
         readyInMinutes: 60,
@@ -206,7 +206,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
     return this.recipeIdCounter++;
   }
 
-  private hashStringToNumericId(str: string): number {
+  private hashStringToNumericId(str: string): string {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
@@ -214,7 +214,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
       hash = hash & hash; // Convert to 32bit integer
     }
     // Ensure the hash is positive and within our ID range
-    return 50000 + (Math.abs(hash) % 49999);
+    return String(50000 + (Math.abs(hash) % 49999));
   }
 
   async getPopularRecipes(): Promise<Recipe[]> {
@@ -696,7 +696,7 @@ export class OpenAIRecipeApiService implements RecipeApiService {
 
       // Create the recipe object
       const recipe: Recipe = {
-        id,
+        id: String(id),
         name: data.name,
         image: data.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
         readyInMinutes: data.readyInMinutes || 30,

@@ -5,28 +5,167 @@ import { imageRecognitionService } from "./services/imageRecognition";
 import { recipeApiService } from "./services/recipeApi";
 import { EdamamRecipeApiService } from "./services/EdamamRecipeApiService";
 import { openaiService } from "./services/openai";
+import { requireAuth, getCurrentUserId, hashPassword, verifyPassword } from "./auth";
 import multer from "multer";
 import { z } from "zod";
-import { ingredientsSearchSchema, chatMessageSchema } from "@shared/schema";
+import { ingredientsSearchSchema, chatMessageSchema, loginSchema, signupSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
-// Setup multer for file uploads
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size
-  }
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
 
+/** Generate an ID for OpenAI-generated recipes */
+function generateOpenAIRecipeId(): string {
+  return `generated_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Build a Recipe object from OpenAI data */
+function buildOpenAIRecipe(openAIData: any, nameHint: string, idOverride?: string) {
+  const id = idOverride ?? generateOpenAIRecipeId();
+  return {
+    id,
+    name: openAIData.name || nameHint,
+    image: openAIData.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+    readyInMinutes: openAIData.readyInMinutes || 30,
+    servings: openAIData.servings || 4,
+    sourceUrl: "",
+    summary: openAIData.summary || `Recipe for ${nameHint}`,
+    instructions: Array.isArray(openAIData.instructions)
+      ? openAIData.instructions
+      : typeof openAIData.instructions === "string"
+        ? [openAIData.instructions]
+        : ["No instructions available"],
+    calories: openAIData.calories || 0,
+    protein: openAIData.protein || "0g",
+    carbs: openAIData.carbs || "0g",
+    fat: openAIData.fat || "0g",
+    diets: openAIData.diets || [],
+    extendedIngredients: openAIData.extendedIngredients || [],
+    analyzedInstructions:
+      openAIData.analyzedInstructions?.length > 0
+        ? openAIData.analyzedInstructions
+        : [{
+            name: "",
+            steps: Array.isArray(openAIData.instructions)
+              ? openAIData.instructions.map((step: string, idx: number) => ({
+                  number: idx + 1, step, ingredients: [], equipment: []
+                }))
+              : [{ number: 1, step: "No detailed instructions available", ingredients: [], equipment: [] }]
+          }],
+    created_at: new Date(),
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API routes
   app.use("/api", express.json());
-  
-  // Create a separate router just for recipe routes to better control their order
+
+  // ─── Auth Routes ──────────────────────────────────────────────────────────
+
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { username, password } = signupSchema.parse(req.body);
+      const existing = await storage.getUserByUsername(username);
+      if (existing) {
+        return res.status(409).json({ message: "Username already taken" });
+      }
+      const hashed = await hashPassword(password);
+      const user = await storage.createUser({ username, password: hashed });
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      res.status(201).json({ id: user.id, username: user.username });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      console.error("Signup error:", error);
+      res.status(500).json({ message: "Error creating account" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = loginSchema.parse(req.body);
+      const user = await storage.getUserByUsername(username);
+      if (!user || !(await verifyPassword(password, user.password))) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      res.json({ id: user.id, username: user.username });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Error logging in" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get("/api/auth/me", (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json({ id: req.session.userId, username: req.session.username });
+  });
+
+  // ─── Subscription Routes ──────────────────────────────────────────────────
+
+  app.get("/api/subscription", requireAuth, async (req, res) => {
+    try {
+      const userId = getCurrentUserId(req);
+      const sub = await storage.getSubscription(userId);
+      if (!sub) {
+        return res.json({ plan: "free", expiresAt: null });
+      }
+      // Check if pro subscription has expired
+      const isExpired = sub.plan === "pro" && sub.expiresAt && sub.expiresAt < new Date();
+      if (isExpired) {
+        await storage.upsertSubscription(userId, "free");
+        return res.json({ plan: "free", expiresAt: null });
+      }
+      res.json({ plan: sub.plan, expiresAt: sub.expiresAt });
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Error fetching subscription" });
+    }
+  });
+
+  app.post("/api/subscription/upgrade", requireAuth, async (req, res) => {
+    try {
+      const userId = getCurrentUserId(req);
+      // In a real app, process payment here (Stripe, etc.)
+      // For now, just upgrade to pro for 30 days
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+      const sub = await storage.upsertSubscription(userId, "pro", expiresAt);
+      res.json({ plan: sub.plan, expiresAt: sub.expiresAt, message: "Upgraded to Pro!" });
+    } catch (error) {
+      console.error("Error upgrading subscription:", error);
+      res.status(500).json({ message: "Error upgrading subscription" });
+    }
+  });
+
+  // Helper: check if user is pro
+  async function isProUser(userId: number): Promise<boolean> {
+    if (!userId) return false;
+    const sub = await storage.getSubscription(userId);
+    if (!sub || sub.plan !== "pro") return false;
+    if (sub.expiresAt && sub.expiresAt < new Date()) return false;
+    return true;
+  }
+
+  // ─── Recipe Routes ─────────────────────────────────────────────────────────
+
   const recipesRouter = express.Router();
-  
-  // Popular and quick recipes (home screen)
-  // Static routes come first
+
   recipesRouter.get("/popular", async (req, res) => {
     try {
       const recipes = await recipeApiService.getPopularRecipes();
@@ -46,94 +185,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching quick recipes" });
     }
   });
-  
-  // Get saved recipes
-  recipesRouter.get("/saved", async (req, res) => {
+
+  // Get saved recipe IDs
+  recipesRouter.get("/saved", requireAuth, async (req, res) => {
     try {
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
-      const savedRecipes = await storage.getSavedRecipes(userId);
-      res.json(savedRecipes);
+      const userId = getCurrentUserId(req);
+      const ids = await storage.getSavedRecipeIds(userId);
+
+      // Hydrate recipes from cache
+      const recipes = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return await recipeApiService.getRecipeById(id);
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      res.json(recipes.filter(Boolean));
     } catch (error) {
       console.error("Error fetching saved recipes:", error);
       res.status(500).json({ message: "Error fetching saved recipes" });
     }
   });
-  
-  // Search recipes by name - IMPORTANT: This must come before the :id route
+
+  // Search recipes by name
   recipesRouter.get("/search", async (req, res) => {
     try {
       const query = req.query.query as string;
-      
-      if (!query || query.trim().length === 0) {
+      if (!query?.trim()) {
         return res.status(400).json({ message: "Search query is required" });
       }
-      
-      console.log("Searching for recipes with query:", query);
-      
+
       try {
         const recipe = await recipeApiService.searchRecipeByName(query);
-        // Return the result as an array for consistency with other recipe endpoints
-        res.json([recipe]);
-      } catch (searchError) {
-        console.log("No exact match found, generating a recipe with OpenAI");
-        
-        try {
-          // Generate a recipe using OpenAI
-          const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(query);
-          
-          if (!openAIRecipeData) {
-            return res.status(404).json({ message: "Could not generate recipe for search query" });
-          }
-          
-          // Create a recipe object with a random ID
-          const recipe = {
-            id: Math.floor(Math.random() * 10000) + 1000,
-            name: openAIRecipeData.name || query,
-            image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
-            readyInMinutes: openAIRecipeData.readyInMinutes || 30,
-            servings: openAIRecipeData.servings || 4,
-            sourceUrl: "",
-            summary: openAIRecipeData.summary || `Recipe for ${query}`,
-            instructions: Array.isArray(openAIRecipeData.instructions) 
-              ? openAIRecipeData.instructions 
-              : typeof openAIRecipeData.instructions === 'string'
-                ? [openAIRecipeData.instructions] 
-                : ["No instructions available"],
-            calories: openAIRecipeData.calories || 0,
-            protein: openAIRecipeData.protein || "0g",
-            carbs: openAIRecipeData.carbs || "0g",
-            fat: openAIRecipeData.fat || "0g",
-            diets: openAIRecipeData.diets || [],
-            extendedIngredients: openAIRecipeData.extendedIngredients || [],
-            analyzedInstructions: 
-              (openAIRecipeData.analyzedInstructions && Array.isArray(openAIRecipeData.analyzedInstructions) && openAIRecipeData.analyzedInstructions.length > 0)
-                ? openAIRecipeData.analyzedInstructions 
-                : [{
-                    name: "",
-                    steps: Array.isArray(openAIRecipeData.instructions) 
-                      ? openAIRecipeData.instructions.map((step: string, index: number) => ({
-                          number: index + 1,
-                          step: step,
-                          ingredients: [],
-                          equipment: []
-                        }))
-                      : [{
-                          number: 1,
-                          step: "No detailed instructions available",
-                          ingredients: [],
-                          equipment: []
-                        }]
-                  }],
-            created_at: new Date()
-          };
-          
-          res.json([recipe]);
-        } catch (openaiError) {
-          console.error("Error generating recipe with OpenAI:", openaiError);
-          res.status(500).json({ message: "Error generating recipe for search query" });
+        return res.json([recipe]);
+      } catch {
+        // Fall back to OpenAI
+        const openAIData = await imageRecognitionService.getRecipeAndNutrition(query);
+        if (!openAIData) {
+          return res.status(404).json({ message: "Could not generate recipe for search query" });
         }
+        const recipe = buildOpenAIRecipe(openAIData, query);
+        if (recipeApiService instanceof EdamamRecipeApiService) {
+          await recipeApiService.cacheRecipe(recipe);
+        }
+        return res.json([recipe]);
       }
     } catch (error) {
       console.error("Error searching recipes:", error);
@@ -141,191 +239,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Now add the parameter routes
-  
-  // Get recipe details
+  // Get recipe details by string ID
   recipesRouter.get("/:id", async (req, res) => {
     try {
-      // Get the original ID string from the request
-      const rawId = req.params.id;
-      console.log(`Recipe lookup requested for ID: ${rawId}`);
-      
-      // Try to parse as number but don't reject string IDs (for Edamam recipe_xxx IDs)
-      const numericId = parseInt(rawId);
-      let lookupId: number | string;
-      
-      // If it's a valid recipe ID from Edamam (starting with "recipe_"), use it directly
-      if (rawId && rawId.startsWith && rawId.startsWith('recipe_')) {
-        console.log(`Detected Edamam recipe ID: ${rawId}`);
-        lookupId = rawId;
-      } else {
-        // Otherwise, try to convert to number if possible
-        lookupId = !isNaN(numericId) ? numericId : rawId;
-      }
-      
-      // If it's a string ID, also compute a hash to try later as fallback
-      let hashedId: number | null = null;
-      if (typeof lookupId === 'string' && lookupId.length > 8) {
-        // Compute a hash for long string IDs (like Edamam IDs)
-        let hash = 0;
-        for (let i = 0; i < lookupId.length; i++) {
-          const char = lookupId.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32bit integer
-        }
-        // Ensure the hash is positive and within our ID range
-        hashedId = 10000 + (Math.abs(hash) % 89999);
-        console.log(`Generated numeric hash ${hashedId} from string ID: ${lookupId}`);
-      }
-      
-      console.log(`Will try looking up recipe with ID: ${lookupId} (${typeof lookupId})`);
-
-      try {
-        // First try to get the recipe with the parsed ID
-        const recipe = await recipeApiService.getRecipeById(lookupId);
-        
-        if (recipe) {
-          console.log(`Found recipe in database: ${recipe.name}`);
-          
-          // Cache the recipe with both formats to ensure it's findable later
-          if (recipeApiService instanceof EdamamRecipeApiService) {
-            console.log(`Re-caching recipe with ID: ${recipe.id}`);
-            recipeApiService.cacheRecipe(recipe);
-          }
-          
-          return res.json(recipe);
-        }
-      } catch (firstLookupError) {
-        console.log(`Recipe not found with ID ${lookupId}: ${firstLookupError instanceof Error ? firstLookupError.message : 'Unknown error'}`);
-        
-        // Try the alternative format if we get here (string->number or number->string)
-        if (typeof lookupId === 'number') {
-          // We tried with number, now try with string
-          lookupId = rawId;
-        } else if (!isNaN(numericId)) {
-          // We tried with string, now try with number
-          lookupId = numericId;
-        }
-        
-        console.log(`Trying alternative ID format: ${lookupId} (${typeof lookupId})`);
-        
-        try {
-          const recipe = await recipeApiService.getRecipeById(lookupId);
-          if (recipe) {
-            console.log(`Found recipe with alternative ID format: ${recipe.name}`);
-            // Cache with both formats
-            if (recipeApiService instanceof EdamamRecipeApiService) {
-              recipeApiService.cacheRecipe(recipe);
-            }
-            return res.json(recipe);
-          }
-        } catch (secondLookupError) {
-          console.log(`Recipe not found with alternative ID format: ${secondLookupError instanceof Error ? secondLookupError.message : 'Unknown error'}`);
-          
-          // Try the hashed ID as a last resort
-          if (hashedId !== null) {
-            console.log(`Trying hashed ID as last resort: ${hashedId}`);
-            try {
-              const recipe = await recipeApiService.getRecipeById(hashedId);
-              if (recipe) {
-                console.log(`Found recipe with hashed ID: ${recipe.name}`);
-                // Cache with all formats
-                if (recipeApiService instanceof EdamamRecipeApiService) {
-                  recipeApiService.cacheRecipe(recipe);
-                }
-                return res.json(recipe);
-              }
-            } catch (hashedError) {
-              console.log(`Recipe not found with hashed ID: ${hashedError instanceof Error ? hashedError.message : 'Unknown error'}`);
-            }
-          }
-        }
-        
-        // If all lookups failed and it's a high ID, it could be a dynamically generated recipe
-        if (numericId && numericId > 1000) {
-          // Get the dish name from query params
-          const dishName = req.query.name as string;
-          
-          if (dishName) {
-            console.log("Regenerating recipe with OpenAI for:", dishName);
-            
-            try {
-              // Generate the recipe data with OpenAI
-              const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(dishName);
-              
-              // Create a recipe object
-              const generatedRecipe = {
-                id: numericId, // Use the requested numeric ID
-                name: openAIRecipeData.name || dishName,
-                image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
-                readyInMinutes: openAIRecipeData.readyInMinutes || 30,
-                servings: openAIRecipeData.servings || 4,
-                sourceUrl: "",
-                summary: openAIRecipeData.summary || `Recipe for ${dishName}`,
-                instructions: Array.isArray(openAIRecipeData.instructions) 
-                ? openAIRecipeData.instructions 
-                : typeof openAIRecipeData.instructions === 'string'
-                  ? [openAIRecipeData.instructions] 
-                  : ["No instructions available"],
-                calories: openAIRecipeData.calories || 0,
-                protein: openAIRecipeData.protein || "0g",
-                carbs: openAIRecipeData.carbs || "0g",
-                fat: openAIRecipeData.fat || "0g",
-                diets: openAIRecipeData.diets || [],
-                extendedIngredients: openAIRecipeData.extendedIngredients || [],
-                analyzedInstructions: openAIRecipeData.analyzedInstructions || [{
-                  name: "",
-                  steps: [
-                    {
-                      number: 1,
-                      step: "No detailed instructions available",
-                      ingredients: [],
-                      equipment: []
-                    }
-                  ]
-                }],
-                created_at: new Date()
-              };
-              
-              // Cache the regenerated recipe for future lookups
-              if (recipeApiService instanceof EdamamRecipeApiService) {
-                console.log(`Caching regenerated recipe with ID: ${numericId}`);
-                recipeApiService.cacheRecipe(generatedRecipe);
-                
-                // Verify recipe is cached properly
-                try {
-                  const cachedRecipe = await recipeApiService.getRecipeById(numericId);
-                  console.log(`Successfully verified cached recipe: ${cachedRecipe.name}`);
-                } catch (cacheError) {
-                  console.error(`Failed to verify recipe in cache: ${cacheError.message}`);
-                }
-              }
-              
-              return res.json(generatedRecipe);
-            } catch (openaiError) {
-              console.error("Error generating recipe with OpenAI:", openaiError);
-            }
-          }
-        }
-      }
-      
-      // If we get here, we couldn't find or generate the recipe
-      return res.status(404).json({ message: "Recipe not found" });
+      const id = req.params.id;
+      const recipe = await recipeApiService.getRecipeById(id);
+      return res.json(recipe);
     } catch (error) {
-      console.error("Error fetching recipe:", error);
-      res.status(500).json({ message: "Error fetching recipe details" });
+      // Try OpenAI fallback with name hint
+      const dishName = req.query.name as string;
+      if (dishName) {
+        try {
+          const openAIData = await imageRecognitionService.getRecipeAndNutrition(dishName);
+          const recipe = buildOpenAIRecipe(openAIData, dishName, req.params.id);
+          if (recipeApiService instanceof EdamamRecipeApiService) {
+            await recipeApiService.cacheRecipe(recipe);
+          }
+          return res.json(recipe);
+        } catch (aiError) {
+          console.error("OpenAI fallback failed:", aiError);
+        }
+      }
+      return res.status(404).json({ message: "Recipe not found" });
     }
   });
 
   // Get similar recipes
   recipesRouter.get("/:id/similar", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid recipe ID" });
-      }
-
-      const recipes = await recipeApiService.getSimilarRecipes(id);
+      const recipes = await recipeApiService.getSimilarRecipes(req.params.id);
       res.json(recipes);
     } catch (error) {
       console.error("Error fetching similar recipes:", error);
@@ -333,213 +275,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Identify dish from photo
+  // Identify dish from photo (free: 5/day, pro: unlimited)
   recipesRouter.post("/identify", upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
       }
 
-      console.log("Processing image for dish identification...");
-      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
-      
-      // Get image buffer
+      const userId = getCurrentUserId(req);
+
+      // Rate limit for free users
+      if (userId) {
+        const pro = await isProUser(userId);
+        if (!pro) {
+          const count = await storage.getIdentifyCount(userId);
+          if (count >= 5) {
+            return res.status(429).json({
+              message: "Daily limit reached. Upgrade to Pro for unlimited dish identification.",
+              upgradeRequired: true,
+            });
+          }
+          await storage.incrementIdentifyCount(userId);
+        }
+      }
+
       const imageBuffer = req.file.buffer;
-      
-      let detectedDish;
-      
-      // First try to use OpenAI Vision API for dish identification
-      try {
-        if (!process.env.OPENAI_API_KEY) {
-          throw new Error("OpenAI API key not configured");
-        }
-        
-        // Use OpenAI Vision API for dish identification
-        detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
-        console.log("OpenAI Vision API identified dish:", detectedDish);
-        
-        if (!detectedDish) {
-          return res.status(404).json({ 
-            message: "Could not identify any dish in the image. Please try with a clearer image of the food."
-          });
-        }
-      } catch (visionError) {
-        console.error("Error with OpenAI Vision API call:", visionError);
-        return res.status(500).json({ 
-          message: "Error identifying the dish", 
-          error: visionError instanceof Error ? visionError.message : String(visionError)
+
+      // Identify dish with OpenAI Vision
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ message: "OpenAI API key not configured" });
+      }
+
+      const detectedDish = await imageRecognitionService.identifyDish(imageBuffer);
+      if (!detectedDish) {
+        return res.status(404).json({
+          message: "Could not identify any dish in the image. Please try with a clearer food photo."
         });
       }
-      
-      try {
-        // Now search for the identified dish using Edamam Recipe API
-        console.log("Searching for recipes for identified dish:", detectedDish);
-        
-        // Check if we have Edamam credentials configured
-        if (!process.env.EDAMAM_RECIPE_APP_ID || !process.env.EDAMAM_RECIPE_APP_KEY) {
-          console.warn("Edamam Recipe API credentials not configured, falling back to OpenAI for recipe generation");
-          throw new Error("Edamam API credentials missing");
-        }
-        
-        // First attempt: Direct search by dish name
-        let recipe;
-        
+
+      // Try Edamam first
+      if (process.env.EDAMAM_RECIPE_APP_ID && process.env.EDAMAM_RECIPE_APP_KEY) {
         try {
-          console.log("Searching Edamam for recipe by name:", detectedDish);
-          recipe = await recipeApiService.searchRecipeByName(detectedDish);
-          console.log("Found recipe with Edamam by name:", recipe.name);
-        } catch (nameSearchError) {
-          console.warn("Error searching by name, trying ingredient search:", nameSearchError);
-          
-          // Second attempt: Try searching by ingredients
+          let recipe;
           try {
-            console.log("Searching Edamam with dish as ingredient:", detectedDish);
+            recipe = await recipeApiService.searchRecipeByName(detectedDish);
+          } catch {
             const ingredientRecipes = await recipeApiService.getRecipesByIngredients([detectedDish]);
-            
-            if (ingredientRecipes && ingredientRecipes.length > 0) {
+            if (ingredientRecipes?.length > 0) {
               recipe = ingredientRecipes[0];
-              console.log("Found recipe with Edamam by ingredient:", recipe.name);
             } else {
-              throw new Error("No recipes found by ingredient search");
-            }
-          } catch (ingredientSearchError) {
-            console.warn("Error in ingredient search:", ingredientSearchError);
-            throw new Error("Edamam could not find matching recipes");
-          }
-        }
-        
-        // Process the Edamam recipe to ensure consistent ID format
-        if (recipe) {
-          // Ensure recipe has a consistent numeric ID
-          let recipeId = recipe.id;
-          
-          if (!recipeId) {
-            // Generate random ID if none exists
-            recipeId = 10000 + Math.floor(Math.random() * 89999); // Generate ID between 10000-99999
-            console.log(`Generated new ID ${recipeId} for Edamam recipe: ${recipe.name}`);
-          } else if (typeof recipeId === 'string') {
-            // Try to convert string ID to number
-            if (!isNaN(parseInt(recipeId))) {
-              recipeId = parseInt(recipeId);
-              console.log(`Converted string ID "${recipe.id}" to number: ${recipeId}`);
-            } else {
-              // For non-numeric IDs, use a hash function
-              let hash = 0;
-              for (let i = 0; i < recipeId.length; i++) {
-                const char = recipeId.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // Convert to 32bit integer
-              }
-              // Ensure the hash is positive and within our ID range
-              recipeId = 10000 + (Math.abs(hash) % 89999);
-              console.log(`Hashed string ID "${recipe.id}" to numeric ID: ${recipeId}`);
+              throw new Error("No Edamam results");
             }
           }
-          
-          // Complete recipe with any missing fields and consistent ID format
-          const completeRecipe = {
-            ...recipe,
-            id: recipeId,
-            instructions: recipe.instructions || [],
-            summary: recipe.summary || `Recipe for ${detectedDish}`,
-            created_at: new Date()
-          };
-          
-          // Cache the recipe
-          if (recipeApiService instanceof EdamamRecipeApiService) {
-            console.log(`Caching Edamam recipe with ID: ${completeRecipe.id}`);
-            recipeApiService.cacheRecipe(completeRecipe);
+
+          if (recipe) {
+            if (recipeApiService instanceof EdamamRecipeApiService) {
+              await recipeApiService.cacheRecipe(recipe);
+            }
+            return res.json(recipe);
           }
-          
-          console.log("Successfully returned Edamam recipe for:", detectedDish);
-          return res.json(completeRecipe);
+        } catch (edamamError) {
+          console.warn("Edamam search failed, falling back to OpenAI:", edamamError);
         }
-        
-      } catch (edamamError) {
-        // Edamam search failed, fall back to OpenAI for recipe generation
-        console.warn("Edamam search failed, falling back to OpenAI recipe generation:", edamamError);
       }
-      
-      // If we get here, Edamam didn't return a recipe, generate with OpenAI
-      console.log("Generating recipe with OpenAI for:", detectedDish);
-      
-      try {
-        // Generate recipe with OpenAI
-        const openAIRecipeData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
-        console.log("Generated recipe with OpenAI:", openAIRecipeData.name || detectedDish);
-        
-        // Generate a consistent numeric ID for the recipe
-        const recipeId = 50000 + Math.floor(Math.random() * 49999); // Generate ID between 50000-99999 (different range from Edamam)
-        
-        // Convert OpenAI recipe to our format
-        const recipe = {
-          id: recipeId,
-          name: openAIRecipeData.name || detectedDish,
-          image: openAIRecipeData.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c", // Default food image
-          readyInMinutes: openAIRecipeData.readyInMinutes || 30,
-          servings: openAIRecipeData.servings || 4,
-          sourceUrl: "",
-          summary: openAIRecipeData.summary || `Recipe for ${detectedDish}`,
-          instructions: Array.isArray(openAIRecipeData.instructions) 
-            ? openAIRecipeData.instructions 
-            : typeof openAIRecipeData.instructions === 'string'
-              ? [openAIRecipeData.instructions] 
-              : ["No instructions available"],
-          calories: openAIRecipeData.calories || 0,
-          protein: openAIRecipeData.protein || "0g",
-          carbs: openAIRecipeData.carbs || "0g",
-          fat: openAIRecipeData.fat || "0g",
-          diets: openAIRecipeData.diets || [],
-          extendedIngredients: openAIRecipeData.extendedIngredients || [],
-          analyzedInstructions: 
-            (openAIRecipeData.analyzedInstructions && Array.isArray(openAIRecipeData.analyzedInstructions) && openAIRecipeData.analyzedInstructions.length > 0)
-              ? openAIRecipeData.analyzedInstructions 
-              : [{
-                  name: "",
-                  steps: Array.isArray(openAIRecipeData.instructions) 
-                    ? openAIRecipeData.instructions.map((step: string, index: number) => ({
-                        number: index + 1,
-                        step: step,
-                        ingredients: [],
-                        equipment: []
-                      }))
-                    : [{
-                        number: 1,
-                        step: "No detailed instructions available",
-                        ingredients: [],
-                        equipment: []
-                      }]
-                }],
-          created_at: new Date()
-        };
-        
-        // Check if we got a valid recipe with all required fields
-        if (!recipe || !recipe.id || !recipe.name) {
-          console.error("Invalid recipe generated:", recipe);
-          return res.status(404).json({ 
-            message: "Could not generate valid recipe for the identified dish"
-          });
-        }
-        
-        console.log("Successfully generated OpenAI recipe for:", recipe.name, "with ID:", recipe.id);
-        
-        // Cache the OpenAI-generated recipe
-        if (recipeApiService instanceof EdamamRecipeApiService) {
-          recipeApiService.cacheRecipe(recipe);
-        }
-        
-        return res.json(recipe);
-      } catch (openaiError) {
-        console.error("Error generating recipe with OpenAI:", openaiError);
-        return res.status(500).json({ 
-          message: "Failed to generate recipe with AI",
-          error: openaiError instanceof Error ? openaiError.message : String(openaiError)
-        });
+
+      // Fall back to OpenAI recipe generation
+      const openAIData = await imageRecognitionService.getRecipeAndNutrition(detectedDish);
+      const recipe = buildOpenAIRecipe(openAIData, detectedDish);
+      if (recipeApiService instanceof EdamamRecipeApiService) {
+        await recipeApiService.cacheRecipe(recipe);
       }
+      return res.json(recipe);
     } catch (error) {
-      console.error("Error in dish identification process:", error);
-      res.status(500).json({ 
-        message: "Error processing image or finding matching recipe",
+      console.error("Error in dish identification:", error);
+      res.status(500).json({
+        message: "Error processing image",
         error: error instanceof Error ? error.message : String(error)
       });
     }
@@ -549,11 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   recipesRouter.post("/by-ingredients", async (req, res) => {
     try {
       const { ingredients } = ingredientsSearchSchema.parse(req.body);
-      
-      if (!ingredients || ingredients.length === 0) {
+      if (!ingredients?.length) {
         return res.status(400).json({ message: "No ingredients provided" });
       }
-      
       const recipes = await recipeApiService.getRecipesByIngredients(ingredients);
       res.json(recipes);
     } catch (error) {
@@ -565,58 +373,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Identify ingredients from photo
-  app.post("/api/ingredients/identify", upload.single("image"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No image uploaded" });
-      }
-
-      console.log("Processing image for ingredients identification...");
-      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
-      
-      // Get image buffer
-      const imageBuffer = req.file.buffer;
-      
-      let ingredients: string[] = [];
-      
-      // Use our imageRecognitionService which now prioritizes OpenAI
-      try {
-        console.log("Using image recognition service for ingredient detection");
-        ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
-        console.log("Identified ingredients:", ingredients);
-      } catch (visionError) {
-        console.error("Error identifying ingredients:", visionError);
-        return res.status(500).json({ 
-          message: "Error processing image for ingredients", 
-          error: visionError instanceof Error ? visionError.message : String(visionError) 
-        });
-      }
-      
-      if (!ingredients || ingredients.length === 0) {
-        return res.status(404).json({ message: "Could not identify any ingredients in the image" });
-      }
-      
-      res.json(ingredients);
-    } catch (error) {
-      console.error("Error identifying ingredients:", error);
-      res.status(500).json({ message: "Error processing image" });
-    }
-  });
-
   // Save recipe
-  recipesRouter.post("/:id/save", async (req, res) => {
+  recipesRouter.post("/:id/save", requireAuth, async (req, res) => {
     try {
-      const recipeId = parseInt(req.params.id);
-      if (isNaN(recipeId)) {
-        return res.status(400).json({ message: "Invalid recipe ID" });
-      }
-
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
-      await storage.saveRecipe(userId, recipeId);
-      res.status(200).json({ message: "Recipe saved" });
+      const userId = getCurrentUserId(req);
+      await storage.saveRecipe(userId, req.params.id);
+      res.json({ message: "Recipe saved" });
     } catch (error) {
       console.error("Error saving recipe:", error);
       res.status(500).json({ message: "Error saving recipe" });
@@ -624,66 +386,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Remove saved recipe
-  recipesRouter.delete("/:id/save", async (req, res) => {
+  recipesRouter.delete("/:id/save", requireAuth, async (req, res) => {
     try {
-      const recipeId = parseInt(req.params.id);
-      if (isNaN(recipeId)) {
-        return res.status(400).json({ message: "Invalid recipe ID" });
-      }
-
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
-      await storage.removeSavedRecipe(userId, recipeId);
-      res.status(200).json({ message: "Recipe removed from saved" });
+      const userId = getCurrentUserId(req);
+      await storage.removeSavedRecipe(userId, req.params.id);
+      res.json({ message: "Recipe removed from saved" });
     } catch (error) {
       console.error("Error removing saved recipe:", error);
       res.status(500).json({ message: "Error removing saved recipe" });
     }
   });
-  
-  // Mount the recipes router
+
   app.use("/api/recipes", recipesRouter);
-  
-  // Create a chat router for all chat-related endpoints
+
+  // ─── Chat Routes ──────────────────────────────────────────────────────────
+
   const chatRouter = express.Router();
 
-  // Chat with AI
-  chatRouter.post("/", async (req, res) => {
+  chatRouter.post("/", requireAuth, async (req, res) => {
     try {
       const { message, recipeId } = chatMessageSchema.parse(req.body);
-      
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
-      // Get recipe context if recipeId is provided
+      const userId = getCurrentUserId(req);
+
+      // Nutrition analysis is a pro feature
+      const isPro = await isProUser(userId);
+      const isNutritionQuery = /nutri|calor|macro|protein|carb|fat|vitamin/i.test(message);
+      if (isNutritionQuery && !isPro) {
+        return res.status(403).json({
+          message: "Nutrition analysis requires a Pro subscription.",
+          upgradeRequired: true,
+        });
+      }
+
       let recipeContext = null;
       if (recipeId) {
-        recipeContext = await recipeApiService.getRecipeById(recipeId);
+        try {
+          recipeContext = await recipeApiService.getRecipeById(recipeId);
+        } catch {
+          // Context unavailable, proceed without it
+        }
       }
-      
-      // Get chat history
+
       const chatHistory = await storage.getChatHistory(userId);
-      
-      // Generate AI response
       const aiResponse = await openaiService.generateChatResponse(message, chatHistory, recipeContext);
-      
-      // Save the message to chat history
-      await storage.addChatMessage(userId, {
-        role: "user",
-        content: message,
-        timestamp: Date.now()
-      });
-      
-      // Save AI response to chat history
-      const responseMessage = {
-        role: "assistant" as const,
-        content: aiResponse,
-        timestamp: Date.now()
-      };
-      
+
+      await storage.addChatMessage(userId, { role: "user", content: message, timestamp: Date.now() });
+      const responseMessage = { role: "assistant" as const, content: aiResponse, timestamp: Date.now() };
       await storage.addChatMessage(userId, responseMessage);
-      
+
       res.json(responseMessage);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -694,12 +444,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get chat history
-  chatRouter.get("/history", async (req, res) => {
+  chatRouter.get("/history", requireAuth, async (req, res) => {
     try {
-      // For simplicity, using a mock user ID since we don't have authentication
-      const userId = 1;
-      
+      const userId = getCurrentUserId(req);
       const chatHistory = await storage.getChatHistory(userId);
       res.json(chatHistory);
     } catch (error) {
@@ -707,98 +454,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching chat history" });
     }
   });
-  
-  // Mount the chat router
-  app.use("/api/chat", chatRouter);
-  
-  // Create an ingredients router
-  const ingredientsRouter = express.Router();
-  
-  // Add nutrition analysis endpoint
-  ingredientsRouter.post("/analyze", async (req, res) => {
+
+  chatRouter.delete("/history", requireAuth, async (req, res) => {
     try {
+      const userId = getCurrentUserId(req);
+      await storage.clearChatHistory(userId);
+      res.json({ message: "Chat history cleared" });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ message: "Error clearing chat history" });
+    }
+  });
+
+  app.use("/api/chat", chatRouter);
+
+  // ─── Ingredient Routes ────────────────────────────────────────────────────
+
+  const ingredientsRouter = express.Router();
+
+  // Nutrition analysis (pro only)
+  ingredientsRouter.post("/analyze", requireAuth, async (req, res) => {
+    try {
+      const userId = getCurrentUserId(req);
+      const isPro = await isProUser(userId);
+      if (!isPro) {
+        return res.status(403).json({
+          message: "Nutrition analysis requires a Pro subscription.",
+          upgradeRequired: true,
+        });
+      }
+
       const { ingredients } = req.body;
-      
-      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+      if (!Array.isArray(ingredients) || ingredients.length === 0) {
         return res.status(400).json({ message: "No ingredients provided" });
       }
-      
-      // Import the OpenAI Nutrition Service
-      const { nutritionService } = require('./services/OpenAINutritionService');
-      
+
+      const { nutritionService } = await import('./services/OpenAINutritionService');
       if (!nutritionService) {
         return res.status(500).json({ message: "Nutrition service not available" });
       }
-      
       const nutritionInfo = await nutritionService.analyzeIngredients(ingredients);
       res.json(nutritionInfo);
     } catch (error) {
-      console.error("Error analyzing ingredients nutrition:", error);
-      res.status(500).json({ 
-        message: "Error analyzing nutrition information", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
+      console.error("Error analyzing nutrition:", error);
+      res.status(500).json({ message: "Error analyzing nutrition information" });
     }
   });
-  
-  // Add meal plan generation endpoint
-  ingredientsRouter.post("/mealplan", async (req, res) => {
+
+  // Meal plan generation (pro only)
+  ingredientsRouter.post("/mealplan", requireAuth, async (req, res) => {
     try {
-      const preferences = req.body;
-      
-      // Import the OpenAI Nutrition Service
-      const { nutritionService } = require('./services/OpenAINutritionService');
-      
+      const userId = getCurrentUserId(req);
+      const isPro = await isProUser(userId);
+      if (!isPro) {
+        return res.status(403).json({
+          message: "Meal plan generation requires a Pro subscription.",
+          upgradeRequired: true,
+        });
+      }
+
+      const { nutritionService } = await import('./services/OpenAINutritionService');
       if (!nutritionService) {
         return res.status(500).json({ message: "Nutrition service not available" });
       }
-      
-      const mealPlan = await nutritionService.generateMealPlan(preferences);
+      const mealPlan = await nutritionService.generateMealPlan(req.body);
       res.json(mealPlan);
     } catch (error) {
       console.error("Error generating meal plan:", error);
-      res.status(500).json({ 
-        message: "Error generating meal plan", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
+      res.status(500).json({ message: "Error generating meal plan" });
     }
   });
-  
-  // We already have a similar endpoint at /api/ingredients/identify
-  // This endpoint is kept for backward compatibility
+
   ingredientsRouter.post("/identify", upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No image uploaded" });
       }
-
-      console.log("Processing image for ingredients identification...");
-      console.log("Uploaded file info:", req.file.originalname, req.file.mimetype, req.file.size);
-      
-      // Get image buffer
-      const imageBuffer = req.file.buffer;
-      
-      // Use our imageRecognitionService which now prioritizes OpenAI
-      const ingredients = await imageRecognitionService.identifyIngredients(imageBuffer);
-      
-      if (!ingredients || ingredients.length === 0) {
+      const ingredients = await imageRecognitionService.identifyIngredients(req.file.buffer);
+      if (!ingredients?.length) {
         return res.status(404).json({ message: "Could not identify any ingredients in the image" });
       }
-      
       res.json(ingredients);
     } catch (error) {
       console.error("Error identifying ingredients:", error);
-      res.status(500).json({ 
-        message: "Error processing image for ingredients", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
+      res.status(500).json({ message: "Error processing image for ingredients" });
     }
   });
-  
-  // Mount the ingredients router
+
+  // Legacy endpoint kept for compatibility
+  app.post("/api/ingredients/identify", upload.single("image"), async (req, res) => {
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+    try {
+      const ingredients = await imageRecognitionService.identifyIngredients(req.file.buffer);
+      res.json(ingredients ?? []);
+    } catch (error) {
+      res.status(500).json({ message: "Error processing image" });
+    }
+  });
+
   app.use("/api/ingredients", ingredientsRouter);
 
   const httpServer = createServer(app);
-  
   return httpServer;
 }

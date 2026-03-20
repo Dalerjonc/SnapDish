@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useTheme } from "next-themes";
 import { 
@@ -261,8 +262,10 @@ const Profile = () => {
     navigate(`/recipe/${historyItem.id}?name=${encodeURIComponent(historyItem.name)}&fromHistory=true`);
   };
 
+  const { user, logout: authLogout } = useAuth();
+  
   // Function to handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // Reset preferences to defaults
     setDietaryRestriction('none');
     setCookingSkill('beginner');
@@ -274,6 +277,11 @@ const Profile = () => {
     localStorage.removeItem('cookingSkill');
     localStorage.removeItem('measurementUnit');
     localStorage.removeItem('savedRecipesCount');
+
+    // Call actual auth logout
+    try {
+      await authLogout();
+    } catch {}
     
     toast({
       title: "Logged out",
